@@ -145,6 +145,10 @@ const mockDb = {
 };
 
 async function initPool() {
+  if (pool) return;
+  const isProduction = process.env.NODE_ENV === 'production';
+  const explicitMock = process.env.DB_MOCK === 'true';
+
   try {
     // Try connecting to database
     pool = mysql.createPool(dbConfig);
@@ -153,9 +157,14 @@ async function initPool() {
     console.log('✅ Connected to MySQL Database: ' + dbConfig.database);
     conn.release();
   } catch (error) {
-    console.warn('⚠️ MySQL connection failed. Error: ', error.message);
-    console.warn('⚡ Initializing in-memory MOCK database for A Square Properties application fallback.');
-    isMock = true;
+    if (isProduction || !explicitMock) {
+      console.error('❌ CRITICAL MySQL connection failed: ', error.message);
+      throw new Error(`CRITICAL MySQL connection failed: ${error.message}`);
+    } else {
+      console.warn('⚠️ MySQL connection failed. Error: ', error.message);
+      console.warn('⚡ Initializing in-memory MOCK database for A Square Properties application fallback.');
+      isMock = true;
+    }
   }
 }
 

@@ -4,6 +4,8 @@ const db = require('./db');
 const { seedDatabaseData } = require('./seeder');
 
 async function initializeDatabase() {
+  await db.initPool();
+
   if (db.isMock()) {
     console.log('⚡ Mock Database initialized. Skipping physical schema migrations.');
     await seedDatabaseData();
