@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Property Reels - A Square Properties</title>
+  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <style>
+    /* Full height scrolling for Reels */
+    .reels-wrapper {
+      height: calc(100vh - 72px); /* Full height minus footer tab nav */
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      background: #000;
+    }
+    .reel-item {
+      height: 100%;
+      scroll-snap-align: start;
+      position: relative;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reel-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .reels-upload-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.98);
+      z-index: 1000;
+      display: none;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    @media (min-width: 769px) {
+      .reels-wrapper {
+        grid-area: content;
+        height: calc(100vh - 70px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #0b0b0b;
+        overflow-y: auto;
+        padding: 20px 0;
+        scroll-snap-type: none;
+      }
+      .reel-item {
+        width: 360px;
+        height: 600px;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 24px;
+        scroll-snap-align: none;
+        flex-shrink: 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      }
+      .reels-upload-overlay {
+        grid-area: content;
+        position: relative;
+        height: calc(100vh - 70px);
+        width: 100%;
+        max-width: 600px;
+        margin: 20px auto;
+        border-radius: 16px;
+        box-shadow: var(--premium-shadow);
+      }
+      #open-reel-upload-btn {
+        right: 40px !important;
+        top: 90px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell" style="background:#000;">
+    
+    <!-- Floating Upload Option button -->
+    <button id="open-reel-upload-btn" style="position:absolute; top:16px; right:16px; z-index:100; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.3); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+      <i class="bx bx-camera-movie" style="font-size:20px;"></i>
+    </button>
+
+    <!-- Reels scroll view -->
+    <div class="reels-wrapper" id="reels-scroller">
+      <!-- Generated dynamically -->
+      <div class="reel-item" id="reel-placeholder">
+        <p style="color:white; text-align:center;">Loading property reels feed...</p>
+      </div>
+    </div>
+
+    <!-- Comments Slide-Up Sheet -->
+    <div class="comments-pane" id="comments-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+        <h4 style="font-size:14px; font-weight:700;">Comments</h4>
+        <button onclick="toggleCommentsSheet(false)" style="background:none; border:none; font-size:20px; cursor:pointer;"><i class="bx bx-x"></i></button>
+      </div>
+      <div class="comments-list" id="reel-comments-list">
+        <!-- comments populate here -->
+      </div>
+      <form onsubmit="handlePostComment(event)" style="display:flex; gap:8px; margin-top:8px;">
+        <input type="text" id="comment-input" class="form-input" style="flex:1;" placeholder="Write a comment..." required>
+        <button type="submit" class="btn-primary" style="width:auto; padding:10px 16px;"><i class="bx bx-paper-plane"></i></button>
+      </form>
+    </div>
+
+    <!-- Reels Upload Overlay Form -->
+    <div class="reels-upload-overlay" id="reels-upload-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h2 style="color:var(--primary-red); font-size:20px; font-weight:700;">Upload Property Reel</h2>
+        <button onclick="toggleUploadReel(false)" style="background:none; border:none; font-size:24px; color:var(--text-dark); cursor:pointer;"><i class="bx bx-x"></i></button>
+      </div>
+      <form onsubmit="handleUploadReel(event)" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Select Reel Video (Portrait MP4 only)</label>
+          <input type="file" id="reel-video-file" class="form-input" accept="video/mp4,video/quicktime" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Caption / Description</label>
+          <textarea id="reel-caption-txt" class="form-input" rows="4" placeholder="Explore this beautiful villa! #ASquare #PremiumListing" required></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top:16px;">Publish Reel</button>
+      </form>
+    </div>
+
+    <!-- Bottom tab nav -->
+    <nav class="bottom-nav" style="background:rgba(0,0,0,0.85); border-top:1px solid rgba(255,255,255,0.15);">
+      <a href="/index.html" class="nav-item" style="color:rgba(255,255,255,0.6);">
+        <i class="bx bx-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="/search.html" class="nav-item" style="color:rgba(255,255,255,0.6);">
+        <i class="bx bx-search-alt-2"></i>
+        <span>Explore</span>
+      </a>
+      <div class="nav-item-center" id="center-add-btn" style="border-color:#000;">
+        <i class="bx bx-plus"></i>
+      </div>
+      <a href="/search.html?gps=1" class="nav-item" style="color:rgba(255,255,255,0.6);">
+        <i class="bx bx-compass"></i>
+        <span>Nearby</span>
+      </a>
+      <a href="/profile.html" class="nav-item" style="color:rgba(255,255,255,0.6);">
+        <i class="bx bx-user-circle"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+    
+    <!-- Floating Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+      <div class="bottom-sheet-handle"></div>
+      <div class="bottom-sheet-header">
+        <h2>Create New</h2>
+        <button class="bottom-sheet-close" id="sheet-close"><i class="bx bx-x"></i></button>
+      </div>
+      <a href="/post.html" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-building-house"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Property</h3>
+          <p>List a new property for sale, rent, or lease</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+      <a href="/reels.html?action=upload" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-video-plus"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Reel</h3>
+          <p>Create and share a short vertical property video</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+    </div>
+
+  </div>
+
+  <script src="/js/main.js?v=99"></script>
+  <script>
+    let reelsData = [];
+    let currentReelIndex = 0;
+    let selectedReelId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('action') === 'upload') {
+        toggleUploadReel(true);
+      }
+      loadReelsFeed();
+      
+      // Auto play video adjustments during scroll
+      const scroller = document.getElementById('reels-scroller');
+      if (window.innerWidth <= 768) {
+        scroller.addEventListener('scroll', () => {
+          const index = Math.round(scroller.scrollTop / scroller.clientHeight);
+          if (index !== currentReelIndex) {
+            playReelVideo(index);
+          }
+        });
+      } else {
+        // Intersection observer play-on-view for desktop
+        if ('IntersectionObserver' in window) {
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              const vid = entry.target.querySelector('video');
+              if (vid) {
+                if (entry.isIntersecting) {
+                  vid.play().catch(() => {});
+                  const playIcon = entry.target.querySelector('.reel-overlay-play');
+                  if (playIcon) playIcon.style.opacity = 0;
+                } else {
+                  vid.pause();
+                }
+              }
+            });
+          }, { threshold: 0.6 });
+
+          window.observeReelItems = () => {
+            document.querySelectorAll('.reel-item').forEach(item => {
+              observer.observe(item);
+            });
+          };
+        }
+      }
+    });
+
+    // Toggle comments panel
+    function toggleCommentsSheet(show, reelId = null) {
+      const sheet = document.getElementById('comments-sheet');
+      if (show) {
+        selectedReelId = reelId;
+        sheet.classList.add('active');
+        loadReelComments(reelId);
+      } else {
+        sheet.classList.remove('active');
+      }
+    }
+
+    // Toggle upload overlay panel
+    function toggleUploadReel(show) {
+      const overlay = document.getElementById('reels-upload-container');
+      if (show) {
+        if (!localStorage.getItem('token')) {
+          alert('Login required to upload property reels.');
+          window.location.href = '/login.html';
+          return;
+        }
+        overlay.style.display = 'block';
+      } else {
+        overlay.style.display = 'none';
+      }
+    }
+
+    document.getElementById('open-reel-upload-btn').addEventListener('click', () => toggleUploadReel(true));
+
+    // Fetch reels from API
+    async function loadReelsFeed() {
+      try {
+        const result = await apiRequest('/api/properties/feed/reels');
+        if (result.success) {
+          reelsData = result.data;
+          renderReels();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Render HTML feeds
+    function renderReels() {
+      const wrapper = document.getElementById('reels-scroller');
+      wrapper.innerHTML = '';
+      if (reelsData.length === 0) {
+        wrapper.innerHTML = `
+          <div class="reel-item" style="color:white; flex-direction:column; gap:12px;">
+            <i class="bx bx-movie-play" style="font-size:48px; color:var(--text-muted);"></i>
+            <p>No property video reels available yet.</p>
+          </div>
+        `;
+        return;
+      }
+
+      reelsData.forEach((r, idx) => {
+        const item = document.createElement('div');
+        item.className = 'reel-item';
+        item.innerHTML = `
+          <video class="reel-video" src="${r.video_url}" loop playsinline onclick="togglePlayState(this)"></video>
+          <div class="reel-overlay-play"><i class="bx bx-play"></i></div>
+          
+          <!-- Actions -->
+          <div class="reel-actions">
+            <button class="reel-action-btn ${r.is_liked ? 'active' : ''}" onclick="handleLikeReel(${r.id}, this)">
+              <i class="${r.is_liked ? 'bx bxs-heart' : 'bx bx-heart'}"></i>
+              <span>${r.likes_count}</span>
+            </button>
+            <button class="reel-action-btn" onclick="toggleCommentsSheet(true, ${r.id})">
+              <i class="bx bx-comment-detail"></i>
+              <span>${r.comments ? r.comments.length : 0}</span>
+            </button>
+            <button class="reel-action-btn" onclick="handleShareReel('${r.video_url}')">
+              <i class="bx bx-share"></i>
+              <span>Share</span>
+            </button>
+          </div>
+
+          <!-- Description info -->
+          <div class="reel-info">
+            <div class="reel-creator">
+              ${window.AvatarSystem.renderHtml({ name: r.creator_name, profile_photo: r.creator_pic }, 'reel-creator-img')}
+              <span class="reel-creator-name">${r.creator_name}</span>
+            </div>
+            <p class="reel-caption">${r.caption}</p>
+          </div>
+        `;
+        wrapper.appendChild(item);
+      });
+
+      // Play first video automatically if mobile
+      if (window.innerWidth <= 768) {
+        setTimeout(() => playReelVideo(0), 500);
+      } else if (window.observeReelItems) {
+        // Run intersection observer bindings for desktop
+        setTimeout(() => window.observeReelItems(), 500);
+      }
+    }
+
+    function playReelVideo(idx) {
+      currentReelIndex = idx;
+      const videos = document.querySelectorAll('.reel-video');
+      videos.forEach((vid, i) => {
+        if (i === idx) {
+          vid.play().catch(() => {});
+        } else {
+          vid.pause();
+        }
+      });
+    }
+
+    function togglePlayState(vid) {
+      const playIcon = vid.parentElement.querySelector('.reel-overlay-play');
+      if (vid.paused) {
+        vid.play();
+        playIcon.style.opacity = 0;
+      } else {
+        vid.pause();
+        playIcon.style.opacity = 1;
+        setTimeout(() => { playIcon.style.opacity = 0; }, 1000);
+      }
+    }
+
+    // Like Action
+    async function handleLikeReel(rid, btn) {
+      if (!localStorage.getItem('token')) {
+        return alert('Login required to like video reels.');
+      }
+      try {
+        const result = await apiRequest(`/api/properties/feed/reels/${rid}/like`, 'POST');
+        if (result.success) {
+          const icon = btn.querySelector('i');
+          const countSpan = btn.querySelector('span');
+          let count = parseInt(countSpan.innerText);
+
+          if (result.liked) {
+            btn.classList.add('active');
+            icon.className = 'bx bxs-heart';
+            countSpan.innerText = count + 1;
+          } else {
+            btn.classList.remove('active');
+            icon.className = 'bx bx-heart';
+            countSpan.innerText = count - 1;
+          }
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Load Comments list inside Slideup sheet
+    function loadReelComments(rid) {
+      const commentsList = document.getElementById('reel-comments-list');
+      commentsList.innerHTML = '';
+      
+      const reel = reelsData.find(r => r.id === rid);
+      if (reel && reel.comments && reel.comments.length > 0) {
+        reel.comments.forEach(c => {
+          const row = document.createElement('div');
+          row.className = 'comment-item';
+          row.innerHTML = `
+            ${window.AvatarSystem.renderHtml({ name: c.user_name, profile_photo: c.user_pic }, 'comment-avatar')}
+            <div class="comment-details">
+              <h5>${c.user_name}</h5>
+              <p>${c.comment_text}</p>
+            </div>
+          `;
+          commentsList.appendChild(row);
+        });
+      } else {
+        commentsList.innerHTML = '<p style="font-size:12px; color:var(--text-muted); text-align:center; padding:16px;">No comments yet.</p>';
+      }
+    }
+
+    // Post comment logic
+    async function handlePostComment(e) {
+      e.preventDefault();
+      const txt = document.getElementById('comment-input').value;
+      if (!localStorage.getItem('token')) {
+        return alert('Login required to post comments.');
+      }
+
+      try {
+        const result = await apiRequest(`/api/properties/feed/reels/${selectedReelId}/comment`, 'POST', { commentText: txt });
+        if (result.success) {
+          alert('Comment posted!');
+          document.getElementById('comment-input').value = '';
+          toggleCommentsSheet(false);
+          loadReelsFeed();
+        }
+      } catch(err) {
+        alert(err.message);
+      }
+    }
+
+    // Upload Reel action dispatcher
+    async function handleUploadReel(e) {
+      e.preventDefault();
+      const videoFile = document.getElementById('reel-video-file').files[0];
+      const caption = document.getElementById('reel-caption-txt').value;
+
+      const formData = new FormData();
+      formData.append('video', videoFile);
+      formData.append('caption', caption);
+
+      try {
+        const result = await apiRequest('/api/properties/feed/reels', 'POST', formData, true);
+        if (result.success) {
+          alert('Reel uploaded successfully! Reloading feed.');
+          toggleUploadReel(false);
+          loadReelsFeed();
+        }
+      } catch(err) {
+        alert(err.message);
+      }
+    }
+
+    function handleShareReel(url) {
+      navigator.clipboard.writeText(window.location.origin + url);
+      alert('Video reel share link copied to clipboard!');
+    }
+  </script>
+</body>
+</html>

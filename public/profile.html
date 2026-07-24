@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Profile - A Square Properties</title>
+  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <!-- Razorpay Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    .profile-tabs {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .profile-tab {
+      flex: 0 0 auto;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .profile-tab.active {
+      background: #111111;
+      color: white;
+    }
+    .dashboard-section {
+      display: none;
+    }
+    .dashboard-section.active {
+      display: block;
+    }
+    .profile-header-card {
+      background: linear-gradient(135deg, #111111 0%, #2B2B2B 100%);
+      color: white;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .profile-header-card img {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 3px solid white;
+      object-fit: cover;
+    }
+    .invoice-card {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
+      <div class="logo" style="font-size:18px;">Dashboard</div>
+      <button class="header-icon" onclick="logoutUser()"><i class="bx bx-log-out" style="color:var(--primary-red);"></i></button>
+    </header>
+
+    <div class="app-content">
+      
+      <!-- Left Column (Dashboard details) -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Profile Header -->
+        <div class="profile-header-card">
+          <img id="profile-pic" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='white'/></svg>">
+          <div>
+            <h2 id="profile-name" style="font-size:18px; font-weight:700;">Loading Name...</h2>
+            <p id="profile-role" style="font-size:12px; opacity:0.9;">User Account</p>
+            <span id="profile-sub-badge" style="display:inline-block; font-size:9px; background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; margin-top:6px; font-weight:700;">Inactive Plan</span>
+            <div id="admin-actions-container" style="display:none; margin-top:10px;">
+              <a href="/admin.html" class="btn-primary" style="display:inline-block; text-decoration:none; padding:6px 12px; font-size:11px; border-radius:8px; background:#FF6A00; border:none; color:white; font-weight:700; cursor:pointer;">Admin Panel</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Tabs -->
+        <div class="profile-tabs">
+          <div class="profile-tab active" data-target="tab-properties" onclick="switchSection('tab-properties', this)">My Listings</div>
+          <div class="profile-tab" data-target="tab-saved" onclick="switchSection('tab-saved', this)">Saved Items</div>
+          <div class="profile-tab" data-target="tab-visits" onclick="switchSection('tab-visits', this)">Visits</div>
+          <div class="profile-tab" data-target="tab-subscription" onclick="switchSection('tab-subscription', this)">Subscription</div>
+          <div class="profile-tab" data-target="tab-settings" onclick="switchSection('tab-settings', this)">Settings</div>
+        </div>
+
+        <!-- SECTIONS -->
+        
+        <!-- 1. My Listings -->
+        <div class="dashboard-section active" id="tab-properties">
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">My Property Listings</h3>
+          <div style="display:flex; flex-direction:column; gap:12px;" id="posted-properties-container">
+            <p style="font-size:12px; color:var(--text-muted);">Loading listings...</p>
+          </div>
+        </div>
+
+        <!-- 2. Saved Items -->
+        <div class="dashboard-section" id="tab-saved">
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">Saved Bookmarked Listings</h3>
+          <div style="display:flex; flex-direction:column; gap:12px;" id="saved-properties-container">
+            <p style="font-size:12px; color:var(--text-muted);">Loading bookmarks...</p>
+          </div>
+        </div>
+
+        <!-- 3. Scheduled Visits -->
+        <div class="dashboard-section" id="tab-visits">
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">Scheduled Property Visits</h3>
+          <div style="display:flex; flex-direction:column; gap:12px;" id="visits-container">
+            <p style="font-size:12px; color:var(--text-muted);">Loading scheduled visits...</p>
+          </div>
+        </div>
+
+        <!-- 4. Subscription Plan & Invoices -->
+        <div class="dashboard-section" id="tab-subscription">
+          <div style="border:1px solid var(--border-color); border-radius:var(--border-radius); padding:20px; text-align:center; background:rgba(255, 106, 0, 0.02); margin-bottom:20px;">
+            <i class="bx bx-crown" style="font-size:48px; color:var(--secondary-orange);"></i>
+            <h2 style="font-size:18px; font-weight:700; margin-top:10px;">Premium Posting Plan</h2>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">Pay just ₹1 to unlock unlimited property and video posting options for 1 full year.</p>
+            <button class="btn-primary" style="margin-top:20px; border:none; cursor:pointer;" onclick="triggerSubscriptionPayment()">Pay ₹1 Now</button>
+          </div>
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">Payment History & Invoices</h3>
+          <div id="payment-history-container">
+            <p style="font-size:12px; color:var(--text-muted);">Loading billing logs...</p>
+          </div>
+        </div>
+
+        <!-- 5. Settings Edit Details -->
+        <div class="dashboard-section" id="tab-settings">
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">Edit Personal Settings</h3>
+          <form onsubmit="handleUpdateProfile(event)" id="edit-profile-form">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="edit-name" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" id="edit-phone" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Profile Image (optional)</label>
+              <input type="file" id="edit-pic" class="form-input" accept="image/*">
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top:16px; border:none; cursor:pointer;">Save Settings</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right Column (Desktop Analytics & Leads Panel) -->
+      <div class="desktop-right-panel desktop-only" style="padding-top:0;">
+        
+        <!-- Seller Analytics (Views count) -->
+        <div class="desktop-panel-section" id="desktop-seller-analytics" style="display:none; margin-bottom:16px;">
+          <h4 class="desktop-panel-title"><i data-lucide="bar-chart-2"></i> Listing Analytics</h4>
+          <div style="background:var(--accent-gray); padding:16px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
+            <div>
+              <span style="font-size:12px; color:var(--text-muted);">Total Views</span>
+              <h2 style="font-size:24px; font-weight:800; color:var(--primary-red);" id="analytics-total-views">0</h2>
+            </div>
+            <i data-lucide="eye" style="width:32px; height:32px; color:var(--primary-red);"></i>
+          </div>
+        </div>
+
+        <!-- Leads / Enquiries widget -->
+        <div class="desktop-panel-section" id="desktop-seller-leads" style="display:none; margin-bottom:16px;">
+          <h4 class="desktop-panel-title"><i data-lucide="message-square"></i> Received Leads</h4>
+          <div id="desktop-leads-list" style="display:flex; flex-direction:column; gap:12px; margin-top:12px; overflow-y:auto; max-height:300px;">
+            <p style="font-size:11px; color:var(--text-muted);">No enquiries received yet.</p>
+          </div>
+        </div>
+
+        <!-- Buyer Summary widget -->
+        <div class="desktop-panel-section" id="desktop-buyer-summary" style="margin-bottom:16px;">
+          <h4 class="desktop-panel-title"><i data-lucide="activity"></i> Activity Summary</h4>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border-color);">
+              <span>Saved Listings</span>
+              <strong id="buyer-saved-count" style="color:var(--primary-red);">0</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border-color);">
+              <span>Visits Scheduled</span>
+              <strong id="buyer-visits-count" style="color:var(--primary-red);">0</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Sticky Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html" class="nav-item">
+        <i class="bx bx-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="/search.html" class="nav-item">
+        <i class="bx bx-search-alt-2"></i>
+        <span>Explore</span>
+      </a>
+      <div class="nav-item-center" id="center-add-btn">
+        <i class="bx bx-plus"></i>
+      </div>
+      <a href="/search.html?gps=1" class="nav-item">
+        <i class="bx bx-compass"></i>
+        <span>Nearby</span>
+      </a>
+      <a href="/profile.html" class="nav-item active">
+        <i class="bx bxs-user-circle"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+    
+    <!-- Floating Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+      <div class="bottom-sheet-handle"></div>
+      <div class="bottom-sheet-header">
+        <h2>Create New</h2>
+        <button class="bottom-sheet-close" id="sheet-close"><i class="bx bx-x"></i></button>
+      </div>
+      <a href="/post.html" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-building-house"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Property</h3>
+          <p>List a new property for sale, rent, or lease</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+      <a href="/reels.html?action=upload" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-video-plus"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Reel</h3>
+          <p>Create and share a short vertical property video</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+    </div>
+
+  </div>
+
+  <script src="/js/main.js?v=99"></script>
+  <script>
+    // Bind initial page loading to window.onAppReady
+    window.onAppReady = async function(user) {
+      if (!user) {
+        window.location.href = '/login.html';
+        return;
+      }
+      
+      // Populate profile data instantly from window.authProfileData cache
+      loadProfileData();
+      
+      // Fetch billing transactions in parallel
+      await loadBillingHistory();
+      
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'subscription') {
+        switchSection('tab-subscription', document.querySelector('[data-target="tab-subscription"]'));
+      }
+    };
+
+    function switchSection(targetId, el) {
+      document.querySelectorAll('.profile-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
+
+      el.classList.add('active');
+      document.getElementById(targetId).classList.add('active');
+    }
+
+    // Populate account details from cached window.authProfileData
+    function loadProfileData() {
+      const result = window.authProfileData;
+      if (!result || !result.success) {
+        return;
+      }
+
+      const user = result.user;
+      document.getElementById('profile-name').innerText = user.name;
+      document.getElementById('profile-role').innerText = `${user.role.toUpperCase()} Account`;
+      const picSrc = user.profile_photo || user.profile_picture || null;
+      const picEl = document.getElementById('profile-pic');
+      if (picEl) {
+        if (picSrc) {
+          picEl.src = picSrc;
+          picEl.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(user.name));
+          picEl.setAttribute('data-fallback-default', window.AvatarSystem.getDefaultAvatarUri());
+          picEl.onerror = function() { window.AvatarSystem.handleImageError(this); };
+        } else {
+          picEl.src = window.AvatarSystem.getInitialsDataUri(user.name);
+          picEl.onerror = null;
+        }
+      }
+
+      const badge = document.getElementById('profile-sub-badge');
+      if (user.subscription_status === 'active') {
+        badge.innerText = 'Active Plan';
+        badge.style.background = '#00875A';
+      } else {
+        badge.innerText = 'Inactive Plan';
+        badge.style.background = 'rgba(0,0,0,0.2)';
+      }
+
+      // Show Admin Panel button if role is admin
+      if (user.role === 'admin') {
+        const adminCont = document.getElementById('admin-actions-container');
+        if (adminCont) adminCont.style.display = 'block';
+      }
+
+      // Populate edit settings fields
+      document.getElementById('edit-name').value = user.name;
+      document.getElementById('edit-phone').value = user.phone || '';
+
+      // Populate properties list
+      const propCont = document.getElementById('posted-properties-container');
+      propCont.innerHTML = '';
+      if (result.properties.length === 0) {
+        propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">You have not uploaded any property listings yet.</p>';
+      } else {
+        result.properties.forEach(p => {
+          const row = document.createElement('div');
+          row.className = 'invoice-card';
+          row.id = `listing-row-${p.id}`;
+          row.innerHTML = `
+            <div>
+              <h4 style="font-size:13px; font-weight:700;">${p.title}</h4>
+              <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Price: ₹${p.price.toLocaleString()} • Status: ${p.approval_status.toUpperCase()}</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <a href="/details.html?id=${p.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px;">View</a>
+              <button onclick="deleteListing(${p.id})" style="padding:6px 12px; font-size:11px; background:#dc2626; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Delete</button>
+            </div>
+          `;
+          propCont.appendChild(row);
+        });
+      }
+
+      // Populate saved bookmarks list
+      const savedCont = document.getElementById('saved-properties-container');
+      savedCont.innerHTML = '';
+      if (result.saved.length === 0) {
+        savedCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">No bookmarked properties.</p>';
+      } else {
+        result.saved.forEach(s => {
+          const row = document.createElement('div');
+          row.className = 'invoice-card';
+          row.innerHTML = `
+            <div>
+              <h4 style="font-size:13px; font-weight:700;">${s.title}</h4>
+              <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Location: ${s.city} • ₹${s.price.toLocaleString()}</p>
+            </div>
+            <a href="/details.html?id=${s.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px;">View</a>
+          `;
+          savedCont.appendChild(row);
+        });
+      }
+
+      // Populate scheduled visits list
+      const visitCont = document.getElementById('visits-container');
+      visitCont.innerHTML = '';
+      if (result.visits.length === 0) {
+        visitCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">No visits scheduled.</p>';
+      } else {
+        result.visits.forEach(v => {
+          const row = document.createElement('div');
+          row.className = 'invoice-card';
+          row.innerHTML = `
+            <div>
+              <h4 style="font-size:13px; font-weight:700;">${v.property_title}</h4>
+              <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Scheduled: ${new Date(v.visit_date).toLocaleString()} • Status: ${v.status.toUpperCase()}</p>
+            </div>
+          `;
+          visitCont.appendChild(row);
+        });
+      }
+
+      // Desktop Widget Populate (Buyer counts & Seller Analytics)
+      const savedCountEl = document.getElementById('buyer-saved-count');
+      if (savedCountEl) savedCountEl.innerText = result.saved.length;
+
+      const visitsCountEl = document.getElementById('buyer-visits-count');
+      if (visitsCountEl) visitsCountEl.innerText = result.visits.length;
+
+      if (result.properties && result.properties.length > 0) {
+        const sellerAnalytics = document.getElementById('desktop-seller-analytics');
+        const sellerLeads = document.getElementById('desktop-seller-leads');
+        if (sellerAnalytics) sellerAnalytics.style.display = 'block';
+        if (sellerLeads) sellerLeads.style.display = 'block';
+
+        // Calc Views
+        let totalViews = 0;
+        result.properties.forEach(p => {
+          totalViews += (parseInt(p.views_count) || 0);
+        });
+        const totalViewsEl = document.getElementById('analytics-total-views');
+        if (totalViewsEl) totalViewsEl.innerText = totalViews;
+
+        // Populate Leads
+        const leadsCont = document.getElementById('desktop-leads-list');
+        if (leadsCont) {
+          if (result.enquiries && result.enquiries.length > 0) {
+            leadsCont.innerHTML = result.enquiries.map(e => `
+              <div style="background:var(--accent-gray); padding:10px; border-radius:8px; font-size:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                  <strong>${e.name}</strong>
+                  <span style="font-size:10px; color:var(--text-muted);">${new Date(e.created_at).toLocaleDateString()}</span>
+                </div>
+                <div style="font-size:11px; margin-bottom:4px;">
+                  <span style="color:var(--text-muted);">Listing:</span> <strong>${e.property_title}</strong>
+                </div>
+                <div style="font-style:italic; color:var(--text-dark); margin-bottom:6px; background:rgba(0,0,0,0.02); padding:4px; border-radius:4px;">"${e.message}"</div>
+                <div style="display:flex; gap:8px;">
+                  <a href="tel:${e.phone}" style="color:var(--primary-red); font-weight:700; text-decoration:none; display:flex; align-items:center; gap:2px;"><i data-lucide="phone" style="width:12px; height:12px;"></i> Call</a>
+                  <a href="mailto:${e.email}" style="color:var(--text-muted); text-decoration:none; display:flex; align-items:center; gap:2px;"><i data-lucide="mail" style="width:12px; height:12px;"></i> Email</a>
+                </div>
+              </div>
+            `).join('');
+          } else {
+            leadsCont.innerHTML = '<p style="font-size:11px; color:var(--text-muted);">No enquiries received yet.</p>';
+          }
+        }
+        if (window.lucide) window.lucide.createIcons();
+      }
+    }
+
+    // Load payments history
+    async function loadBillingHistory() {
+      try {
+        const result = await apiRequest('/api/payments/history');
+        if (result.success) {
+          const histCont = document.getElementById('payment-history-container');
+          histCont.innerHTML = '';
+          if (result.payments.length === 0) {
+            histCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">No billing transactions recorded.</p>';
+          } else {
+            result.payments.forEach(p => {
+              const row = document.createElement('div');
+              row.className = 'invoice-card';
+              row.innerHTML = `
+                <div>
+                  <h4 style="font-size:13px; font-weight:700;">₹${p.amount} Subscription</h4>
+                  <p style="font-size:10px; color:var(--text-muted); margin-top:2px;">Order ID: ${p.razorpay_order_id} • Date: ${new Date(p.created_at).toLocaleDateString()}</p>
+                </div>
+                <span style="font-size:11px; font-weight:700; color: ${p.status === 'success' ? '#00875A' : 'var(--primary-red)'};">${p.status.toUpperCase()}</span>
+              `;
+              histCont.appendChild(row);
+            });
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Update Profile details
+    async function handleUpdateProfile(e) {
+      e.preventDefault();
+      const name = document.getElementById('edit-name').value;
+      const phone = document.getElementById('edit-phone').value;
+      const imgInput = document.getElementById('edit-pic');
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('phone', phone);
+      if (imgInput.files.length > 0) {
+        const file = imgInput.files[0];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+          alert('Only image files (JPG, PNG, WEBP, GIF) are allowed for profile picture!');
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Profile picture size must be under 5MB!');
+          return;
+        }
+        formData.append('profile_picture', file);
+      }
+
+      try {
+        const result = await apiRequest('/api/auth/profile', 'PUT', formData, true);
+        if (result.success) {
+          alert('Settings updated successfully!');
+          // Invalidate cache and fetch fresh session details
+          invalidateAuthCache();
+          const freshUser = await getAuth();
+          loadProfileData();
+
+          // Dynamically synchronize the visual desktop details
+          const desktopUserProfile = document.querySelector('.desktop-user-profile');
+          if (desktopUserProfile) {
+            desktopUserProfile.innerHTML = window.AvatarSystem.renderHtml(freshUser, 'desktop-avatar-img') + `<span>${freshUser.name}</span>`;
+          }
+
+          const headerImg = document.getElementById('header-profile-pic');
+          if (headerImg) {
+            const freshPic = freshUser.profile_photo || freshUser.profile_picture;
+            if (freshPic) {
+              headerImg.src = freshPic;
+              headerImg.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(freshUser.name));
+              headerImg.setAttribute('data-fallback-default', window.AvatarSystem.getDefaultAvatarUri());
+              headerImg.onerror = function() { window.AvatarSystem.handleImageError(this); };
+            } else {
+              headerImg.src = window.AvatarSystem.getInitialsDataUri(freshUser.name);
+              headerImg.onerror = null;
+            }
+          }
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Launch Razorpay Payment checkout
+    async function triggerSubscriptionPayment() {
+      try {
+        const orderResult = await apiRequest('/api/payments/order', 'POST');
+        if (orderResult.success) {
+          const options = {
+            key: orderResult.keyId,
+            amount: orderResult.amount,
+            currency: orderResult.currency,
+            name: "A Square Properties",
+            description: "₹1 Listing Subscription Activation",
+            order_id: orderResult.orderId,
+            handler: async function (response) {
+              // verify payment on backend
+              const verifyResult = await apiRequest('/api/payments/verify', 'POST', {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                isMock: orderResult.isMock
+              });
+              if (verifyResult.success) {
+                alert('Plan activated successfully!');
+                // Invalidate local storage cache and reload state
+                invalidateAuthCache();
+                await getAuth();
+                loadProfileData();
+              }
+            },
+            prefill: {
+              name: document.getElementById('edit-name').value,
+              contact: document.getElementById('edit-phone').value
+            },
+            theme: {
+              color: "#8B0000"
+            }
+          };
+
+          if (orderResult.isMock) {
+            // Simulated transaction click confirmation
+            if (confirm("Proceed with MOCK payment? This simulates completing checkout via Razorpay.")) {
+              // Trigger success callback directly
+              options.handler({
+                razorpay_order_id: orderResult.orderId,
+                razorpay_payment_id: 'pay_mock_success_123',
+                razorpay_signature: 'mock_sig_123'
+              });
+            }
+          } else {
+            // Fire official checkout instance
+            const rzp = new Razorpay(options);
+            rzp.open();
+          }
+        }
+      } catch(err) {
+        alert(err.message);
+      }
+    }
+
+    // Delete a listing
+    async function deleteListing(propertyId) {
+      if (!confirm('Are you sure you want to delete this listing? This cannot be undone.')) return;
+      try {
+        const result = await apiRequest(`/api/properties/${propertyId}`, 'DELETE');
+        if (result.success) {
+          const row = document.getElementById(`listing-row-${propertyId}`);
+          if (row) row.remove();
+          // Show empty message if no listings left
+          const propCont = document.getElementById('posted-properties-container');
+          if (propCont && propCont.children.length === 0) {
+            propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted)">You have not uploaded any property listings yet.</p>';
+          }
+          // Invalidate cache in background
+          invalidateAuthCache();
+          getAuth();
+        } else {
+          alert('Delete failed: ' + (result.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Delete failed: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

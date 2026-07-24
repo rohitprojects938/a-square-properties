@@ -1,0 +1,511 @@
+const db = require('../config/db');
+
+// Post a new property (Multi-Step Form upload)
+async function createProperty(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+
+
+  try {
+    const {
+      title, description, category, listing_type, category_type, price, area_sqft,
+      bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status,
+      address, city, state, pincode, latitude, longitude
+    } = req.body;
+
+    // 2. Insert property details
+    const [result] = await db.query(
+      `INSERT INTO properties 
+      (user_id, title, description, category, listing_type, category_type, price, area_sqft, 
+       bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status, 
+       address, city, state, pincode, latitude, longitude, approval_status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')`,
+      [
+        req.user.id, title, description, category, listing_type, category_type || 'new',
+        parseFloat(price), parseInt(area_sqft), parseInt(bedrooms || 0), parseInt(bathrooms || 0),
+        facing || null, parseInt(floor_number || 0), parseInt(parking_spaces || 0), furnishing_status || 'unfurnished',
+        address, city, state, pincode,
+        latitude ? parseFloat(latitude) : null,
+        longitude ? parseFloat(longitude) : null
+      ]
+    );
+
+    const propertyId = result.insertId;
+
+    // 3. Process Uploaded Images with sharp image compression
+    const { processImage, processVideo } = require('../middlewares/uploadMiddleware');
+    let imagePaths = [];
+    let videoPaths = [];
+
+    if (req.files) {
+      // Handle property images
+      if (req.files.images) {
+        for (let i = 0; i < req.files.images.length; i++) {
+          const file = req.files.images[i];
+          const savedPath = await processImage(file.buffer, 'properties', `property-${propertyId}`);
+          imagePaths.push(savedPath);
+
+          // Insert path to database
+          await db.query(
+            'INSERT INTO property_images (property_id, image_url, is_cover) VALUES (?, ?, ?)',
+            [propertyId, savedPath, i === 0] // First image is cover
+          );
+        }
+      }
+
+      // Handle property video
+      if (req.files.video) {
+        const file = req.files.video[0];
+        const savedVideoPath = await processVideo(file.buffer, file.originalname, 'properties');
+        videoPaths.push(savedVideoPath);
+
+        await db.query(
+          'INSERT INTO property_videos (property_id, video_url) VALUES (?, ?)',
+          [propertyId, savedVideoPath]
+        );
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Property listed successfully!',
+      propertyId,
+      images: imagePaths,
+      videos: videoPaths
+    });
+  } catch (error) {
+    console.error('Create property error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server property posting failure.' });
+  }
+}
+
+// Search and List Properties (paginated, cache-safe)
+async function getProperties(req, res) {
+  // Prevent browser/CDN caching so admin changes are always live
+  res.set('Cache-Control', 'no-store');
+
+  let {
+    city, search, category, listing_type, furnishing_status,
+    minPrice, maxPrice, bedrooms, bathrooms, minArea, maxArea,
+    lat, lng, radius, sort,
+    is_featured,
+    page, limit,
+    admin   // internal: skip hidden/approval filter for admin panel
+  } = req.query;
+
+  // Pagination defaults
+  const pageNum  = Math.max(1, parseInt(page)  || 1);
+  const limitNum = Math.min(100, parseInt(limit) || 12);
+  const offset   = (pageNum - 1) * limitNum;
+
+  try {
+    let whereClauses = [];
+    let params = [];
+
+    // Public: only approved + non-hidden
+    if (!admin) {
+      whereClauses.push("p.approval_status = 'approved'");
+      whereClauses.push('(p.is_hidden IS NULL OR p.is_hidden = 0)');
+    }
+
+    // Featured filter
+    if (is_featured === '1' || is_featured === 'true') {
+      whereClauses.push('p.is_featured = 1');
+    }
+
+    if (city)   { whereClauses.push('(p.city LIKE ? OR p.pincode = ?)'); params.push(`%${city}%`, city); }
+    if (search) { whereClauses.push('(p.title LIKE ? OR p.description LIKE ? OR p.address LIKE ? OR p.city LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`); }
+    if (category && category !== 'all') { whereClauses.push('p.category = ?'); params.push(category); }
+    if (listing_type)    { whereClauses.push('p.listing_type = ?');    params.push(listing_type); }
+    if (furnishing_status){ whereClauses.push('p.furnishing_status = ?'); params.push(furnishing_status); }
+    if (minPrice) { whereClauses.push('p.price >= ?'); params.push(parseFloat(minPrice)); }
+    if (maxPrice) { whereClauses.push('p.price <= ?'); params.push(parseFloat(maxPrice)); }
+    if (bedrooms  && bedrooms  !== 'any') { whereClauses.push('p.bedrooms >= ?');  params.push(parseInt(bedrooms)); }
+    if (bathrooms && bathrooms !== 'any') { whereClauses.push('p.bathrooms >= ?'); params.push(parseInt(bathrooms)); }
+    if (minArea) { whereClauses.push('p.area_sqft >= ?'); params.push(parseInt(minArea)); }
+    if (maxArea) { whereClauses.push('p.area_sqft <= ?'); params.push(parseInt(maxArea)); }
+
+    const whereStr = whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : '';
+
+    let baseSql = `
+      SELECT p.*,
+             (SELECT image_url FROM property_images WHERE property_id = p.id AND is_cover = 1 LIMIT 1) as cover_image,
+             u.name as owner_name, u.phone as owner_phone
+      FROM properties p
+      JOIN users u ON p.user_id = u.id
+      ${whereStr}
+    `;
+
+    // GPS Haversine radius
+    if (lat && lng && radius) {
+      const pLat = parseFloat(lat), pLng = parseFloat(lng);
+      baseSql = `SELECT *, (6371 * acos(cos(radians(${pLat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${pLng})) + sin(radians(${pLat})) * sin(radians(latitude)))) AS distance FROM (${baseSql}) as gps_filtered HAVING distance <= ?`;
+      params.push(parseFloat(radius));
+    }
+
+    // Sort
+    let orderClause = 'ORDER BY p.id DESC';
+    if (sort === 'price_low')  orderClause = 'ORDER BY price ASC';
+    else if (sort === 'price_high') orderClause = 'ORDER BY price DESC';
+    else if (sort === 'featured')   orderClause = 'ORDER BY p.is_featured DESC, p.id DESC';
+    else if (sort === 'nearest' && lat && lng) orderClause = 'ORDER BY distance ASC';
+
+    // Total count for pagination
+    const countSql = `SELECT COUNT(*) as total FROM (${baseSql} ${orderClause}) as count_q`;
+    const [countRows] = await db.query(countSql, [...params]);
+    const total = countRows[0] ? (countRows[0].total || 0) : 0;
+    const totalPages = Math.ceil(total / limitNum);
+
+    // Paginated data
+    const paginatedSql = `${baseSql} ${orderClause} LIMIT ? OFFSET ?`;
+    const [results] = await db.query(paginatedSql, [...params, limitNum, offset]);
+
+    res.status(200).json({
+      success: true,
+      data: results,
+      pagination: { total, page: pageNum, limit: limitNum, totalPages, hasMore: pageNum < totalPages }
+    });
+  } catch (error) {
+    console.error('Get properties error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server property search failure.' });
+  }
+}
+
+// Get single property details
+async function getPropertyById(req, res) {
+  const { id } = req.params;
+
+  try {
+    const [properties] = await db.query(
+      `SELECT p.*, u.name as owner_name, u.email as owner_email, u.phone as owner_phone, u.profile_picture as owner_pic, u.role as owner_role 
+       FROM properties p 
+       JOIN users u ON p.user_id = u.id 
+       WHERE p.id = ?`,
+      [id]
+    );
+
+    if (properties.length === 0) {
+      return res.status(404).json({ success: false, error: 'Property not found.' });
+    }
+
+    const property = properties[0];
+
+    // Increment views counter
+    await db.query('INSERT INTO property_views (user_id, property_id) VALUES (?, ?)', [req.user ? req.user.id : null, id]);
+
+    // Fetch images and videos
+    const [images] = await db.query('SELECT * FROM property_images WHERE property_id = ?', [id]);
+    const [videos] = await db.query('SELECT * FROM property_videos WHERE property_id = ?', [id]);
+    const [reviews] = await db.query('SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.property_id = ? ORDER BY r.id DESC', [id]);
+
+    // Fetch similar properties in same city/category
+    const [similar] = await db.query(
+      `SELECT p.*, (SELECT image_url FROM property_images WHERE property_id = p.id AND is_cover = 1 LIMIT 1) as cover_image 
+       FROM properties p 
+       WHERE p.city = ? AND p.category = ? AND p.id != ? AND p.approval_status = 'approved' LIMIT 4`,
+      [property.city, property.category, id]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...property,
+        images,
+        videos,
+        reviews,
+        similar
+      }
+    });
+  } catch (error) {
+    console.error('Get property by ID error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server property details failure.' });
+  }
+}
+
+// Toggle Save Property
+async function toggleSaveProperty(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Not authenticated.' });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const [existing] = await db.query('SELECT * FROM saved_properties WHERE user_id = ? AND property_id = ?', [req.user.id, id]);
+
+    if (existing.length > 0) {
+      await db.query('DELETE FROM saved_properties WHERE user_id = ? AND property_id = ?', [req.user.id, id]);
+      return res.status(200).json({ success: true, saved: false, message: 'Property removed from saved.' });
+    } else {
+      await db.query('INSERT INTO saved_properties (user_id, property_id) VALUES (?, ?)', [req.user.id, id]);
+      return res.status(200).json({ success: true, saved: true, message: 'Property saved successfully!' });
+    }
+  } catch (error) {
+    console.error('Toggle save property error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server error saving property.' });
+  }
+}
+
+// Schedule Property Visit
+async function scheduleVisit(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+
+  const { propertyId, visitDate } = req.body;
+  if (!propertyId || !visitDate) {
+    return res.status(400).json({ success: false, error: 'Property ID and Date are required.' });
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO visits (user_id, property_id, visit_date, status) VALUES (?, ?, ?, ?)',
+      [req.user.id, propertyId, visitDate, 'scheduled']
+    );
+
+    // Send notification to property owner
+    const [props] = await db.query('SELECT user_id, title FROM properties WHERE id = ?', [propertyId]);
+    if (props.length > 0) {
+      const ownerId = props[0].user_id;
+      const propTitle = props[0].title;
+      await db.query(
+        'INSERT INTO notifications (user_id, title, message) VALUES (?, ?, ?)',
+        [ownerId, 'New Visit Scheduled', `${req.user.name} has scheduled a visit for "${propTitle}" on ${visitDate}`]
+      );
+    }
+
+    res.status(200).json({ success: true, message: 'Visit scheduled successfully!' });
+  } catch (error) {
+    console.error('Schedule visit error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server scheduling failure.' });
+  }
+}
+
+// Contact Owner Enquiry
+async function submitEnquiry(req, res) {
+  const { propertyId, name, phone, email, message } = req.body;
+
+  try {
+    const [result] = await db.query(
+      'INSERT INTO enquiries (user_id, property_id, name, phone, email, message) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.user ? req.user.id : null, propertyId, name, phone, email, message]
+    );
+
+    // Notify owner
+    const [props] = await db.query('SELECT user_id, title FROM properties WHERE id = ?', [propertyId]);
+    if (props.length > 0) {
+      const ownerId = props[0].user_id;
+      await db.query(
+        'INSERT INTO notifications (user_id, title, message) VALUES (?, ?, ?)',
+        [ownerId, 'New Property Inquiry', `${name} is interested in "${props[0].title}". Message: ${message}. Contact: ${phone}`]
+      );
+    }
+
+    res.status(200).json({ success: true, message: 'Inquiry submitted successfully!' });
+  } catch (error) {
+    console.error('Submit inquiry error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server inquiry logging failure.' });
+  }
+}
+
+// Add Review
+async function addReview(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Not authenticated.' });
+  }
+
+  const { propertyId, rating, reviewText } = req.body;
+  if (!propertyId || !rating || !reviewText) {
+    return res.status(400).json({ success: false, error: 'All fields are required.' });
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO reviews (user_id, property_id, rating, review_text) VALUES (?, ?, ?, ?)',
+      [req.user.id, propertyId, parseInt(rating), reviewText]
+    );
+
+    res.status(200).json({ success: true, message: 'Review posted successfully!' });
+  } catch (error) {
+    console.error('Add review error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server review submission failure.' });
+  }
+}
+
+// GET REELS FEED
+async function getReels(req, res) {
+  try {
+    const [reels] = await db.query(
+      `SELECT r.*, u.name as creator_name, u.profile_picture as creator_pic 
+       FROM reels r 
+       JOIN users u ON r.user_id = u.id 
+       WHERE r.approval_status = 'approved' 
+       ORDER BY r.id DESC`
+    );
+
+    // Get engagement details if user is logged in
+    for (let reel of reels) {
+      try {
+        const [likes] = await db.query('SELECT COUNT(*) as count FROM reel_likes WHERE reel_id = ?', [reel.id]);
+        reel.likes_count = (Array.isArray(likes) && likes[0]) ? (likes[0].count ?? 0) : (reel.likes_count || 0);
+      } catch (e) {
+        reel.likes_count = reel.likes_count || 0;
+      }
+
+      try {
+        const [comments] = await db.query(
+          `SELECT rc.id, rc.reel_id, rc.user_id, rc.comment_text, rc.created_at, u.name as user_name, u.profile_picture as user_pic 
+           FROM reel_comments rc 
+           JOIN users u ON rc.user_id = u.id 
+           WHERE rc.reel_id = ? ORDER BY rc.id ASC`,
+          [reel.id]
+        );
+        reel.comments = Array.isArray(comments) ? comments : [];
+      } catch (e) {
+        reel.comments = [];
+      }
+
+      try {
+        if (req.user) {
+          const [userLike] = await db.query('SELECT id FROM reel_likes WHERE reel_id = ? AND user_id = ?', [reel.id, req.user.id]);
+          reel.is_liked = Array.isArray(userLike) && userLike.length > 0;
+        } else {
+          reel.is_liked = false;
+        }
+      } catch (e) {
+        reel.is_liked = false;
+      }
+    }
+
+    res.status(200).json({ success: true, data: reels });
+  } catch (error) {
+    console.error('Get reels error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server reels fetch failure.' });
+  }
+}
+
+// UPLOAD REEL
+async function uploadReel(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+
+  try {
+    if (!req.files || !req.files.video) {
+      return res.status(400).json({ success: false, error: 'Video file is required for reels.' });
+    }
+
+    const file = req.files.video[0];
+    const { processVideo } = require('../middlewares/uploadMiddleware');
+    const savedPath = await processVideo(file.buffer, file.originalname, 'reels');
+
+    const caption = req.body.caption || '';
+
+    // Reels require admin approval, but defaults to 'approved' for demo
+    await db.query(
+      'INSERT INTO reels (user_id, video_url, caption, approval_status) VALUES (?, ?, ?, ?)',
+      [req.user.id, savedPath, caption, 'approved']
+    );
+
+    res.status(201).json({ success: true, message: 'Reel uploaded successfully!' });
+  } catch (error) {
+    console.error('Upload reel error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server reel upload failure.' });
+  }
+}
+
+// TOGGLE REEL LIKE
+async function toggleReelLike(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const [existing] = await db.query('SELECT * FROM reel_likes WHERE user_id = ? AND reel_id = ?', [req.user.id, id]);
+
+    if (existing.length > 0) {
+      await db.query('DELETE FROM reel_likes WHERE user_id = ? AND reel_id = ?', [req.user.id, id]);
+      return res.status(200).json({ success: true, liked: false });
+    } else {
+      await db.query('INSERT INTO reel_likes (user_id, reel_id) VALUES (?, ?)', [req.user.id, id]);
+      return res.status(200).json({ success: true, liked: true });
+    }
+  } catch (error) {
+    console.error('Reel like error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server interaction logging failure.' });
+  }
+}
+
+// ADD REEL COMMENT
+async function addReelComment(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+
+  const { id } = req.params;
+  const { commentText } = req.body;
+
+  if (!commentText) {
+    return res.status(400).json({ success: false, error: 'Comment text is required.' });
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO reel_comments (user_id, reel_id, comment_text) VALUES (?, ?, ?)',
+      [req.user.id, id, commentText]
+    );
+
+    res.status(201).json({ success: true, message: 'Comment added successfully!' });
+  } catch (error) {
+    console.error('Reel comment error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server comment logging failure.' });
+  }
+}
+
+// Delete a property listing (owner or admin only)
+async function deleteProperty(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+  const { id } = req.params;
+  try {
+    // Only allow owner or admin to delete
+    const [rows] = await db.query('SELECT user_id FROM properties WHERE id = ?', [id]);
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Property not found.' });
+    }
+    const property = rows[0];
+    if (property.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'You can only delete your own listings.' });
+    }
+
+    // Delete related images, saves, views first
+    await db.query('DELETE FROM property_images WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM saved_properties WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM property_views WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM properties WHERE id = ?', [id]);
+
+    res.status(200).json({ success: true, message: 'Property deleted successfully.' });
+  } catch (error) {
+    console.error('Delete property error:', error.message);
+    res.status(500).json({ success: false, error: 'Server error while deleting property.' });
+  }
+}
+
+module.exports = {
+  createProperty,
+  deleteProperty,
+  getProperties,
+  getPropertyById,
+  toggleSaveProperty,
+  scheduleVisit,
+  submitEnquiry,
+  addReview,
+  getReels,
+  uploadReel,
+  toggleReelLike,
+  addReelComment
+};

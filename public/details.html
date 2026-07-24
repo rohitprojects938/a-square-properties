@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Property Details - A Square Properties</title>
+  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <!-- Leaflet CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    .slider-container {
+      width: 100%;
+      height: 240px;
+      position: relative;
+      background: #000;
+    }
+    .slider-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .spec-item {
+      background: var(--accent-gray);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .spec-item i {
+      color: var(--primary-red);
+      font-size: 20px;
+    }
+    .spec-item span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .spec-item strong {
+      font-size: 13px;
+      color: var(--text-dark);
+    }
+    #map {
+      height: 200px;
+      border-radius: var(--border-radius);
+      margin: 16px 0;
+      z-index: 1;
+    }
+    .owner-card {
+      background: var(--accent-gray);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+    }
+    .action-bar-sticky {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 72px;
+      background: white;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 16px;
+      z-index: 10;
+    }
+    .action-circle-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      text-decoration: none;
+      color: white;
+      box-shadow: var(--soft-shadow);
+      cursor: pointer;
+    }
+    .emi-card {
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Floating Back & Favorite buttons -->
+    <a href="/search.html" class="floating-back-btn">
+      <i class="bx bx-left-arrow-alt" style="font-size:24px;"></i>
+    </a>
+    <button class="favorite-btn" id="details-fav-btn" style="position:absolute; top:16px; right:16px; z-index:10; background:white;">
+      <i class="bx bx-heart"></i>
+    </button>
+
+    <!-- Details App Content Scroll -->
+    <!-- Details App Content Scroll -->
+    <div class="app-content" style="padding:0; padding-bottom: 76px;">
+      
+      <!-- Left Column (Property Details) -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Image slider -->
+        <div class="slider-container" id="details-image-slider">
+          <img class="slider-img" id="slider-img-target" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80">
+        </div>
+
+        <!-- Information Summary block -->
+        <div style="padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <div>
+              <h2 style="font-size:20px; font-weight:800; color:var(--text-dark);" id="details-title">Loading property...</h2>
+              <p style="font-size:12px; color:var(--text-muted); margin-top:2px;" id="details-address"><i class="bx bx-map"></i> Loading address...</p>
+            </div>
+            <h2 style="font-size:22px; font-weight:800; color:var(--primary-red); white-space:nowrap;" id="details-price">₹0.00</h2>
+          </div>
+
+          <span class="verified-badge" style="position:static; display:inline-flex; margin-bottom:16px;">
+            <i class="bx bxs-badge-check"></i> RERA Approved
+          </span>
+
+          <!-- Specifications grid -->
+          <h3 style="font-size:16px; font-weight:700;">Property Highlights</h3>
+          <div class="specs-grid">
+            <div class="spec-item">
+              <i class="bx bx-bed"></i>
+              <span>Bedrooms</span>
+              <strong id="spec-beds">-</strong>
+            </div>
+            <div class="spec-item">
+              <i class="bx bx-bath"></i>
+              <span>Bathrooms</span>
+              <strong id="spec-baths">-</strong>
+            </div>
+            <div class="spec-item">
+              <i class="bx bx-compass"></i>
+              <span>Facing</span>
+              <strong id="spec-facing">-</strong>
+            </div>
+            <div class="spec-item">
+              <i class="bx bx-building"></i>
+              <span>Floor</span>
+              <strong id="spec-floor">-</strong>
+            </div>
+            <div class="spec-item">
+              <i class="bx bx-car"></i>
+              <span>Parking</span>
+              <strong id="spec-parking">-</strong>
+            </div>
+            <div class="spec-item">
+              <i class="bx bx-chair"></i>
+              <span>Furnishing</span>
+              <strong id="spec-furnish">-</strong>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <h3 style="font-size:16px; font-weight:700; margin-top:20px;">Description</h3>
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.6; margin-top:6px;" id="details-description">
+            Loading property description...
+          </p>
+
+          <!-- Location Leaflet Map -->
+          <h3 style="font-size:16px; font-weight:700; margin-top:20px;">Map Location</h3>
+          <div id="map"></div>
+
+          <!-- Local Amenities list -->
+          <h3 style="font-size:16px; font-weight:700; margin-top:20px;">Nearby Amenities</h3>
+          <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid var(--border-color);">
+              <span>🏫 St. Mary High School</span>
+              <strong style="color:var(--primary-red);">0.5 km</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid var(--border-color);">
+              <span>🏥 City Medical Hospital</span>
+              <strong style="color:var(--primary-red);">1.2 km</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid var(--border-color);">
+              <span>🛒 More Supermarket Retail</span>
+              <strong style="color:var(--primary-red);">0.3 km</strong>
+            </div>
+          </div>
+
+          <!-- EMI Loan Calculator -->
+          <div class="emi-card">
+            <h3 style="font-size:15px; font-weight:700;"><i class="bx bx-calculator" style="color:var(--primary-red);"></i> EMI Loan Calculator</h3>
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label" style="display:flex; justify-content:space-between;">
+                <span>Loan Amount (₹)</span>
+                <span id="loan-amt-txt" style="font-weight:bold; color:var(--primary-red);">₹10,00,000</span>
+              </label>
+              <input type="range" id="loan-amount-slider" min="100000" max="50000000" step="50000" value="1000000" style="accent-color:var(--primary-red);" oninput="runEMI()">
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="display:flex; justify-content:space-between;">
+                <span>Interest Rate (%)</span>
+                <span id="loan-rate-txt" style="font-weight:bold;">8.5%</span>
+              </label>
+              <input type="range" id="loan-rate-slider" min="5" max="18" step="0.1" value="8.5" style="accent-color:var(--primary-red);" oninput="runEMI()">
+            </div>
+            <div style="margin-top:16px; background:var(--accent-gray); padding:12px; border-radius:12px; text-align:center;">
+              <span style="font-size:12px; color:var(--text-muted);">Estimated Monthly EMI</span>
+              <h2 style="color:var(--primary-red); font-size:24px; font-weight:800; margin-top:2px;" id="emi-output">₹0 / month</h2>
+            </div>
+          </div>
+
+          <!-- Visit Scheduler -->
+          <div class="emi-card" style="margin-top:16px;">
+            <h3 style="font-size:15px; font-weight:700;"><i class="bx bx-calendar-event" style="color:var(--primary-red);"></i> Schedule a Visit</h3>
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label">Choose Visit Date</label>
+              <input type="datetime-local" id="visit-date-input" class="form-input">
+            </div>
+            <button class="btn-primary" onclick="handleScheduleVisit()">Schedule Visit</button>
+          </div>
+
+          <!-- Owner card profile summary -->
+          <div class="owner-card">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img id="owner-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" style="width:48px; height:48px; border-radius:50%; object-fit:cover;">
+              <div>
+                <h4 id="owner-name">Manoj Soni</h4>
+                <p style="font-size:11px; color:var(--text-muted);" id="owner-tag">Premium Builder</p>
+              </div>
+            </div>
+            <span style="background:var(--primary-red); color:white; font-size:9px; font-weight:700; padding:4px 8px; border-radius:8px;">OWNER</span>
+          </div>
+
+          <!-- Inquiries / Lead generation form -->
+          <div class="emi-card" style="margin-top:16px;">
+            <h3 style="font-size:15px; font-weight:700;">Inquire About Property</h3>
+            <form onsubmit="handleSendEnquiry(event)" style="margin-top:12px; display:flex; flex-direction:column; gap:12px;">
+              <input type="text" id="enq-name" class="form-input" placeholder="Your Name" required>
+              <input type="tel" id="enq-phone" class="form-input" placeholder="Your Phone Number" required>
+              <input type="email" id="enq-email" class="form-input" placeholder="Your Email Address" required>
+              <textarea id="enq-msg" class="form-input" rows="3" placeholder="I am interested in this listing. Please contact me." required></textarea>
+              <button type="submit" class="btn-primary">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column (Desktop Dashboard Quick Actions) -->
+      <div class="desktop-right-panel desktop-only" style="padding-top:16px;">
+        <!-- Quick actions -->
+        <div class="desktop-panel-section">
+          <h4 class="desktop-panel-title"><i data-lucide="zap"></i> Quick Actions</h4>
+          <button class="btn-primary" id="desktop-compare-btn" style="width:100%; padding:12px; border-radius:12px; font-weight:700; border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i data-lucide="git-compare"></i> Add to Compare
+          </button>
+          <button class="btn-secondary" id="desktop-share-btn" style="width:100%; padding:12px; border-radius:12px; font-weight:700; border:1px solid var(--border-color); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; background:white;">
+            <i data-lucide="share-2"></i> Share Property
+          </button>
+        </div>
+
+        <!-- Recently viewed widget -->
+        <div class="desktop-panel-section">
+          <h4 class="desktop-panel-title"><i data-lucide="clock"></i> Recently Viewed</h4>
+          <div id="desktop-recent-details-widget" style="display:flex; flex-direction:column; gap:12px;">
+            <!-- Loaded dynamically from localStorage -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Contact Sticky Action Bar -->
+    <div class="action-bar-sticky">
+      <!-- Call Owner -->
+      <a href="tel:+919919014220" class="action-circle-btn" style="background:#0071e3;" id="call-action-btn">
+        <i class="bx bxs-phone"></i>
+      </a>
+      <!-- WhatsApp chat -->
+      <a href="https://wa.me/919919014220" class="action-circle-btn" style="background:#25D366;" id="whatsapp-action-btn" target="_blank">
+        <i class="bx bxl-whatsapp" style="font-size:24px;"></i>
+      </a>
+      <!-- Share link -->
+      <button class="action-circle-btn" style="background:#FF9F0A;" onclick="handleShareLink()">
+        <i class="bx bx-share-alt"></i>
+      </button>
+      <!-- Direct Enquiry -->
+      <button class="btn-primary" style="flex:1; max-width:180px; padding:12px;" onclick="document.getElementById('enq-name').focus()">
+        Enquire Now
+      </button>
+    </div>
+
+  </div>
+
+  <script src="/js/main.js?v=99"></script>
+  <script>
+    let propertyId = null;
+    let propertyDetails = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      propertyId = urlParams.get('id');
+      if (propertyId) {
+        loadPropertyDetails();
+      }
+    });
+
+    async function loadPropertyDetails() {
+      try {
+        const result = await apiRequest(`/api/properties/${propertyId}`);
+        if (result.success) {
+          propertyDetails = result.data;
+          
+          // Set text titles
+          document.getElementById('details-title').innerText = propertyDetails.title;
+          document.getElementById('details-address').innerHTML = `<i class="bx bx-map"></i> ${propertyDetails.address}, ${propertyDetails.city}`;
+          document.getElementById('details-price').innerText = `₹${formatPrice(propertyDetails.price)}`;
+          document.getElementById('details-description').innerText = propertyDetails.description;
+
+          // Set Spec items
+          document.getElementById('spec-beds').innerText = propertyDetails.bedrooms + ' BHK';
+          document.getElementById('spec-baths').innerText = propertyDetails.bathrooms;
+          document.getElementById('spec-facing').innerText = propertyDetails.facing || 'East';
+          document.getElementById('spec-floor').innerText = propertyDetails.floor_number;
+          document.getElementById('spec-parking').innerText = propertyDetails.parking_spaces;
+          document.getElementById('spec-furnish').innerText = propertyDetails.furnishing_status.toUpperCase();
+
+          // Set Slider Image
+          if (propertyDetails.images && propertyDetails.images.length > 0) {
+            document.getElementById('slider-img-target').src = propertyDetails.images[0].image_url;
+          }
+
+          // Set Owner Cards
+          document.getElementById('owner-name').innerText = propertyDetails.owner_name;
+          document.getElementById('owner-tag').innerText = `Direct ${propertyDetails.owner_role.toUpperCase()} • ${propertyDetails.owner_phone}`;
+          
+          const ownerAvatar = document.getElementById('owner-avatar');
+          if (ownerAvatar) {
+            const ownerPic = propertyDetails.owner_pic || null;
+            if (ownerPic) {
+              ownerAvatar.src = ownerPic;
+              ownerAvatar.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(propertyDetails.owner_name));
+              ownerAvatar.setAttribute('data-fallback-default', window.AvatarSystem.getDefaultAvatarUri());
+              ownerAvatar.onerror = function() { window.AvatarSystem.handleImageError(this); };
+            } else {
+              ownerAvatar.src = window.AvatarSystem.getInitialsDataUri(propertyDetails.owner_name);
+              ownerAvatar.onerror = null;
+            }
+          }
+
+          // Set Call / Whatsapp links
+          document.getElementById('call-action-btn').href = `tel:${propertyDetails.owner_phone}`;
+          document.getElementById('whatsapp-action-btn').href = `https://wa.me/${propertyDetails.owner_phone.replace('+', '')}?text=I am interested in your property "${propertyDetails.title}" listed on A Square Properties.`;
+
+          // Setup Favorite icon status
+          checkFavStatus();
+
+          // Setup Map Location Drop (Leaflet OSM)
+          const lat = parseFloat(propertyDetails.latitude) || 17.385; // Default Hyderabad lat
+          const lng = parseFloat(propertyDetails.longitude) || 78.486; // Default Hyderabad lng
+          renderLeafletMap('map', lat, lng, propertyDetails.title);
+
+          // Setup Loan Calculator initial sliders
+          document.getElementById('loan-amount-slider').max = propertyDetails.price;
+          document.getElementById('loan-amount-slider').value = Math.round(propertyDetails.price * 0.8); // 80% default
+          runEMI();
+
+          // Track recently viewed listing
+          trackRecentlyViewed(propertyDetails);
+
+          // Setup desktop widgets
+          setupDesktopWidgets();
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function setupDesktopWidgets() {
+      if (window.innerWidth <= 768) return;
+
+      // 1. Compare Button
+      const compBtn = document.getElementById('desktop-compare-btn');
+      if (compBtn && propertyDetails) {
+        compBtn.addEventListener('click', () => {
+          toggleComparison(propertyDetails);
+        });
+      }
+
+      // 2. Share Button
+      const shareBtn = document.getElementById('desktop-share-btn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(window.location.href)
+            .then(() => alert('Property link copied to clipboard!'))
+            .catch(() => alert('Failed to copy link.'));
+        });
+      }
+
+      // 3. Recently Viewed details list (excluding current)
+      const rv = localStorage.getItem('recently_viewed');
+      const container = document.getElementById('desktop-recent-details-widget');
+      if (container) {
+        const items = rv ? JSON.parse(rv) : [];
+        const filtered = items.filter(i => i.id != propertyId);
+        
+        if (filtered.length > 0) {
+          container.innerHTML = filtered.slice(0, 3).map(p => `
+            <a href="/details.html?id=${p.id}" style="display:flex; gap:10px; text-decoration:none; color:inherit; margin-top:8px;">
+              <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=100&q=80'}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
+              <div>
+                <h5 style="font-size:12px; font-weight:700;">${p.title}</h5>
+                <p style="font-size:11px; color:var(--primary-red);">₹${formatPrice(p.price)} • ${p.city}</p>
+              </div>
+            </a>
+          `).join('');
+        } else {
+          container.innerHTML = `<p style="font-size:11px; color:var(--text-muted); margin-top:8px;">No other recently viewed listings.</p>`;
+        }
+      }
+    }
+
+    // Toggle and read favorites status
+    async function checkFavStatus() {
+      const user = localStorage.getItem('user');
+      if (user && propertyDetails) {
+        // Toggle active heart colors if saved in client list
+      }
+    }
+
+    document.getElementById('details-fav-btn').addEventListener('click', async () => {
+      if (!localStorage.getItem('token')) {
+        return alert('Please login to save properties.');
+      }
+      try {
+        const result = await apiRequest(`/api/properties/${propertyId}/save`, 'POST');
+        if (result.success) {
+          const btn = document.getElementById('details-fav-btn');
+          const icon = btn.querySelector('i');
+          if (result.saved) {
+            btn.classList.add('active');
+            icon.className = 'bx bxs-heart';
+            alert('Listing saved successfully!');
+          } else {
+            btn.classList.remove('active');
+            icon.className = 'bx bx-heart';
+            alert('Listing removed from saved.');
+          }
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    // Run Loan Calculator Calculation
+    function runEMI() {
+      const p = parseFloat(document.getElementById('loan-amount-slider').value);
+      const r = parseFloat(document.getElementById('loan-rate-slider').value);
+      
+      document.getElementById('loan-amt-txt').innerText = `₹${p.toLocaleString('en-IN')}`;
+      document.getElementById('loan-rate-txt').innerText = `${r}%`;
+
+      const monthlyEMI = calculateEMI(p, r, 240); // 20 year default term
+      document.getElementById('emi-output').innerText = `₹${monthlyEMI.toLocaleString('en-IN')} / mo`;
+    }
+
+    // Inquiry Dispatcher
+    async function handleSendEnquiry(e) {
+      e.preventDefault();
+      const name = document.getElementById('enq-name').value;
+      const phone = document.getElementById('enq-phone').value;
+      const email = document.getElementById('enq-email').value;
+      const message = document.getElementById('enq-msg').value;
+
+      try {
+        const result = await apiRequest('/api/properties/action/enquiry', 'POST', {
+          propertyId, name, phone, email, message
+        });
+        if (result.success) {
+          alert('Your inquiry was successfully sent to the property owner! They will contact you shortly.');
+          e.target.reset();
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Visit Scheduler Dispatcher
+    async function handleScheduleVisit() {
+      const visitDate = document.getElementById('visit-date-input').value;
+      if (!visitDate) {
+        return alert('Please select a visit date and time.');
+      }
+
+      try {
+        const result = await apiRequest('/api/properties/action/visit', 'POST', {
+          propertyId, visitDate
+        });
+        if (result.success) {
+          alert('Visit scheduled! The listing owner has been notified of your schedule request.');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // Share action
+    function handleShareLink() {
+      if (navigator.share) {
+        navigator.share({
+          title: document.getElementById('details-title').innerText,
+          url: window.location.href
+        }).catch(err => console.log(err));
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Property link copied to clipboard!');
+      }
+    }
+
+    function formatPrice(num) {
+      if (num >= 10000000) return (num / 10000000).toFixed(1) + ' Cr';
+      if (num >= 100000) return (num / 100000).toFixed(1) + ' L';
+      return num.toLocaleString('en-IN');
+    }
+  </script>
+</body>
+</html>

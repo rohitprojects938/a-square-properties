@@ -1,0 +1,22 @@
+{
+  "name": "A Square Properties",
+  "short_name": "A² Properties",
+  "description": "Premium Mobile-First Real Estate Marketplace",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#58181F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/uploads/profile/default-avatar.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/uploads/profile/default-avatar.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

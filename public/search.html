@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Explore Properties - A Square Properties</title>
+  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    .filter-drawer {
+      position: absolute;
+      top: 0;
+      right: -320px;
+      width: 320px;
+      height: 100%;
+      background: white;
+      z-index: 1000;
+      transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    .filter-drawer.active {
+      right: 0;
+    }
+    .filter-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+    .filter-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .filter-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 400px) {
+      .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .property-search-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      text-decoration: none;
+      color: var(--text-dark);
+      box-shadow: var(--soft-shadow);
+      transition: all 0.2s ease;
+    }
+    .property-search-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--floating-shadow);
+    }
+    .property-search-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+    .property-search-info {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
+      <div class="logo" style="font-size:18px;">Explore listings</div>
+      <button class="header-icon" id="open-filter-btn"><i class="bx bx-slider-alt"></i></button>
+    </header>
+
+    <div class="app-content search-page-container">
+      
+      <!-- Left Column (Search results) -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Search Input -->
+        <div class="search-input-wrapper" style="margin-bottom: 8px;">
+          <i class="bx bx-search"></i>
+          <input type="text" id="search-query" class="search-input" placeholder="Enter city, locality or zipcode..." oninput="debounceSearch()">
+        </div>
+
+        <!-- Sorting Pill Container -->
+        <div class="horizontal-scroll" style="margin-bottom: 8px; padding-bottom: 4px;">
+          <div class="category-pill active" onclick="setSort('newest', this)">Newest</div>
+          <div class="category-pill" onclick="setSort('price_low', this)">Price Low to High</div>
+          <div class="category-pill" onclick="setSort('price_high', this)">Price High to Low</div>
+          <div class="category-pill" onclick="setSort('popular', this)">Popular</div>
+        </div>
+
+        <!-- Results List -->
+        <div id="results-count-bar" style="font-size:12px; color:var(--text-muted); padding:4px 0 8px 0; display:flex; justify-content:space-between; align-items:center;">
+          <span id="results-count-text">Loading...</span>
+        </div>
+        <div class="results-grid" id="search-results-container">
+          <!-- Loaded dynamically from API -->
+        </div>
+        <div id="load-more-container" style="display:none; text-align:center; margin-top:20px;">
+          <button id="load-more-btn" onclick="loadMoreResults()" class="btn-secondary" style="padding:12px 32px; font-size:13px; font-weight:700; border-radius:12px; cursor:pointer;">
+            <i data-lucide="chevrons-down"></i> Load More Properties
+          </button>
+          <p id="load-more-info" style="font-size:11px; color:var(--text-muted); margin-top:6px;"></p>
+        </div>
+      </div>
+
+      <!-- Right Column (Desktop Map & Nearby Search) -->
+      <div class="desktop-right-panel desktop-only">
+        
+        <!-- Map Panel -->
+        <div class="desktop-panel-section" style="flex:1; display:flex; flex-direction:column; min-height:400px; padding:0; overflow:hidden;">
+          <div style="padding:16px; font-weight:700; border-bottom:1px solid var(--border-color); display:flex; align-items:center; gap:8px;">
+            <i data-lucide="map"></i> Interactive Listings Map
+          </div>
+          <div id="desktop-search-map" style="flex:1; width:100%; min-height:300px; background:#e5e7eb;"></div>
+        </div>
+        
+        <!-- Nearby Search panel -->
+        <div class="desktop-panel-section">
+          <h4 class="desktop-panel-title"><i data-lucide="compass"></i> Nearby Place Search</h4>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Find amenities around your search results</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <select id="nearby-type" class="form-input" style="padding:8px; border:1px solid var(--border-color); border-radius:8px;">
+              <option value="school">Schools</option>
+              <option value="hospital">Hospitals</option>
+              <option value="restaurant">Restaurants</option>
+              <option value="park">Parks</option>
+              <option value="subway_station">Metro Stations</option>
+            </select>
+            <button class="btn-primary" onclick="searchNearbyPlaces()" style="padding:8px; border-radius:8px; font-weight:700; border:none; color:white; cursor:pointer;">Search Amenities</button>
+          </div>
+          <div id="nearby-results-list" style="margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto; font-size:12px;">
+            <p style="color:var(--text-muted); font-size:11px;">Search to load nearby amenities...</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Filters Side Drawer -->
+    <div class="drawer-overlay" id="filter-overlay"></div>
+    <div class="filter-drawer" id="filter-drawer">
+      <div class="filter-header">
+        <span>Advanced Filters</span>
+        <button class="hamburger-btn" id="close-filter-btn"><i class="bx bx-x"></i></button>
+      </div>
+      <div class="filter-body">
+        <div class="form-group">
+          <label class="form-label">Property Type</label>
+          <select id="filter-category" class="form-input">
+            <option value="all">All Categories</option>
+            <option value="apartment">Apartment</option>
+            <option value="villa">Villa</option>
+            <option value="pg">PG / Co-living</option>
+            <option value="commercial">Commercial</option>
+            <option value="plot">Plot / Land</option>
+            <option value="farmhouse">Farm House</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transaction Type</label>
+          <select id="filter-listing-type" class="form-input">
+            <option value="">Any Option</option>
+            <option value="sale">For Sale</option>
+            <option value="rent">For Rent</option>
+            <option value="lease">For Lease</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bedrooms</label>
+          <select id="filter-bedrooms" class="form-input">
+            <option value="any">Any Quantity</option>
+            <option value="1">1+ BHK</option>
+            <option value="2">2+ BHK</option>
+            <option value="3">3+ BHK</option>
+            <option value="4">4+ BHK</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min Price (₹)</label>
+          <input type="number" id="filter-min-price" class="form-input" placeholder="e.g. 5,00,000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Price (₹)</label>
+          <input type="number" id="filter-max-price" class="form-input" placeholder="e.g. 5,00,00,000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Furnishing Status</label>
+          <select id="filter-furnishing" class="form-input">
+            <option value="">Any Status</option>
+            <option value="fully">Fully Furnished</option>
+            <option value="semi">Semi Furnished</option>
+            <option value="unfurnished">Unfurnished</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-footer">
+        <button class="btn-secondary" style="flex:1;" onclick="resetFilters()">Reset</button>
+        <button class="btn-primary" style="flex:2;" onclick="applyFilters()">Apply Filters</button>
+      </div>
+    </div>
+
+    <!-- Sticky Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html" class="nav-item">
+        <i class="bx bx-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="/search.html" class="nav-item active">
+        <i class="bx bxs-search-alt-2"></i>
+        <span>Explore</span>
+      </a>
+      <div class="nav-item-center" id="center-add-btn">
+        <i class="bx bx-plus"></i>
+      </div>
+      <a href="/search.html?gps=1" class="nav-item">
+        <i class="bx bx-compass"></i>
+        <span>Nearby</span>
+      </a>
+      <a href="/profile.html" class="nav-item">
+        <i class="bx bx-user-circle"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+    
+    <!-- Floating Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+      <div class="bottom-sheet-handle"></div>
+      <div class="bottom-sheet-header">
+        <h2>Create New</h2>
+        <button class="bottom-sheet-close" id="sheet-close"><i class="bx bx-x"></i></button>
+      </div>
+      <a href="/post.html" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-building-house"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Property</h3>
+          <p>List a new property for sale, rent, or lease</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+      <a href="/reels.html?action=upload" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-video-plus"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Reel</h3>
+          <p>Create and share a short vertical property video</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+    </div>
+
+  </div>
+
+  <script src="/js/main.js?v=99"></script>
+  <script>
+    let filterParams = {};
+    let searchDebounceTimer = null;
+    let currentSort = 'newest';
+    let mapInstance = null;
+    let mapMarkers = [];
+    let googlePlacesService = null;
+    let isGoogleMap = false;
+    let mapCenter = { lat: 17.432, lng: 78.402 }; // default Hyderabad Jubilee Hills
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      setupFilterDrawer();
+      parseUrlParams();
+      await initMapSystem();
+      loadSearchResults();
+    });
+
+    // Initialize Map System (Google Maps with Leaflet Fallback)
+    async function initMapSystem() {
+      if (window.innerWidth <= 768) return; // Only run on desktop
+
+      try {
+        const response = await fetch('/api/auth/config');
+        const config = await response.json();
+        
+        if (config.success && config.googleMapsApiKey) {
+          // Load Google Maps API script
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${config.googleMapsApiKey}&libraries=places&callback=onGoogleMapsLoaded`;
+          script.async = true;
+          script.defer = true;
+          window.onGoogleMapsLoaded = () => {
+            isGoogleMap = true;
+            mapInstance = new google.maps.Map(document.getElementById('desktop-search-map'), {
+              center: mapCenter,
+              zoom: 13,
+              styles: [
+                {
+                  featureType: "poi",
+                  elementType: "labels",
+                  stylers: [{ visibility: "off" }]
+                }
+              ]
+            });
+            googlePlacesService = new google.maps.places.PlacesService(mapInstance);
+            console.log('🗺️ Google Maps initialized.');
+          };
+          document.head.appendChild(script);
+        } else {
+          // Fallback to Leaflet map
+          console.warn('⚠️ Google Maps API Key is missing. Falling back to Leaflet OpenStreetMap.');
+          setTimeout(() => {
+            initLeafletMap();
+          }, 500);
+        }
+      } catch (err) {
+        console.error('Failed to initialize map system: ', err.message);
+      }
+    }
+
+    function initLeafletMap() {
+      const mapContainer = document.getElementById('desktop-search-map');
+      if (!mapContainer) return;
+      
+      mapInstance = L.map('desktop-search-map').setView([mapCenter.lat, mapCenter.lng], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(mapInstance);
+      console.log('🗺️ Leaflet Map initialized.');
+    }
+
+    // Update markers based on current search listings
+    function updateMapMarkers(properties) {
+      if (!mapInstance) return;
+
+      // Clear existing markers
+      if (isGoogleMap) {
+        mapMarkers.forEach(m => m.setMap(null));
+        mapMarkers = [];
+      } else {
+        // Leaflet clear markers
+        mapMarkers.forEach(m => mapInstance.removeLayer(m));
+        mapMarkers = [];
+      }
+
+      if (properties.length === 0) return;
+
+      // Calculate center dynamically
+      let sumLat = 0, sumLng = 0, count = 0;
+
+      properties.forEach(p => {
+        const lat = parseFloat(p.latitude);
+        const lng = parseFloat(p.longitude);
+        if (!lat || !lng) return;
+
+        sumLat += lat;
+        sumLng += lng;
+        count++;
+
+        const popupContent = `
+          <div style="font-family:'Outfit',sans-serif; padding:4px; max-width:160px;">
+            <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=100&q=80'}" style="width:100%; height:70px; object-fit:cover; border-radius:6px; margin-bottom:6px;">
+            <h5 style="margin:0; font-weight:700; font-size:12px;">${p.title}</h5>
+            <p style="margin:2px 0 0; color:var(--primary-red); font-weight:800; font-size:12px;">₹${formatPrice(p.price)}</p>
+            <a href="/details.html?id=${p.id}" style="font-size:11px; display:inline-block; margin-top:4px; text-decoration:none; color:#D96B27; font-weight:700;">View Details →</a>
+          </div>
+        `;
+
+        if (isGoogleMap) {
+          const marker = new google.maps.Marker({
+            position: { lat, lng },
+            map: mapInstance,
+            title: p.title
+          });
+
+          const infowindow = new google.maps.InfoWindow({
+            content: popupContent
+          });
+
+          marker.addListener('click', () => {
+            infowindow.open(mapInstance, marker);
+          });
+
+          mapMarkers.push(marker);
+        } else {
+          // Leaflet marker
+          const marker = L.marker([lat, lng]).addTo(mapInstance)
+            .bindPopup(popupContent);
+          mapMarkers.push(marker);
+        }
+      });
+
+      if (count > 0) {
+        mapCenter = { lat: sumLat / count, lng: sumLng / count };
+        if (isGoogleMap) {
+          mapInstance.setCenter(mapCenter);
+        } else {
+          mapInstance.setView([mapCenter.lat, mapCenter.lng], 13);
+        }
+      }
+    }
+
+    // Nearby places search (Google Places API / mock coordinates fallback)
+    window.searchNearbyPlaces = function() {
+      const type = document.getElementById('nearby-type').value;
+      const resultsContainer = document.getElementById('nearby-results-list');
+      resultsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:11px;">Searching nearby amenities...</p>';
+
+      if (isGoogleMap && googlePlacesService) {
+        const request = {
+          location: mapCenter,
+          radius: '1000', // 1km radius
+          type: type
+        };
+
+        googlePlacesService.nearbySearch(request, (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            resultsContainer.innerHTML = '';
+            results.slice(0, 5).forEach(place => {
+              const item = document.createElement('div');
+              item.style.padding = '8px';
+              item.style.background = 'var(--accent-gray)';
+              item.style.borderRadius = '8px';
+              item.innerHTML = `
+                <div style="font-weight:700;">${place.name}</div>
+                <div style="color:var(--text-muted); font-size:10px;">Rating: ${place.rating || 'N/A'}★ • ${place.vicinity}</div>
+              `;
+              resultsContainer.appendChild(item);
+            });
+          } else {
+            resultsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:11px;">No nearby amenities found matching choice.</p>';
+          }
+        });
+      } else {
+        // Fallback Mock search based on center location coordinates
+        setTimeout(() => {
+          resultsContainer.innerHTML = '';
+          const mockAmenities = {
+            school: [
+              { name: 'Jubilee Hills Public School', rating: 4.6, distance: '400m' },
+              { name: 'Delhi Public School Secondary', rating: 4.8, distance: '850m' }
+            ],
+            hospital: [
+              { name: 'Apollo Hospitals Jubilee Hills', rating: 4.7, distance: '300m' },
+              { name: 'Omega Cancer Hospital', rating: 4.4, distance: '1.2km' }
+            ],
+            restaurant: [
+              { name: 'Olive Bistro Hyderabad', rating: 4.5, distance: '150m' },
+              { name: 'Chutneys Restaurant', rating: 4.3, distance: '600m' }
+            ],
+            park: [
+              { name: 'KBR National Park', rating: 4.8, distance: '500m' },
+              { name: 'Jubilee Hills Society Park', rating: 4.2, distance: '250m' }
+            ],
+            subway_station: [
+              { name: 'Jubilee Hills Check Post Metro', rating: 4.7, distance: '650m' },
+              { name: 'Road No 5 Metro Station', rating: 4.6, distance: '1.1km' }
+            ]
+          };
+
+          const list = mockAmenities[type] || [];
+          if (list.length > 0) {
+            list.forEach(item => {
+              const div = document.createElement('div');
+              div.style.padding = '8px';
+              div.style.background = 'var(--accent-gray)';
+              div.style.borderRadius = '8px';
+              div.innerHTML = `
+                <div style="font-weight:700;">${item.name}</div>
+                <div style="color:var(--text-muted); font-size:10px;">Rating: ${item.rating}★ • Distance: ${item.distance}</div>
+              `;
+              resultsContainer.appendChild(div);
+            });
+          } else {
+            resultsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:11px;">No nearby amenities found.</p>';
+          }
+        }, 500);
+      }
+    };
+
+    // Pagination state
+    let currentPage = 1;
+    const PAGE_LIMIT = 12;
+    let currentTotalPages = 1;
+    let currentTotal = 0;
+
+    // Parse URL queries for pre-filtering
+    function parseUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('city'))         { document.getElementById('search-query').value = params.get('city'); filterParams.city = params.get('city'); }
+      if (params.get('category'))     { document.getElementById('filter-category').value = params.get('category'); filterParams.category = params.get('category'); }
+      if (params.get('listing_type')) { document.getElementById('filter-listing-type').value = params.get('listing_type'); filterParams.listing_type = params.get('listing_type'); }
+      if (params.get('minPrice'))     { document.getElementById('filter-min-price').value = params.get('minPrice'); filterParams.minPrice = params.get('minPrice'); }
+      if (params.get('is_featured'))  { filterParams.is_featured = params.get('is_featured'); }
+      if (params.get('sort'))         { currentSort = params.get('sort'); }
+      if (params.get('gps') || params.get('lat')) { triggerGPS(); }
+    }
+
+    // Set sorting method
+    function setSort(type, pill) {
+      document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentSort = type;
+      loadSearchResults();
+    }
+
+    // Open/Close filter drawer
+    function setupFilterDrawer() {
+      const openBtn = document.getElementById('open-filter-btn');
+      const closeBtn = document.getElementById('close-filter-btn');
+      const drawer = document.getElementById('filter-drawer');
+      const overlay = document.getElementById('filter-overlay');
+      const toggleDrawer = () => { drawer.classList.toggle('active'); overlay.classList.toggle('active'); };
+      if (openBtn) openBtn.addEventListener('click', toggleDrawer);
+      if (closeBtn) closeBtn.addEventListener('click', toggleDrawer);
+      if (overlay) overlay.addEventListener('click', toggleDrawer);
+    }
+
+    // Search query with debounce
+    function debounceSearch() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        filterParams.city = document.getElementById('search-query').value;
+        loadSearchResults();
+      }, 400);
+    }
+
+    // GPS location
+    function triggerGPS() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          filterParams.lat = pos.coords.latitude;
+          filterParams.lng = pos.coords.longitude;
+          filterParams.radius = 5;
+          loadSearchResults();
+        }, () => alert('Unable to retrieve GPS location.'));
+      }
+    }
+
+    // Reset all filters
+    function resetFilters() {
+      document.getElementById('filter-category').value = 'all';
+      document.getElementById('filter-listing-type').value = '';
+      document.getElementById('filter-bedrooms').value = 'any';
+      document.getElementById('filter-min-price').value = '';
+      document.getElementById('filter-max-price').value = '';
+      document.getElementById('filter-furnishing').value = '';
+      filterParams = {};
+      document.getElementById('search-query').value = '';
+      loadSearchResults();
+      document.getElementById('close-filter-btn').click();
+    }
+
+    // Apply filters
+    function applyFilters() {
+      filterParams.category = document.getElementById('filter-category').value;
+      filterParams.listing_type = document.getElementById('filter-listing-type').value;
+      filterParams.bedrooms = document.getElementById('filter-bedrooms').value;
+      filterParams.minPrice = document.getElementById('filter-min-price').value;
+      filterParams.maxPrice = document.getElementById('filter-max-price').value;
+      filterParams.furnishing_status = document.getElementById('filter-furnishing').value;
+      loadSearchResults();
+      document.getElementById('close-filter-btn').click();
+    }
+
+    // Fetch and display properties from API (paginated)
+    async function loadSearchResults(resetPage = true) {
+      if (resetPage) currentPage = 1;
+      const container = document.getElementById('search-results-container');
+      if (resetPage) {
+        container.innerHTML = `
+          <div class="property-search-card skeleton-shimmer" style="height:320px; border-radius:12px; background:#ECECEC;"></div>
+          <div class="property-search-card skeleton-shimmer" style="height:320px; border-radius:12px; background:#ECECEC;"></div>
+          <div class="property-search-card skeleton-shimmer" style="height:320px; border-radius:12px; background:#ECECEC;"></div>
+        `;
+        document.getElementById('load-more-container').style.display = 'none';
+        document.getElementById('results-count-text').textContent = 'Searching...';
+      }
+
+      const queryParams = new URLSearchParams({ ...filterParams, sort: currentSort, page: currentPage, limit: PAGE_LIMIT });
+
+      try {
+        const result = await apiRequest(`/api/properties?${queryParams.toString()}`);
+        if (result.success) {
+          if (resetPage) container.innerHTML = '';
+          const pagination = result.pagination || {};
+          currentTotalPages = pagination.totalPages || 1;
+          currentTotal = pagination.total || result.data.length;
+
+          // Update count bar
+          const countText = document.getElementById('results-count-text');
+          if (countText) {
+            const showing = Math.min(currentPage * PAGE_LIMIT, currentTotal);
+            countText.textContent = result.data.length === 0
+              ? 'No properties found'
+              : `Showing ${showing} of ${currentTotal} properties`;
+          }
+
+          if (result.data.length === 0 && resetPage) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:32px; grid-column:1/-1;">No properties match your search criteria.</p>';
+            document.getElementById('load-more-container').style.display = 'none';
+            updateMapMarkers([]);
+            return;
+          }
+
+          result.data.forEach(p => {
+            const card = document.createElement('a');
+            card.href = `/details.html?id=${p.id}`;
+            card.className = 'property-search-card';
+            card.innerHTML = `
+              <div style="position: relative;">
+                <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80'}" alt="${p.title}" style="width:100%; height:160px; object-fit:cover; display:block;" loading="lazy">
+                <div style="position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px;">
+                  ${p.is_featured ? '<span style="background:#8B0000; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">★ Featured</span>' : ''}
+                  ${p.is_verified ? '<span style="background:#16A34A; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">✓ Verified</span>' : ''}
+                  ${p.price >= 15000000 ? '<span style="background:#FF6A00; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">Premium</span>' : ''}
+                </div>
+                <div style="position: absolute; top: 10px; right: 10px;">
+                  <button class="favorite-btn" onclick="event.preventDefault(); toggleFavorite(${p.id}, this)" style="width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer;"><i data-lucide="heart" style="width:14px; height:14px;"></i></button>
+                </div>
+                <div class="price-tag" style="position: absolute; bottom: 10px; left: 10px; background: #111111; color: white; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 700;">₹${formatPrice(p.price)}</div>
+              </div>
+              <div class="property-search-info">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:9px; color:var(--secondary-orange); font-weight:700; text-transform:uppercase;">${p.listing_type}</span>
+                  <span style="font-size:10px; color:var(--text-muted);">${p.category}</span>
+                </div>
+                <h4 style="font-size:13px; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</h4>
+                <p style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:4px; margin-top:2px;"><i data-lucide="map-pin"></i> ${p.city}</p>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: 4px;">
+                  <span><i data-lucide="bed"></i> ${p.bedrooms} BHK</span>
+                  <span><i data-lucide="bath"></i> ${p.bathrooms || 2} Baths</span>
+                  <span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>
+                </div>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+
+          updateMapMarkers(result.data);
+          if (window.lucide) window.lucide.createIcons();
+
+          // Show Load More if more pages exist
+          const lmCont = document.getElementById('load-more-container');
+          const lmInfo = document.getElementById('load-more-info');
+          if (pagination.hasMore) {
+            lmCont.style.display = 'block';
+            if (lmInfo) lmInfo.textContent = `Page ${currentPage} of ${currentTotalPages} • ${currentTotal} total listings`;
+          } else {
+            lmCont.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        container.innerHTML = `<p style="color:var(--primary-red); text-align:center; grid-column:1/-1;">Error: ${err.message}</p>`;
+      }
+    }
+
+    // Load next page
+    async function loadMoreResults() {
+      const btn = document.getElementById('load-more-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+      currentPage++;
+      await loadSearchResults(false);
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevrons-down"></i> Load More Properties'; if(window.lucide) window.lucide.createIcons(); }
+    }
+
+    function formatPrice(num) {
+      if (num >= 10000000) return (num / 10000000).toFixed(1) + ' Cr';
+      if (num >= 100000) return (num / 100000).toFixed(1) + ' L';
+      return num.toLocaleString('en-IN');
+    }
+  </script>
+</body>
+</html>

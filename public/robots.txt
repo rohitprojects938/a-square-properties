@@ -1,0 +1,7 @@
+# Robots.txt for A Square Properties
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /api/admin/
+
+Sitemap: http://localhost:5000/sitemap.xml

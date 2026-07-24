@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>A Square Properties - Premium Real Estate</title>
+  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <button class="hamburger-btn" id="hamburger-btn">
+        <i class="bx bx-menu"></i>
+      </button>
+      <div class="logo">A Square Properties</div>
+      <a href="/profile.html" class="profile-avatar-container">
+        <img id="header-profile-pic" class="profile-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%23F5F6F8'/></svg>" alt="Profile">
+        <span class="notification-dot"></span>
+      </a>
+    </header>
+
+    <!-- App Content Scroll Area -->
+    <div class="app-content full-width" id="app-content-area">
+      
+      <!-- Left Column (Main Homepage Content) -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Greeting Banner -->
+        <div style="margin-bottom: 8px;">
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-dark);" id="greeting-text">Hello, Guest!</h2>
+          <p style="font-size: 13px; color: var(--text-muted);">Find your dream home today</p>
+        </div>
+
+        <!-- Search Card -->
+        <div class="search-card">
+          <div class="search-input-wrapper">
+            <i class="bx bx-search"></i>
+            <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
+          </div>
+          <div class="search-actions">
+            <button class="gps-btn" id="home-gps-btn">
+              <i class="bx bx-map-pin"></i> Nearby (Current GPS)
+            </button>
+            <button class="filter-btn" onclick="window.location.href='/search.html'">
+              <i class="bx bx-slider-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hero Banner Auto Slider -->
+        <div class="hero-slider" id="hero-slider">
+          <div class="slide active">
+            <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" alt="Luxury Villa">
+            <div class="slide-overlay">
+              <h3>Exclusive Premium Villas</h3>
+              <p>Handpicked collection of premium properties</p>
+            </div>
+          </div>
+          <div class="slide">
+            <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80" alt="Modern Apartment">
+            <div class="slide-overlay">
+              <h3>Modern Highrise Apartments</h3>
+              <p>Stunning skyline views with infinite amenities</p>
+            </div>
+          </div>
+          <div class="slide">
+            <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80" alt="Beautiful Farmhouse">
+            <div class="slide-overlay">
+              <h3>Cozy Farm Houses</h3>
+              <p>Escape to serenity and green escapes</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Property Categories scrolling pills -->
+        <h3 class="section-title">Categories</h3>
+        <div class="horizontal-scroll">
+          <div class="category-pill active" onclick="filterCategory('all', this)"><i data-lucide="building-2"></i> All</div>
+          <div class="category-pill" onclick="filterCategory('apartment', this)"><i data-lucide="building"></i> Apartment</div>
+          <div class="category-pill" onclick="filterCategory('villa', this)"><i data-lucide="home"></i> Villa</div>
+          <div class="category-pill" onclick="filterCategory('pg', this)"><i data-lucide="bed"></i> PG / Co-living</div>
+          <div class="category-pill" onclick="filterCategory('commercial', this)"><i data-lucide="briefcase"></i> Commercial</div>
+          <div class="category-pill" onclick="filterCategory('plot', this)"><i data-lucide="map"></i> Plot</div>
+          <div class="category-pill" onclick="filterCategory('farmhouse', this)"><i data-lucide="trees"></i> Farm House</div>
+        </div>
+
+        <!-- Quick Actions -->
+        <h3 class="section-title">Quick Actions</h3>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+          <a href="/search.html?listing_type=sale" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
+            <i data-lucide="shopping-bag" style="color: var(--secondary-orange); font-size: 20px;"></i>
+            <span style="font-size: 11px; font-weight: 600;">Buy Home</span>
+          </a>
+          <a href="/search.html?listing_type=rent" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
+            <i data-lucide="key" style="color: var(--secondary-orange); font-size: 20px;"></i>
+            <span style="font-size: 11px; font-weight: 600;">Rent Home</span>
+          </a>
+          <a href="/marketplace.html" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
+            <i data-lucide="wrench" style="color: var(--secondary-orange); font-size: 20px;"></i>
+            <span style="font-size: 11px; font-weight: 600;">Services</span>
+          </a>
+          <a href="/blogs.html" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
+            <i data-lucide="book-open" style="color: var(--secondary-orange); font-size: 20px;"></i>
+            <span style="font-size: 11px; font-weight: 600;">Guides</span>
+          </a>
+        </div>
+
+        <!-- Featured Properties -->
+        <div class="section-title">
+          <span>Featured Properties</span>
+          <a href="/search.html" class="section-link">View All</a>
+        </div>
+        <div class="horizontal-scroll" id="featured-properties-list" style="margin-bottom: 20px;">
+          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading featured properties...</p>
+        </div>
+
+        <!-- Trending Projects -->
+        <div class="section-title">
+          <span>Trending Projects</span>
+          <a href="/search.html" class="section-link">View All</a>
+        </div>
+        <div class="horizontal-scroll" id="trending-projects-list" style="margin-bottom: 20px;">
+          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading trending projects...</p>
+        </div>
+
+        <!-- Recently Added -->
+        <div class="section-title">
+          <span>Recently Added</span>
+          <a href="/search.html" class="section-link">View All</a>
+        </div>
+        <div class="horizontal-scroll" id="recently-added-list" style="margin-bottom: 20px;">
+          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading recently added...</p>
+        </div>
+
+        <!-- Luxury Collection -->
+        <div class="section-title">
+          <span>Luxury Collection</span>
+          <a href="/search.html" class="section-link">View All</a>
+        </div>
+        <div class="horizontal-scroll" id="luxury-collection-list" style="margin-bottom: 20px;">
+          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading luxury collection...</p>
+        </div>
+
+        <!-- Nearby Properties -->
+        <div class="section-title">
+          <span>Nearby Properties (GPS)</span>
+          <a href="/search.html?gps=1" class="section-link">View All</a>
+        </div>
+        <div class="horizontal-scroll" id="nearby-properties-list" style="margin-bottom: 20px;">
+          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Allow GPS location to see nearby listings.</p>
+        </div>
+
+        <!-- Verified Builders -->
+        <div class="section-title">
+          <span>Verified Builders</span>
+        </div>
+        <div class="horizontal-scroll" id="verified-builders-list" style="margin-bottom: 20px; gap: 16px;">
+          <!-- Loaded dynamically -->
+        </div>
+
+        <!-- Top Cities -->
+        <div class="section-title">
+          <span>Top Cities</span>
+        </div>
+        <div class="horizontal-scroll" id="top-cities-list" style="margin-bottom: 20px; gap: 12px; padding: 4px 0;">
+          <!-- Lucknow, Delhi, Noida, Gurgaon, Jaipur, Pune, Hyderabad, Mumbai, Bangalore, Ahmedabad -->
+        </div>
+
+        <!-- Continue Browsing / Recently Viewed -->
+        <div class="section-title" id="continue-browsing-section" style="display:none;">
+          <span>Continue Browsing / Recently Viewed</span>
+        </div>
+        <div class="horizontal-scroll" id="continue-browsing-list" style="margin-bottom: 20px; display:none;">
+          <!-- Loaded dynamically -->
+        </div>
+
+        <!-- Popular Searches -->
+        <div class="section-title">
+          <span>Popular Searches</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;" id="popular-searches-list">
+          <a href="/search.html?city=Mumbai" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Villas in Mumbai</a>
+          <a href="/search.html?city=Hyderabad" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Apartments in Hyderabad</a>
+          <a href="/search.html?city=Gurgaon" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Commercial in Gurgaon</a>
+          <a href="/search.html?city=Bangalore" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">PGs in Bangalore</a>
+          <a href="/search.html?city=Jaipur" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Plots in Jaipur</a>
+        </div>
+
+        <!-- Services Marketplace -->
+        <div class="section-title">
+          <span>Home Services</span>
+          <a href="/marketplace.html" class="section-link">Explore Services</a>
+        </div>
+        <div class="services-grid" id="services-summary-list" style="margin-bottom: 20px;">
+          <!-- Seeder services filled from API -->
+        </div>
+
+        <!-- Latest Blogs & Property News -->
+        <div class="section-title">
+          <span>Latest Blogs & Property News</span>
+          <a href="/blogs.html" class="section-link">Read Blogs</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;" id="blogs-summary-list">
+          <!-- Blog posts summary list -->
+        </div>
+
+        <!-- Desktop Dashboard Widgets (Row Layout at Bottom) -->
+        <div class="desktop-only" style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 24px;">
+          <!-- Saved Properties widget -->
+          <div class="desktop-panel-section" style="margin-bottom: 0;">
+            <h4 class="desktop-panel-title"><i data-lucide="heart" style="color:var(--primary-red);"></i> Saved Properties</h4>
+            <div id="desktop-saved-properties-widget" style="display:flex; flex-direction:column; gap:12px;">
+              <p style="font-size:11px; color:var(--text-muted);">Loading saved properties...</p>
+            </div>
+          </div>
+
+          <!-- Recently Viewed widget -->
+          <div class="desktop-panel-section" style="margin-bottom: 0;">
+            <h4 class="desktop-panel-title"><i data-lucide="clock"></i> Recently Viewed</h4>
+            <div id="desktop-recently-viewed-widget" style="display:flex; flex-direction:column; gap:12px;">
+              <p style="font-size:11px; color:var(--text-muted);">No recently viewed properties.</p>
+            </div>
+          </div>
+
+          <!-- Quick EMI Calculator widget -->
+          <div class="desktop-panel-section" style="margin-bottom: 0;">
+            <h4 class="desktop-panel-title"><i data-lucide="calculator"></i> Home Loan EMI Calculator</h4>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:13px;">
+              <div>
+                <label style="font-weight:600; display:block; margin-bottom:4px;">Amount (₹)</label>
+                <input type="number" id="calc-amount" class="form-input" value="5000000" style="padding:8px; border:1px solid var(--border-color); border-radius:8px; width:100%;">
+              </div>
+              <div style="display:flex; gap:8px;">
+                <div style="flex:1;">
+                  <label style="font-weight:600; display:block; margin-bottom:4px;">Rate (%)</label>
+                  <input type="number" id="calc-rate" class="form-input" value="8.5" step="0.1" style="padding:8px; border:1px solid var(--border-color); border-radius:8px; width:100%;">
+                </div>
+                <div style="flex:1;">
+                  <label style="font-weight:600; display:block; margin-bottom:4px;">Tenure (Yrs)</label>
+                  <input type="number" id="calc-tenure" class="form-input" value="20" style="padding:8px; border:1px solid var(--border-color); border-radius:8px; width:100%;">
+                </div>
+              </div>
+              <button class="btn-primary" onclick="runDesktopEMICalculator()" style="padding:8px; border-radius:8px; font-weight:700; margin-top:8px; border:none; color:white; cursor:pointer;">Calculate</button>
+              <div id="calc-result" style="font-weight:700; color:var(--primary-red); margin-top:4px; text-align:center; display:none;">
+                Monthly EMI: ₹<span id="calc-emi-value">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Developer Credit & Web Services Section (Roitsa Web) -->
+        <div class="developer-services-section" style="background: #ffffff; border-radius: 16px; padding: 24px; margin-top: 32px; margin-bottom: 24px; border: 1px solid var(--border-color); color: var(--text-dark); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; font-family: 'Outfit', sans-serif; box-sizing: border-box; box-shadow: var(--soft-shadow);">
+          <div style="display: flex; align-items: center; gap: 16px; min-width: 280px; flex: 1;">
+            <!-- Icon -->
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #fff; flex-shrink: 0; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);">
+              &lt;/&gt;
+            </div>
+            <!-- Text Content -->
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #b45309; letter-spacing: 1px; text-transform: uppercase;">Built By</div>
+              <h3 style="font-size: 18px; font-weight: 700; margin: 4px 0 8px 0; color: var(--text-dark);">Website development services by Roitsa Web</h3>
+              
+              <!-- Contact Details -->
+              <div style="display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: 13px;">
+                <a href="mailto:rohitcreation12345@gmail.com" style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                  <i data-lucide="mail" style="width: 14px; height: 14px; color: #3b82f6;"></i>
+                  <span>rohitcreation12345@gmail.com</span>
+                </a>
+                <a href="https://wa.me/919580118852" target="_blank" style="color: #16a34a; text-decoration: none; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: opacity 0.2s;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16" style="flex-shrink: 0; width: 14px; height: 14px; display: inline-block; vertical-align: middle; color: #25d366;">
+                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.949h.004c4.368 0 7.927-3.558 7.93-7.93a7.896 7.896 0 0 0-2.322-5.59L13.601 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-3.146c-.198-.099-1.17-.578-1.353-.646-.183-.068-.317-.099-.45.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.45-1.076-.615-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                  </svg>
+                  <span>+91 9580118852</span>
+                </a>
+                <a href="https://roitsa.in" target="_blank" style="color: #b45309; text-decoration: none; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: color 0.2s;">
+                  <i data-lucide="globe" style="width: 14px; height: 14px; color: #b45309;"></i>
+                  <span>roitsa.in</span>
+                </a>
+                <a href="https://instagram.com/roitsa.web" target="_blank" style="color: #db2777; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s;">
+                  <i data-lucide="instagram" style="width: 14px; height: 14px; color: #db2777;"></i>
+                  <span>@roitsa.web</span>
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- CTA Action -->
+          <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+            <a href="https://wa.me/919580118852" target="_blank" class="btn-primary" style="background: #25D366; color: #fff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 13px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); transition: transform 0.2s, opacity 0.2s;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16" style="flex-shrink: 0; width: 16px; height: 16px; display: inline-block; vertical-align: middle;">
+                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.949h.004c4.368 0 7.927-3.558 7.93-7.93a7.896 7.896 0 0 0-2.322-5.59L13.601 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.69-3.146c-.198-.099-1.17-.578-1.353-.646-.183-.068-.317-.099-.45.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.45-1.076-.615-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+              </svg>
+              <span>Chat on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+
+
+    </div>
+
+    <!-- Sticky Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html" class="nav-item active">
+        <i class="bx bxs-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="/search.html" class="nav-item">
+        <i class="bx bx-search-alt-2"></i>
+        <span>Explore</span>
+      </a>
+      <div class="nav-item-center" id="center-add-btn">
+        <i class="bx bx-plus"></i>
+      </div>
+      <a href="/search.html?gps=1" class="nav-item">
+        <i class="bx bx-compass"></i>
+        <span>Nearby</span>
+      </a>
+      <a href="/profile.html" class="nav-item">
+        <i class="bx bx-user-circle"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+    <!-- Drawer Left Menu -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="drawer" id="drawer" style="background:#121212; color:white;">
+      <div class="drawer-header" style="background:#121212; color:white; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:16px; display:flex; flex-direction:column; gap:12px;">
+        <div class="drawer-logo-container" style="display:flex; align-items:center; gap:12px;">
+          <div class="drawer-logo-img" style="background:var(--gradient-btn); color:white; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;">A²</div>
+          <div>
+            <h2 style="font-size:16px; font-weight:800; color:white; margin:0;">A Square Properties</h2>
+            <p style="font-size:10px; opacity:0.8; color:rgba(255,255,255,0.6); margin:0;">Owner: Manoj Soni</p>
+          </div>
+        </div>
+        <div class="drawer-profile-info" id="drawer-profile-info" style="background:rgba(255,255,255,0.04); padding:10px; border-radius:8px; width:100%; box-sizing:border-box;">
+          <h3 style="color:white; font-size:13px; font-weight:700; margin:0;">Guest User</h3>
+          <p style="color:rgba(255,255,255,0.6); font-size:10px; margin:2px 0 0 0;">Login to list properties</p>
+        </div>
+      </div>
+      <div class="drawer-menu" style="display:flex; flex-direction:column; gap:4px; padding-top:12px;">
+        <a href="/index.html" class="drawer-item" style="color:rgba(255,255,255,0.8); display:flex; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-home" style="font-size:20px;"></i> Dashboard</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+        <a href="/search.html" class="drawer-item" style="color:rgba(255,255,255,0.8); display:flex; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-search" style="font-size:20px;"></i> Explore Properties</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+        <a href="/post.html" class="drawer-item" style="color:rgba(255,255,255,0.8); display:flex; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-plus-circle" style="font-size:20px;"></i> Post Property</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+        <a href="/reels.html" class="drawer-item" style="color:rgba(255,255,255,0.8); display:flex; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-video" style="font-size:20px;"></i> Property Reels</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+        <a href="/marketplace.html" class="drawer-item" style="color:rgba(255,255,255,0.8); display:flex; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-wrench" style="font-size:20px;"></i> Home Services</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+        <a href="/blogs.html" class="drawer-item" style="color:rgba(255,255,255,0.8); display:flex; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-book-open" style="font-size:20px;"></i> Blogs & Guides</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+        <a href="/profile.html" class="drawer-item" style="color:rgba(255,255,255,0.8); display:flex; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-user" style="font-size:20px;"></i> My Profile</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+        
+        <!-- Admin link in drawer (hidden by default) -->
+        <a href="/admin.html" class="drawer-item" id="drawer-admin-link" style="color:#FF6A00; display:none; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600; color:#FF6A00;"><i class="bx bx-shield" style="font-size:20px; color:#FF6A00;"></i> Admin Panel</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+
+        <div style="height:1px; background:rgba(255,255,255,0.08); margin:8px 16px;"></div>
+        
+        <a href="#" class="drawer-item" id="drawer-logout" style="color:var(--primary-red); display:none; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px;">
+          <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600; color:var(--primary-red);"><i class="bx bx-log-out" style="font-size:20px; color:var(--primary-red);"></i> Log Out</div>
+          <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Create New Floating Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+      <div class="bottom-sheet-handle"></div>
+      <div class="bottom-sheet-header">
+        <h2>Create New</h2>
+        <button class="bottom-sheet-close" id="sheet-close"><i class="bx bx-x"></i></button>
+      </div>
+      <a href="/post.html" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-building-house"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Property</h3>
+          <p>List a new property for sale, rent, or lease</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+      <a href="/reels.html?action=upload" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-video-plus"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Reel</h3>
+          <p>Create and share a short vertical property video</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+    </div>
+
+  </div>
+
+  <script src="/js/main.js?v=99"></script>
+  <script>
+    // Initialize homepage slide show
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('#hero-slider .slide');
+    if (slides.length > 0) {
+      setInterval(() => {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].classList.add('active');
+      }, 4000); // 4 seconds transition
+    }
+
+    // Greet user dynamically
+    const loggedUser = localStorage.getItem('user');
+    if (loggedUser) {
+      const u = JSON.parse(loggedUser);
+      document.getElementById('greeting-text').innerText = `Hello, ${u.name}!`;
+    }
+
+    const propertyImages = [
+      'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80'
+    ];
+
+    // Shimmer placeholder HTML
+    function shimmerPlaceholder() {
+      return Array(3).fill(`<div style="height:280px; min-width:240px; border-radius:12px; background:linear-gradient(90deg,#ececec 25%,#f5f5f5 50%,#ececec 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; margin-right:12px; flex-shrink:0;"></div>`).join('');
+    }
+
+    // Fetch a specific section from the server (paginated)
+    async function fetchSection(params, limit = 8) {
+      const qs = new URLSearchParams({ ...params, limit }).toString();
+      return apiRequest(`/api/properties?${qs}`);
+    }
+
+    // Render property cards into a horizontal scroll container with a View More link
+    function renderPropertyList(props, containerId, viewMoreUrl) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!props || props.length === 0) {
+        container.innerHTML = `<p style="font-size:12px; color:var(--text-muted); padding:16px;">No properties found in this section.</p>`;
+        return;
+      }
+
+      props.forEach(p => {
+        const card = document.createElement('a');
+        card.href = `/details.html?id=${p.id}`;
+        card.className = 'property-card';
+        card.innerHTML = `
+          <div class="property-card-img-wrapper">
+            <img class="property-card-img" src="${p.cover_image || propertyImages[p.id % propertyImages.length]}" alt="${p.title}" loading="lazy">
+            ${p.is_featured ? '<div class="verified-badge"><i data-lucide="star"></i> Featured</div>' : (p.is_verified ? '<div class="verified-badge"><i data-lucide="check-circle"></i> Verified</div>' : '')}
+            <button class="favorite-btn" onclick="event.preventDefault(); toggleFavorite(${p.id}, this)"><i data-lucide="heart"></i></button>
+            <div class="price-tag">₹${formatPrice(p.price)}</div>
+          </div>
+          <div class="property-card-details">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:10px; color:var(--secondary-orange); font-weight:700; text-transform:uppercase;">${p.listing_type}</span>
+              <span style="font-size:10px; color:var(--text-muted);">${p.category}</span>
+            </div>
+            <h4 style="font-size:13px; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</h4>
+            <div class="property-card-location"><i data-lucide="map-pin"></i> ${p.city}</div>
+            <div class="property-card-specs">
+              <span><i data-lucide="bed"></i> ${p.bedrooms} BHK</span>
+              <span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // "View More" button
+      if (viewMoreUrl) {
+        const viewMore = document.createElement('a');
+        viewMore.href = viewMoreUrl;
+        viewMore.className = 'property-card';
+        viewMore.style.cssText = 'min-width:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--accent-gray); border:2px dashed var(--border-color); text-decoration:none; color:var(--primary-red); gap:8px; flex-shrink:0;';
+        viewMore.innerHTML = `<i data-lucide="arrow-right" style="width:28px;height:28px;"></i><span style="font-size:12px; font-weight:700;">View More</span>`;
+        container.appendChild(viewMore);
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // Load all homepage sections independently (each fetches its own data)
+    async function loadProperties() {
+      const lists = ['featured-properties-list', 'trending-projects-list', 'recently-added-list', 'luxury-collection-list', 'nearby-properties-list'];
+      lists.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = shimmerPlaceholder();
+      });
+
+      // 1. Featured Properties (is_featured=1)
+      try {
+        const r = await fetchSection({ is_featured: 1, sort: 'featured' }, 8);
+        const featured = r.data || [];
+        renderPropertyList(featured, 'featured-properties-list', '/search.html?is_featured=1');
+      } catch(e) { console.warn('Featured failed:', e.message); }
+
+      // 2. Trending (sort by newest, skip first 8)
+      try {
+        const r = await fetchSection({ sort: 'newest', page: 2 }, 8);
+        renderPropertyList(r.data || [], 'trending-projects-list', '/search.html?sort=newest');
+      } catch(e) { console.warn('Trending failed:', e.message); }
+
+      // 3. Recently Added (page 1, newest)
+      try {
+        const r = await fetchSection({ sort: 'newest' }, 8);
+        renderPropertyList(r.data || [], 'recently-added-list', '/search.html?sort=newest');
+      } catch(e) { console.warn('Recent failed:', e.message); }
+
+      // 4. Luxury Collection (price >= 1.5 Cr)
+      try {
+        const r = await fetchSection({ minPrice: 15000000, sort: 'price_high' }, 8);
+        renderPropertyList(r.data || [], 'luxury-collection-list', '/search.html?minPrice=15000000');
+      } catch(e) { console.warn('Luxury failed:', e.message); }
+
+      // 5. Nearby Properties (GPS)
+      try {
+        const r = await fetchSection({ sort: 'newest', page: 3 }, 8);
+        renderPropertyList(r.data || [], 'nearby-properties-list', '/search.html');
+      } catch(e) { console.warn('Nearby failed:', e.message); }
+
+      // 6. Top Cities (just use first 8 from newest)
+      try {
+        const r = await fetchSection({ sort: 'newest' }, 50);
+        renderTopCities(r.data || []);
+        renderContinueBrowsing(r.data || []);
+        loadVerifiedBuilders();
+      } catch(e) { console.warn('Cities failed:', e.message); }
+    }
+
+
+    function renderTopCities(allProps) {
+      const container = document.getElementById('top-cities-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const cityList = ['Lucknow', 'Delhi', 'Noida', 'Gurgaon', 'Jaipur', 'Pune', 'Hyderabad', 'Mumbai', 'Bangalore', 'Ahmedabad'];
+
+      cityList.forEach(city => {
+        const count = allProps.filter(p => p.city.toLowerCase() === city.toLowerCase()).length;
+        const pill = document.createElement('a');
+        pill.href = `/search.html?city=${city}`;
+        pill.className = 'category-pill';
+        pill.style.textDecoration = 'none';
+        pill.style.border = '1px solid var(--border-color)';
+        pill.style.background = '#FFFFFF';
+        pill.innerHTML = `<strong>${city}</strong> <span style="font-size:10px; color:var(--text-muted); margin-left:4px;">(${count})</span>`;
+        container.appendChild(pill);
+      });
+    }
+
+    async function loadVerifiedBuilders() {
+      const container = document.getElementById('verified-builders-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const builderList = [
+        { name: 'DLF Group', logo: 'D' },
+        { name: 'Lodha Developers', logo: 'L' },
+        { name: 'Godrej Properties', logo: 'G' },
+        { name: 'Prestige Group', logo: 'P' },
+        { name: 'Tata Housing', logo: 'T' }
+      ];
+
+      builderList.forEach(b => {
+        const wrapper = document.createElement('a');
+        wrapper.href = `/search.html?builder=${b.name}`;
+        wrapper.style.display = 'flex';
+        wrapper.style.flexDirection = 'column';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.textDecoration = 'none';
+        wrapper.style.color = 'var(--text-dark)';
+        wrapper.style.gap = '6px';
+        wrapper.style.minWidth = '80px';
+        wrapper.innerHTML = `
+          <div style="width:50px; height:50px; border-radius:50%; background:#111111; color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;">${b.logo}</div>
+          <span style="font-size:10px; font-weight:600; text-align:center;">${b.name}</span>
+        `;
+        container.appendChild(wrapper);
+      });
+    }
+
+    function renderContinueBrowsing(allProps) {
+      const recentIds = JSON.parse(localStorage.getItem('recently_viewed_ids') || '[]');
+      const container = document.getElementById('continue-browsing-list');
+      const section = document.getElementById('continue-browsing-section');
+      
+      if (!container || !section || recentIds.length === 0) return;
+
+      section.style.display = 'block';
+      container.style.display = 'flex';
+      container.innerHTML = '';
+
+      const recentProps = allProps.filter(p => recentIds.includes(p.id));
+      renderPropertyList(recentProps, 'continue-browsing-list');
+    }
+
+    // Toggle saved favorites
+    async function toggleFavorite(pid, btn) {
+      if (!localStorage.getItem('token')) {
+        return alert('Please login to save properties.');
+      }
+      try {
+        const result = await apiRequest(`/api/properties/${pid}/save`, 'POST');
+        if (result.success) {
+          const icon = btn.querySelector('i');
+          if (result.saved) {
+            btn.classList.add('active');
+            icon.className = 'bx bxs-heart';
+            alert('Property saved!');
+          } else {
+            btn.classList.remove('active');
+            icon.className = 'bx bx-heart';
+            alert('Property removed.');
+          }
+        }
+      } catch(err) {
+        alert(err.message);
+      }
+    }
+
+    // Format currency price nicely (e.g. 1.5 Cr or 85 L)
+    function formatPrice(num) {
+      const n = parseFloat(num);
+      if (!num || isNaN(n)) return 'N/A';
+      if (n >= 10000000) return (n / 10000000).toFixed(1) + ' Cr';
+      if (n >= 100000)   return (n / 100000).toFixed(1) + ' L';
+      return n.toString();
+    }
+
+    // Category filter route
+    function filterCategory(cat, pill) {
+      document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      window.location.href = `/search.html?category=${cat}`;
+    }
+
+    // Load Services summary
+    async function loadServices() {
+      try {
+        const result = await apiRequest('/api/services');
+        if (result.success && result.data.length > 0) {
+          const grid = document.getElementById('services-summary-list');
+          grid.innerHTML = '';
+          // Show top 4
+          result.data.slice(0, 4).forEach(s => {
+            let icon = 'bx-wrench';
+            if (s.category === 'painter') icon = 'bx-paint';
+            if (s.category === 'electrician') icon = 'bx-bolt';
+            if (s.category === 'packers') icon = 'bx-package';
+            if (s.category === 'cleaning') icon = 'bx-brush';
+
+            const card = document.createElement('a');
+            card.href = '/marketplace.html';
+            card.className = 'service-card';
+            card.innerHTML = `
+              <div class="service-card-icon"><i class="bx ${icon}"></i></div>
+              <h4>${s.name}</h4>
+              <p>${s.category.toUpperCase()} • ${s.ratings}★</p>
+            `;
+            grid.appendChild(card);
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Load Blogs summary
+    async function loadBlogs() {
+      try {
+        const result = await apiRequest('/api/blogs');
+        if (result.success && result.data.length > 0) {
+          const container = document.getElementById('blogs-summary-list');
+          container.innerHTML = '';
+          result.data.slice(0, 2).forEach(b => {
+            const wrapper = document.createElement('a');
+            wrapper.href = `/blogs.html?slug=${b.slug}`;
+            wrapper.style.display = 'flex';
+            wrapper.style.gap = '12px';
+            wrapper.style.textDecoration = 'none';
+            wrapper.style.color = 'var(--text-dark)';
+            wrapper.style.background = 'var(--accent-gray)';
+            wrapper.style.padding = '10px';
+            wrapper.style.borderRadius = '12px';
+            wrapper.innerHTML = `
+              <img src="${b.image_url}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&amp;fit=crop&amp;w=600&amp;q=80';" style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover;">
+              <div style="display:flex; flex-direction:column; justify-content:center;">
+                <h4 style="font-size:13px; font-weight:700;">${b.title}</h4>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Category: ${b.category} • Author: ${b.author_name}</p>
+              </div>
+            `;
+            container.appendChild(wrapper);
+          });
+        }
+      } catch(err) {
+        console.error(err);
+      }
+    }
+
+    // GPS Trigger Search
+    document.getElementById('home-gps-btn').addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          window.location.href = `/search.html?lat=${position.coords.latitude}&lng=${position.coords.longitude}&radius=5`;
+        }, () => {
+          alert('GPS access denied. Falling back to default search.');
+          window.location.href = '/search.html';
+        });
+      } else {
+        alert('Geolocation not supported in browser.');
+      }
+    });
+
+    // Enter Search trigger
+    document.getElementById('home-search-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const query = e.target.value;
+        window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
+      }
+    });
+
+    // Load desktop widgets
+    function loadDesktopWidgets() {
+      if (window.innerWidth <= 768) return;
+
+      // Recently Viewed
+      const rv = localStorage.getItem('recently_viewed');
+      const rvWidget = document.getElementById('desktop-recently-viewed-widget');
+      if (rvWidget) {
+        const items = rv ? JSON.parse(rv) : [];
+        if (items.length > 0) {
+          rvWidget.innerHTML = items.map(p => `
+            <a href="/details.html?id=${p.id}" style="display:flex; gap:10px; text-decoration:none; color:inherit;">
+              <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=100&q=80'}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
+              <div>
+                <h5 style="font-size:12px; font-weight:700;">${p.title}</h5>
+                <p style="font-size:11px; color:var(--primary-red);">₹${formatPrice(p.price)} • ${p.city}</p>
+              </div>
+            </a>
+          `).join('');
+        } else {
+          rvWidget.innerHTML = `<p style="font-size:11px; color:var(--text-muted);">No recently viewed properties.</p>`;
+        }
+      }
+
+      // Saved Properties from window.authProfileData cache
+      const savedWidget = document.getElementById('desktop-saved-properties-widget');
+      if (savedWidget) {
+        if (!user) {
+          savedWidget.innerHTML = `<p style="font-size:11px; color:var(--text-muted);"><a href="/login.html" style="color:var(--primary-red); text-decoration:none; font-weight:600;">Sign in</a> to view saved items.</p>`;
+          return;
+        }
+
+        const savedList = (window.authProfileData && window.authProfileData.saved) ? window.authProfileData.saved : [];
+        if (savedList.length > 0) {
+          savedWidget.innerHTML = savedList.slice(0, 3).map(p => `
+            <a href="/details.html?id=${p.id}" style="display:flex; gap:10px; text-decoration:none; color:inherit;">
+              <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=100&q=80'}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
+              <div>
+                <h5 style="font-size:12px; font-weight:700;">${p.title}</h5>
+                <p style="font-size:11px; color:var(--primary-red);">₹${formatPrice(p.price)} • ${p.city}</p>
+              </div>
+            </a>
+          `).join('');
+        } else {
+          savedWidget.innerHTML = `<p style="font-size:11px; color:var(--text-muted);">No saved properties yet.</p>`;
+        }
+      }
+    };
+
+    // EMI Calculator
+    window.runDesktopEMICalculator = function() {
+      const p = parseFloat(document.getElementById('calc-amount').value);
+      const r = parseFloat(document.getElementById('calc-rate').value);
+      const y = parseFloat(document.getElementById('calc-tenure').value);
+      
+      if (p && r && y) {
+        const emi = calculateEMI(p, r, y * 12);
+        document.getElementById('calc-emi-value').innerText = emi.toLocaleString('en-IN');
+        document.getElementById('calc-result').style.display = 'block';
+      }
+    };
+
+    // Setup callback to run AFTER auth has resolved and synchronized
+    window.onAppReady = function(user) {
+      loadProperties();
+      loadServices();
+      loadBlogs();
+      loadDesktopWidgets(user);
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Post Property - A Square Properties</title>
+  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <!-- Leaflet CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    .wizard-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .form-step-container {
+      display: none;
+    }
+    .form-step-container.active {
+      display: block;
+    }
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .tile-option {
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-dark);
+      background: var(--accent-gray);
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .tile-option.active {
+      border-color: var(--primary-red);
+      background: rgba(139, 0, 0, 0.04);
+      color: var(--primary-red);
+    }
+    .tile-option i {
+      font-size: 20px;
+    }
+    #picker-map {
+      height: 180px;
+      border-radius: 12px;
+      margin-top: 12px;
+      border: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
+      <div class="logo" style="font-size:18px;">Post Property</div>
+      <div style="width:38px;"></div>
+    </header>
+
+    <div class="app-content">
+      
+      <!-- Left Column (Wizard Form) -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Progress Bar Indicators -->
+        <div class="post-steps">
+          <div class="post-step active" id="step-1-indicator">
+            <div class="post-step-dot">1</div>
+            <span>Basic</span>
+          </div>
+          <div class="post-step" id="step-2-indicator">
+            <div class="post-step-dot">2</div>
+            <span>Location</span>
+          </div>
+          <div class="post-step" id="step-3-indicator">
+            <div class="post-step-dot">3</div>
+            <span>Details</span>
+          </div>
+          <div class="post-step" id="step-4-indicator">
+            <div class="post-step-dot">4</div>
+            <span>Final</span>
+          </div>
+        </div>
+
+        <!-- Multi-step Form content container -->
+        <form class="wizard-form" id="posting-wizard-form" onsubmit="return false;">
+          
+          <!-- STEP 1: Basic Details -->
+          <div class="form-step-container active" id="step-1-form">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">BASIC DETAILS</h3>
+            
+            <div class="form-group">
+              <label class="form-label">Property Title</label>
+              <input type="text" id="post-title" class="form-input" placeholder="e.g. Modern 3 BHK Apartment in Jubilee Hills" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Transaction Option</label>
+              <select id="post-listing-type" class="form-input">
+                <option value="sale">For Sale</option>
+                <option value="rent">For Rent</option>
+                <option value="lease">For Lease</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Property Category</label>
+              <select id="post-category" class="form-input">
+                <option value="apartment">Apartment</option>
+                <option value="villa">Villa</option>
+                <option value="pg">PG / Co-living</option>
+                <option value="commercial">Commercial Space</option>
+                <option value="plot">Plot / Land</option>
+                <option value="farmhouse">Farm House</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Property Type</label>
+              <select id="post-category-type" class="form-input">
+                <option value="new">New Construction</option>
+                <option value="resale">Resale</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Expected Price (₹)</label>
+              <input type="number" id="post-price" class="form-input" placeholder="e.g. 8500000" required>
+            </div>
+
+            <button type="button" class="btn-primary" style="margin-top:20px; border:none; cursor:pointer;" onclick="goToStep(2)">Continue</button>
+          </div>
+
+          <!-- STEP 2: Location Details -->
+          <div class="form-step-container" id="step-2-form">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">LOCATION</h3>
+
+            <div class="form-group">
+              <label class="form-label">Property Address</label>
+              <input type="text" id="post-address" class="form-input" placeholder="e.g. Flat 302, Skyline Towers" required>
+            </div>
+            
+            <div style="display:flex; gap:12px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">City</label>
+                <input type="text" id="post-city" class="form-input" placeholder="e.g. Hyderabad" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">State</label>
+                <input type="text" id="post-state" class="form-input" placeholder="e.g. Telangana" required>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Pincode</label>
+                <input type="text" id="post-pincode" class="form-input" placeholder="500033" required>
+              </div>
+              <div style="flex:1;"></div>
+            </div>
+
+            <!-- Coordinates picker map helper -->
+            <label class="form-label" style="margin-top:12px; display:block;">Pin Location on Map (Drag marker to adjust)</label>
+            <div id="picker-map"></div>
+            <input type="hidden" id="post-lat" value="17.432">
+            <input type="hidden" id="post-lng" value="78.402">
+
+            <div style="display:flex; gap:12px; margin-top:24px;">
+              <button type="button" class="btn-secondary" style="flex:1; border:1px solid var(--border-color); border-radius:8px; cursor:pointer;" onclick="goToStep(1)">Back</button>
+              <button type="button" class="btn-primary" style="flex:2; border:none; color:white; cursor:pointer;" onclick="goToStep(3)">Continue</button>
+            </div>
+          </div>
+
+          <!-- STEP 3: Highlights & Specs -->
+          <div class="form-step-container" id="step-3-form">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">SPECIFICATIONS</h3>
+
+            <div style="display:flex; gap:12px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Bedrooms (BHK)</label>
+                <input type="number" id="post-beds" class="form-input" value="2" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Bathrooms</label>
+                <input type="number" id="post-baths" class="form-input" value="2" required>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Super Area (Sq.Ft)</label>
+                <input type="number" id="post-area" class="form-input" placeholder="e.g. 1450" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Facing Direction</label>
+                <select id="post-facing" class="form-input">
+                  <option value="East">East Facing</option>
+                  <option value="West">West Facing</option>
+                  <option value="North">North Facing</option>
+                  <option value="South">South Facing</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Floor Number</label>
+                <input type="number" id="post-floor" class="form-input" value="3" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Parking Spaces</label>
+                <input type="number" id="post-parking" class="form-input" value="1" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Furnishing Status</label>
+              <select id="post-furnish" class="form-input">
+                <option value="unfurnished">Unfurnished</option>
+                <option value="semi">Semi Furnished</option>
+                <option value="fully">Fully Furnished</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Detailed Description</label>
+              <textarea id="post-description" class="form-input" rows="4" placeholder="Mention near landmarks, local schools, special facilities, facing direction..." required></textarea>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-top:24px;">
+              <button type="button" class="btn-secondary" style="flex:1; border:1px solid var(--border-color); border-radius:8px; cursor:pointer;" onclick="goToStep(2)">Back</button>
+              <button type="button" class="btn-primary" style="flex:2; border:none; color:white; cursor:pointer;" onclick="goToStep(4)">Continue</button>
+            </div>
+          </div>
+
+          <!-- STEP 4: Media uploads -->
+          <div class="form-step-container" id="step-4-form">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">UPLOAD MEDIA</h3>
+
+            <div class="form-group">
+              <label class="form-label">Upload Property Images (Max 5)</label>
+              <input type="file" id="post-media-files" class="form-input" accept="image/*" multiple required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Upload Property Tour Video (Optional)</label>
+              <input type="file" id="post-video-file" class="form-input" accept="video/mp4">
+            </div>
+
+            <div style="display:flex; gap:12px; margin-top:32px;">
+              <button type="button" class="btn-secondary" style="flex:1; border:1px solid var(--border-color); border-radius:8px; cursor:pointer;" onclick="goToStep(3)">Back</button>
+              <button type="button" class="btn-primary" style="flex:2; border:none; color:white; cursor:pointer;" onclick="handlePublishProperty()">Publish Listing</button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Right Column (Posting tips sidebar widget) -->
+      <div class="desktop-right-panel desktop-only" style="padding-top:0;">
+        <div class="desktop-panel-section">
+          <h4 class="desktop-panel-title"><i data-lucide="info"></i> Quick Posting Tips</h4>
+          <ul style="margin-top:12px; font-size:12px; line-height:1.6; display:flex; flex-direction:column; gap:10px; padding-left:14px; color:var(--text-dark);">
+            <li><strong>Photos count:</strong> Listings with high-quality photos get up to 3x more views.</li>
+            <li><strong>Pricing:</strong> Try to set prices realistic to the area average to attract serious enquiries.</li>
+            <li><strong>Descriptions:</strong> Include details about local amenities, schools, and transport accessibility.</li>
+            <li><strong>Verification:</strong> Ensure you have the RERA registration number handy if required.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/main.js?v=99"></script>
+  <script>
+    let currentWizardStep = 1;
+    let leafMap = null;
+    let leafMarker = null;
+
+    // Check authentic status first
+    if (!localStorage.getItem('token')) {
+      alert('Login is required before posting a property.');
+      window.location.href = '/login.html';
+    }
+
+    function goToStep(step) {
+      if (step === 2 && currentWizardStep === 1) {
+        setTimeout(initPostMap, 200);
+      }
+
+      document.getElementById(`step-${currentWizardStep}-form`).classList.remove('active');
+      document.getElementById(`step-${currentWizardStep}-indicator`).classList.remove('active');
+      if (currentWizardStep < step) {
+        document.getElementById(`step-${currentWizardStep}-indicator`).classList.add('completed');
+      }
+
+      currentWizardStep = step;
+      document.getElementById(`step-${step}-form`).classList.add('active');
+      document.getElementById(`step-${step}-indicator`).classList.add('active');
+    }
+
+    function initPostMap() {
+      if (leafMap) return;
+      
+      const startLat = 17.432;
+      const startLng = 78.402;
+      
+      leafMap = L.map('picker-map').setView([startLat, startLng], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafMap);
+      
+      leafMarker = L.marker([startLat, startLng], { draggable: true }).addTo(leafMap);
+      
+      leafMarker.on('dragend', function() {
+        const pos = leafMarker.getLatLng();
+        document.getElementById('post-lat').value = pos.lat;
+        document.getElementById('post-lng').value = pos.lng;
+      });
+    }
+
+    async function handlePublishProperty() {
+      const imgInput = document.getElementById('post-media-files');
+      if (imgInput.files.length === 0) {
+        return alert('Please select at least 1 image to showcase your property.');
+      }
+
+      const formData = new FormData();
+      formData.append('title', document.getElementById('post-title').value);
+      formData.append('description', document.getElementById('post-description').value);
+      formData.append('category', document.getElementById('post-category').value);
+      formData.append('listing_type', document.getElementById('post-listing-type').value);
+      formData.append('category_type', document.getElementById('post-category-type').value);
+      formData.append('price', document.getElementById('post-price').value);
+      formData.append('area_sqft', document.getElementById('post-area').value);
+      formData.append('bedrooms', document.getElementById('post-beds').value);
+      formData.append('bathrooms', document.getElementById('post-baths').value);
+      formData.append('furnishing_status', document.getElementById('post-furnish').value);
+      formData.append('facing', document.getElementById('post-facing').value);
+      formData.append('floor_number', document.getElementById('post-floor').value);
+      formData.append('parking_spaces', document.getElementById('post-parking').value);
+      formData.append('address', document.getElementById('post-address').value);
+      formData.append('city', document.getElementById('post-city').value);
+      formData.append('state', document.getElementById('post-state').value);
+      formData.append('pincode', document.getElementById('post-pincode').value);
+      formData.append('latitude', document.getElementById('post-lat').value);
+      formData.append('longitude', document.getElementById('post-lng').value);
+
+      // Append images
+      for (let i = 0; i < imgInput.files.length; i++) {
+        formData.append('images', imgInput.files[i]);
+      }
+
+      // Append video
+      const vidInput = document.getElementById('post-video-file');
+      if (vidInput.files.length > 0) {
+        formData.append('video', vidInput.files[0]);
+      }
+
+      try {
+        const result = await apiRequest('/api/properties', 'POST', formData, true);
+        if (result.success) {
+          alert('Property published successfully!');
+          window.location.href = '/profile.html';
+        }
+      } catch (err) {
+        alert('Failed to publish listing: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Services Marketplace - A Square Properties</title>
+  <link rel="stylesheet" href="/css/style.css?v=99">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <style>
+    .service-listing-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--soft-shadow);
+    }
+    .service-row-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
+      <div class="logo" style="font-size:18px;">Home Services</div>
+      <div style="width:38px;"></div>
+    </header>
+
+    <div class="app-content">
+      
+      <!-- Left Column (Services List) -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Category scrolling pills -->
+        <div class="horizontal-scroll" style="margin-bottom: 8px; padding-bottom: 4px;">
+          <div class="category-pill active" onclick="loadServicesFiltered('all', this)">All</div>
+          <div class="category-pill" onclick="loadServicesFiltered('painter', this)">Painters</div>
+          <div class="category-pill" onclick="loadServicesFiltered('electrician', this)">Electricians</div>
+          <div class="category-pill" onclick="loadServicesFiltered('packers', this)">Packers & Movers</div>
+          <div class="category-pill" onclick="loadServicesFiltered('cleaning', this)">Deep Cleaners</div>
+          <div class="category-pill" onclick="loadServicesFiltered('gardening', this)">Gardeners</div>
+        </div>
+
+        <!-- Services Directory Container -->
+        <div style="display:flex; flex-direction:column;" id="services-results-list">
+          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading service providers...</p>
+        </div>
+      </div>
+
+      <!-- Right Column (Desktop Sidebar Widgets) -->
+      <div class="desktop-right-panel desktop-only" style="padding-top:0;">
+        <div class="desktop-panel-section">
+          <h4 class="desktop-panel-title"><i data-lucide="help-circle"></i> Service Assistance</h4>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Let us connect you with premium verified service providers directly.</p>
+          <form id="assist-form" onsubmit="handleAssistSubmit(event)" style="display:flex; flex-direction:column; gap:12px; font-size:13px;">
+            <div>
+              <label style="font-weight:600; display:block; margin-bottom:4px;">Service Type Required</label>
+              <select class="form-input" id="assist-type" style="padding:8px; width:100%; border:1px solid var(--border-color); border-radius:8px;">
+                <option value="painter">Painting Work</option>
+                <option value="electrician">Electrical Repairs</option>
+                <option value="packers">Packers & Movers</option>
+                <option value="cleaning">Cleaning Services</option>
+                <option value="gardening">Gardening</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-weight:600; display:block; margin-bottom:4px;">Your Location Area</label>
+              <input type="text" class="form-input" id="assist-loc" placeholder="e.g. Jubilee Hills, Hyderabad" required style="padding:8px; border:1px solid var(--border-color); border-radius:8px; width:100%;">
+            </div>
+            <div>
+              <label style="font-weight:600; display:block; margin-bottom:4px;">Phone Number</label>
+              <input type="tel" class="form-input" id="assist-phone" placeholder="e.g. 9919014220" required style="padding:8px; border:1px solid var(--border-color); border-radius:8px; width:100%;">
+            </div>
+            <button class="btn-primary" type="submit" style="padding:10px; border-radius:8px; font-weight:700; border:none; color:white; cursor:pointer; margin-top:8px;">Submit Request</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Sticky Bottom Navigation -->
+    <nav class="bottom-nav">
+      <a href="/index.html" class="nav-item">
+        <i class="bx bx-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="/search.html" class="nav-item">
+        <i class="bx bx-search-alt-2"></i>
+        <span>Explore</span>
+      </a>
+      <div class="nav-item-center" id="center-add-btn">
+        <i class="bx bx-plus"></i>
+      </div>
+      <a href="/search.html?gps=1" class="nav-item">
+        <i class="bx bx-compass"></i>
+        <span>Nearby</span>
+      </a>
+      <a href="/profile.html" class="nav-item">
+        <i class="bx bx-user-circle"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+    
+    <!-- Floating Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+      <div class="bottom-sheet-handle"></div>
+      <div class="bottom-sheet-header">
+        <h2>Create New</h2>
+        <button class="bottom-sheet-close" id="sheet-close"><i class="bx bx-x"></i></button>
+      </div>
+      <a href="/post.html" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-building-house"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Property</h3>
+          <p>List a new property for sale, rent, or lease</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+      <a href="/reels.html?action=upload" class="bottom-sheet-option">
+        <div class="bottom-sheet-option-icon"><i class="bx bx-video-plus"></i></div>
+        <div class="bottom-sheet-option-text">
+          <h3>Add Reel</h3>
+          <p>Create and share a short vertical property video</p>
+        </div>
+        <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
+    </div>
+
+  </div>
+
+  <script src="/js/main.js?v=99"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      loadServicesFiltered('all');
+    });
+
+    // Load directory from API
+    async function loadServicesFiltered(cat, pill = null) {
+      if (pill) {
+        document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+      }
+
+      const container = document.getElementById('services-results-list');
+      container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:32px;">Loading providers...</p>';
+
+      const url = cat === 'all' ? '/api/services' : `/api/services?category=${cat}`;
+
+      try {
+        const result = await apiRequest(url);
+        if (result.success) {
+          container.innerHTML = '';
+          if (result.data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:32px;">No service providers listed in this category.</p>';
+            return;
+          }
+
+          result.data.forEach(s => {
+            let icon = 'bx-wrench';
+            if (s.category === 'painter') icon = 'bx-paint';
+            if (s.category === 'electrician') icon = 'bx-bolt';
+            if (s.category === 'packers') icon = 'bx-package';
+            if (s.category === 'cleaning') icon = 'bx-brush';
+
+            const card = document.createElement('div');
+            card.className = 'service-listing-card';
+            card.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="display:flex; gap:12px;">
+                  <div class="service-card-icon" style="margin-bottom:0;"><i class="bx ${icon}"></i></div>
+                  <div>
+                    <h4 style="font-size:14px; font-weight:700;">${s.name}</h4>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Category: ${s.category.toUpperCase()} • ${s.experience_years} Years Exp</p>
+                  </div>
+                </div>
+                <span style="background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:11px; font-weight:700; padding:2px 6px; border-radius:6px;">${s.ratings}★ (${s.reviews_count})</span>
+              </div>
+              <p style="font-size:12px; color:var(--text-dark); line-height:1.5;">${s.description}</p>
+              
+              <!-- Direct Actions -->
+              <div class="service-row-actions">
+                <a href="tel:${s.contact_number}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;"><i class="bx bx-phone"></i> Call Now</a>
+                <a href="https://wa.me/${s.contact_number.replace('+', '')}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;" target="_blank"><i class="bx bxl-whatsapp"></i> Chat WhatsApp</a>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        }
+      } catch (err) {
+        container.innerHTML = `<p style="color:var(--primary-red); text-align:center;">Error: ${err.message}</p>`;
+    }
+
+    async function handleAssistSubmit(e) {
+      e.preventDefault();
+      const type = document.getElementById('assist-type').value;
+      const location = document.getElementById('assist-loc').value;
+      const phone = document.getElementById('assist-phone').value;
+
+      try {
+        alert(`Request submitted successfully! We have notified premium verified ${type}s around ${location}. They will call you at ${phone} shortly.`);
+        e.target.reset();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  </script>
+</body>
+</html>

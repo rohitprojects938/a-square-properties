@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — A Square Properties</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <!-- Chart.js and Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="adm-shell">
+    <!-- Mobile Sidebar overlay -->
+    <div class="adm-mobile-overlay" id="adm-mobile-overlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="adm-sidebar" id="adm-sidebar">
+      <div class="adm-logo">
+        <div class="adm-logo-icon">🏡</div>
+        <div class="adm-logo-text">
+          <strong>A Square</strong>
+          <div class="adm-logo-sub">ADMIN PORTAL</div>
+        </div>
+      </div>
+
+      <div class="nav-section-title">Core</div>
+      <a href="#" class="nav-item active" data-target="dashboard">
+        <i class="nav-icon" data-lucide="layout-dashboard"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-target="users">
+        <i class="nav-icon" data-lucide="users"></i>
+        <span class="nav-label">Users</span>
+      </a>
+      <a href="#" class="nav-item" data-target="listings">
+        <i class="nav-icon" data-lucide="building"></i>
+        <span class="nav-label">Listings</span>
+      </a>
+
+      <div class="nav-section-title">Moderation</div>
+      <a href="#" class="nav-item" data-target="approval">
+        <i class="nav-icon" data-lucide="check-square"></i>
+        <span class="nav-label">Property Approval</span>
+        <span class="nav-badge" id="badge-pending-count">0</span>
+      </a>
+      <a href="#" class="nav-item" data-target="featured">
+        <i class="nav-icon" data-lucide="star"></i>
+        <span class="nav-label">Featured Properties</span>
+      </a>
+      <a href="#" class="nav-item" data-target="reels">
+        <i class="nav-icon" data-lucide="play"></i>
+        <span class="nav-label">Reels</span>
+      </a>
+
+      <div class="nav-section-title">Management</div>
+      <a href="#" class="nav-item" data-target="banners">
+        <i class="nav-icon" data-lucide="image"></i>
+        <span class="nav-label">Banner Manager</span>
+      </a>
+      <a href="#" class="nav-item" data-target="blogs">
+        <i class="nav-icon" data-lucide="book-open"></i>
+        <span class="nav-label">Blogs</span>
+      </a>
+      <a href="#" class="nav-item" data-target="services">
+        <i class="nav-icon" data-lucide="wrench"></i>
+        <span class="nav-label">Home Services</span>
+      </a>
+      <a href="#" class="nav-item" data-target="plans">
+        <i class="nav-icon" data-lucide="credit-card"></i>
+        <span class="nav-label">Plans & Subscriptions</span>
+      </a>
+      <a href="#" class="nav-item" data-target="payments">
+        <i class="nav-icon" data-lucide="wallet"></i>
+        <span class="nav-label">Payments</span>
+      </a>
+
+      <div class="nav-section-title">Security & System</div>
+      <a href="#" class="nav-item" data-target="analytics">
+        <i class="nav-icon" data-lucide="bar-chart-3"></i>
+        <span class="nav-label">Analytics</span>
+      </a>
+      <a href="#" class="nav-item" data-target="notifications">
+        <i class="nav-icon" data-lucide="bell"></i>
+        <span class="nav-label">Notifications</span>
+      </a>
+      <a href="#" class="nav-item" data-target="reports">
+        <i class="nav-icon" data-lucide="flag"></i>
+        <span class="nav-label">Reports</span>
+      </a>
+      <a href="#" class="nav-item" data-target="audit">
+        <i class="nav-icon" data-lucide="shield-alert"></i>
+        <span class="nav-label">Audit Logs</span>
+      </a>
+      <a href="#" class="nav-item" data-target="settings">
+        <i class="nav-icon" data-lucide="settings"></i>
+        <span class="nav-label">Settings</span>
+      </a>
+
+      <div class="adm-sidebar-footer">
+        <a href="/profile.html" class="nav-item" style="color:var(--adm-danger);">
+          <i class="nav-icon" data-lucide="log-out"></i>
+          <span class="nav-label">Exit Panel</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="adm-main">
+      <!-- Top header bar -->
+      <header class="adm-topbar">
+        <button class="adm-topbar-toggle" id="sidebar-toggle"><i data-lucide="menu"></i></button>
+        <div class="adm-page-title" id="topbar-page-title">Dashboard</div>
+
+        <div class="adm-topbar-actions">
+          <div class="adm-search">
+            <i class="adm-search-icon" data-lucide="search"></i>
+            <input type="text" id="adm-global-search" placeholder="Quick search listings/users...">
+          </div>
+          <button class="adm-icon-btn" id="theme-toggle-btn"><i data-lucide="sun"></i></button>
+          <button class="adm-icon-btn" onclick="loadSectionData('notifications')">
+            <i data-lucide="bell"></i>
+            <div class="adm-notif-dot"></div>
+          </button>
+          <div class="adm-avatar" id="admin-topbar-avatar">A</div>
+        </div>
+      </header>
+
+      <!-- Main Scrollable Section Container -->
+      <div class="adm-content">
+
+        <!-- 1. DASHBOARD OVERVIEW -->
+        <section class="adm-section active" id="sec-dashboard">
+          <div class="adm-stats-grid">
+            <div class="adm-stat-card stat-purple">
+              <span class="adm-stat-label">Total Users</span>
+              <div class="adm-stat-value" id="stat-total-users">0</div>
+            </div>
+            <div class="adm-stat-card stat-green">
+              <span class="adm-stat-label">Active Subs</span>
+              <div class="adm-stat-value" id="stat-active-users">0</div>
+            </div>
+            <div class="adm-stat-card stat-red">
+              <span class="adm-stat-label">Inactive Users</span>
+              <div class="adm-stat-value" id="stat-inactive-users">0</div>
+            </div>
+            <div class="adm-stat-card stat-blue">
+              <span class="adm-stat-label">Google Auth</span>
+              <div class="adm-stat-value" id="stat-google-users">0</div>
+            </div>
+            <div class="adm-stat-card stat-gray">
+              <span class="adm-stat-label">Phone Auth</span>
+              <div class="adm-stat-value" id="stat-phone-users">0</div>
+            </div>
+            <div class="adm-stat-card stat-orange">
+              <span class="adm-stat-label">Premium Users</span>
+              <div class="adm-stat-value" id="stat-premium-subs">0</div>
+            </div>
+            <div class="adm-stat-card stat-amber">
+              <span class="adm-stat-label">Free Users</span>
+              <div class="adm-stat-value" id="stat-free-users">0</div>
+            </div>
+            <div class="adm-stat-card stat-purple">
+              <span class="adm-stat-label">Total Listings</span>
+              <div class="adm-stat-value" id="stat-total-listings">0</div>
+            </div>
+            <div class="adm-stat-card stat-amber">
+              <span class="adm-stat-label">Pending</span>
+              <div class="adm-stat-value" id="stat-pending-listings">0</div>
+            </div>
+            <div class="adm-stat-card stat-green">
+              <span class="adm-stat-label">Approved</span>
+              <div class="adm-stat-value" id="stat-approved-listings">0</div>
+            </div>
+            <div class="adm-stat-card stat-red">
+              <span class="adm-stat-label">Rejected</span>
+              <div class="adm-stat-value" id="stat-rejected-listings">0</div>
+            </div>
+            <div class="adm-stat-card stat-orange">
+              <span class="adm-stat-label">Featured</span>
+              <div class="adm-stat-value" id="stat-featured-listings">0</div>
+            </div>
+            <div class="adm-stat-card stat-blue">
+              <span class="adm-stat-label">Today Registrations</span>
+              <div class="adm-stat-value" id="stat-today-users">0</div>
+            </div>
+            <div class="adm-stat-card stat-purple">
+              <span class="adm-stat-label">Today Listings</span>
+              <div class="adm-stat-value" id="stat-today-listings">0</div>
+            </div>
+            <div class="adm-stat-card stat-green">
+              <span class="adm-stat-label">Revenue Today</span>
+              <div class="adm-stat-value" id="stat-revenue-today">₹0</div>
+            </div>
+            <div class="adm-stat-card stat-purple">
+              <span class="adm-stat-label">Revenue Month</span>
+              <div class="adm-stat-value" id="stat-revenue-month">₹0</div>
+            </div>
+            <div class="adm-stat-card stat-orange">
+              <span class="adm-stat-label">Total Revenue</span>
+              <div class="adm-stat-value" id="stat-revenue-total">₹0</div>
+            </div>
+          </div>
+
+          <!-- Bottom lists overview -->
+          <div class="adm-overview-grid">
+            <div class="adm-card">
+              <div class="adm-card-title"><i data-lucide="users"></i> Recent Users</div>
+              <div id="recent-users-list"></div>
+            </div>
+            <div class="adm-card">
+              <div class="adm-card-title"><i data-lucide="building"></i> Recent Listings</div>
+              <div id="recent-listings-list"></div>
+            </div>
+            <div class="adm-card">
+              <div class="adm-card-title"><i data-lucide="wallet"></i> Successful Payments</div>
+              <div id="recent-payments-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. USERS MANAGEMENT -->
+        <section class="adm-section" id="sec-users">
+          <div class="adm-section-header">
+            <div>
+              <h2>Users Directory</h2>
+              <p>Manage roles, plans, suspensions and view customer activity logs.</p>
+            </div>
+            <div class="adm-section-actions">
+              <button class="adm-btn adm-btn-ghost" onclick="exportTableToCSV('users-table-data', 'users.csv')"><i data-lucide="download"></i> Export CSV</button>
+            </div>
+          </div>
+
+          <div class="adm-table-wrapper">
+            <div class="adm-table-toolbar">
+              <input type="text" id="user-search-query" class="adm-table-search" placeholder="Search by name, email, phone..." oninput="filterUsers()">
+              <select id="user-filter-role" class="adm-table-filter" onchange="filterUsers()">
+                <option value="">All Roles</option>
+                <option value="user">Users</option>
+                <option value="seller">Sellers</option>
+                <option value="admin">Admins</option>
+              </select>
+              <select id="user-filter-sub" class="adm-table-filter" onchange="filterUsers()">
+                <option value="">All Plans</option>
+                <option value="active">Active Plans</option>
+                <option value="inactive">Free / Inactive</option>
+              </select>
+            </div>
+            <table class="adm-table" id="users-table-data">
+              <thead>
+                <tr>
+                  <th>User Details</th>
+                  <th>Phone Number</th>
+                  <th>Role</th>
+                  <th>Provider</th>
+                  <th>Subscription</th>
+                  <th>Properties</th>
+                  <th>Joined Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+            <div class="adm-pagination" id="users-pagination"></div>
+          </div>
+        </section>
+
+        <!-- 3. LISTINGS MANAGEMENT -->
+        <section class="adm-section" id="sec-listings">
+          <div class="adm-section-header">
+            <div>
+              <h2>Property Listings</h2>
+              <p>Full control over listings visibility, featured tags, duplication and mark as sold.</p>
+            </div>
+            <button class="adm-btn adm-btn-ghost" onclick="exportTableToCSV('listings-table-data', 'properties.csv')"><i data-lucide="download"></i> Export CSV</button>
+          </div>
+
+          <div class="adm-table-wrapper">
+            <div class="adm-table-toolbar">
+              <input type="text" id="listing-search-query" class="adm-table-search" placeholder="Search title or location..." oninput="filterListings()">
+              <select id="listing-filter-status" class="adm-table-filter" onchange="filterListings()">
+                <option value="">All Status</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <table class="adm-table" id="listings-table-data">
+              <thead>
+                <tr>
+                  <th>Cover</th>
+                  <th>Title Details</th>
+                  <th>Owner / Seller</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Visibility</th>
+                  <th>Featured</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="listings-table-body"></tbody>
+            </table>
+            <div class="adm-pagination" id="listings-pagination"></div>
+          </div>
+        </section>
+
+        <!-- 4. PROPERTY APPROVAL QUEUE -->
+        <section class="adm-section" id="sec-approval">
+          <div class="adm-section-header">
+            <div>
+              <h2>Moderation Queue</h2>
+              <p>Approve properties to publish instantly or reject and notify the owners.</p>
+            </div>
+          </div>
+          <div id="approval-queue-container"></div>
+        </section>
+
+        <!-- 5. FEATURED PROPERTY MANAGER -->
+        <section class="adm-section" id="sec-featured">
+          <div class="adm-section-header">
+            <div>
+              <h2>Featured Showcase</h2>
+              <p>Manage and sequence property items featured on the homepage carousel slider.</p>
+            </div>
+          </div>
+          <div class="adm-card" style="max-width:600px;">
+            <div class="adm-card-title"><i data-lucide="star" style="color:var(--adm-accent);"></i> Homepage Featured Queue</div>
+            <div id="featured-manager-list"></div>
+          </div>
+        </section>
+
+        <!-- 6. REELS -->
+        <section class="adm-section" id="sec-reels">
+          <div class="adm-section-header">
+            <div>
+              <h2>Vertical Reels Moderation</h2>
+              <p>Approve short property video tours before they show on vertical feeds.</p>
+            </div>
+          </div>
+          <div class="adm-table-wrapper">
+            <table class="adm-table">
+              <thead>
+                <tr>
+                  <th>Reel ID</th>
+                  <th>Video File Link</th>
+                  <th>Uploader</th>
+                  <th>Caption</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reels-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 7. HOMEPAGE BANNERS -->
+        <section class="adm-section" id="sec-banners">
+          <div class="adm-section-header">
+            <div>
+              <h2>Promo Banner Management</h2>
+              <p>Upload new visual banners for seasonal marketing campaigns.</p>
+            </div>
+          </div>
+          <div id="banners-manager-container"></div>
+        </section>
+
+        <!-- 8. BLOG MANAGER -->
+        <section class="adm-section" id="sec-blogs">
+          <div class="adm-section-header">
+            <div>
+              <h2>Property Blog Articles</h2>
+              <p>Post homebuying advice guides, pricing updates and builder announcements.</p>
+            </div>
+            <button class="adm-btn adm-btn-primary" onclick="openAddBlogModal()"><i data-lucide="plus"></i> Write Post</button>
+          </div>
+          <div class="adm-blog-grid" id="blogs-manager-grid"></div>
+        </section>
+
+        <!-- 9. HOME SERVICES -->
+        <section class="adm-section" id="sec-services">
+          <div class="adm-section-header">
+            <div>
+              <h2>Verified Home Services</h2>
+              <p>Manage painters, cleaning services, interior designers and carpenters list.</p>
+            </div>
+            <button class="adm-btn adm-btn-primary" onclick="openAddServiceModal()"><i data-lucide="plus"></i> Add Service Category</button>
+          </div>
+          <div class="adm-service-grid" id="services-manager-grid"></div>
+        </section>
+
+        <!-- 10. PLANS & SUBSCRIPTIONS -->
+        <section class="adm-section" id="sec-plans">
+          <div class="adm-section-header">
+            <div>
+              <h2>Pricing Plans Configuration</h2>
+              <p>Adjust subscription price limits, featured badges quotas, duration, and features list.</p>
+            </div>
+            <button class="adm-btn adm-btn-primary" onclick="openAddPlanModal()"><i data-lucide="plus"></i> Create Pricing Plan</button>
+          </div>
+          <div class="adm-plan-grid" id="plans-manager-grid"></div>
+        </section>
+
+        <!-- 11. PAYMENTS -->
+        <section class="adm-section" id="sec-payments">
+          <div class="adm-section-header">
+            <div>
+              <h2>Billing & Invoice Payments</h2>
+              <p>Review payment records captured by Razorpay gateways.</p>
+            </div>
+            <button class="adm-btn adm-btn-ghost" onclick="exportTableToCSV('payments-table-data', 'payments.csv')"><i data-lucide="download"></i> Export CSV</button>
+          </div>
+          <div class="adm-table-wrapper">
+            <table class="adm-table" id="payments-table-data">
+              <thead>
+                <tr>
+                  <th>PayID</th>
+                  <th>Customer Name</th>
+                  <th>Order ID</th>
+                  <th>Payment ID</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date Created</th>
+                </tr>
+              </thead>
+              <tbody id="payments-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 12. ANALYTICS Charts -->
+        <section class="adm-section" id="sec-analytics">
+          <div class="adm-section-header">
+            <div>
+              <h2>Advanced Site Analytics</h2>
+              <p>Live visual charts mapping organic growths and listing metrics.</p>
+            </div>
+          </div>
+          <div class="adm-charts-grid">
+            <div class="adm-chart-card">
+              <div class="adm-card-title">Daily Registrations</div>
+              <canvas id="chart-registrations"></canvas>
+            </div>
+            <div class="adm-chart-card">
+              <div class="adm-card-title">Daily Listings Growth</div>
+              <canvas id="chart-listings"></canvas>
+            </div>
+            <div class="adm-chart-card">
+              <div class="adm-card-title">Properties by Categories</div>
+              <canvas id="chart-categories"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- 13. NOTIFICATIONS Broadcaster -->
+        <section class="adm-section" id="sec-notifications">
+          <div class="adm-section-header">
+            <div>
+              <h2>Broadcasting Console</h2>
+              <p>Blast push alerts or notifications to premium groups or all users at once.</p>
+            </div>
+          </div>
+          <div id="notifications-composer-container"></div>
+        </section>
+
+        <!-- 14. REPORTS -->
+        <section class="adm-section" id="sec-reports">
+          <div id="reports-container"></div>
+        </section>
+
+        <!-- 15. AUDIT LOGS -->
+        <section class="adm-section" id="sec-audit">
+          <div class="adm-section-header">
+            <div>
+              <h2>Security Audit Logging</h2>
+              <p>Monitors destructive modifications, updates, deletions and IP addresses.</p>
+            </div>
+          </div>
+          <div class="adm-table-wrapper">
+            <table class="adm-table">
+              <thead>
+                <tr>
+                  <th>Security Action</th>
+                  <th>Change Details</th>
+                  <th>Timestamp</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="audit-logs-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 16. SETTINGS -->
+        <section class="adm-section" id="sec-settings">
+          <div class="adm-section-header">
+            <div>
+              <h2>Site Configurations</h2>
+              <p>Setup maintenance modes, brand details and payment API key structures.</p>
+            </div>
+          </div>
+          <div class="adm-settings-grid">
+            <form onsubmit="saveSettings(event)" style="display:flex; flex-direction:column; gap:16px;">
+              <div class="adm-settings-section">
+                <div class="adm-settings-title"><i data-lucide="globe"></i> Brand Customization</div>
+                <div class="adm-form-group">
+                  <label class="adm-form-label">Brand Name</label>
+                  <input type="text" id="set-name" class="adm-form-input">
+                </div>
+                <div class="adm-form-group">
+                  <label class="adm-form-label">Support Email</label>
+                  <input type="email" id="set-email" class="adm-form-input">
+                </div>
+                <div class="adm-form-group">
+                  <label class="adm-form-label">Support Phone</label>
+                  <input type="text" id="set-phone" class="adm-form-input">
+                </div>
+                <div class="adm-form-group">
+                  <label class="adm-form-label">Office Address</label>
+                  <input type="text" id="set-address" class="adm-form-input">
+                </div>
+              </div>
+
+              <div class="adm-settings-section">
+                <div class="adm-settings-title"><i data-lucide="shield"></i> Maintenance Mode</div>
+                <div class="adm-form-group">
+                  <label class="adm-form-label">Server Mode</label>
+                  <select id="set-maintenance" class="adm-form-select">
+                    <option value="0">Online — Public Access</option>
+                    <option value="1">Offline — Under Maintenance</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="adm-btn adm-btn-primary" style="align-self: flex-start; padding: 12px 30px;">Save Settings Configurations</button>
+            </form>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ─── MODALS ─── -->
+
+  <!-- User Profile detail Modal -->
+  <div class="adm-modal-overlay" id="user-profile-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title">Detailed User Profile</div>
+        <button class="adm-modal-close" onclick="closeModal('user-profile-modal')">×</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:12px;">
+          <div><strong style="color:var(--adm-muted);">Name:</strong> <span id="prof-name"></span></div>
+          <div><strong style="color:var(--adm-muted);">Email:</strong> <span id="prof-email"></span></div>
+          <div><strong style="color:var(--adm-muted);">Phone:</strong> <span id="prof-phone"></span></div>
+          <div><strong style="color:var(--adm-muted);">System Role:</strong> <span id="prof-role"></span></div>
+          <div><strong style="color:var(--adm-muted);">Provider:</strong> <span id="prof-provider"></span></div>
+          <div><strong style="color:var(--adm-muted);">Plan status:</strong> <span id="prof-sub"></span></div>
+          <div><strong style="color:var(--adm-muted);">Joined Date:</strong> <span id="prof-created"></span></div>
+        </div>
+
+        <div class="adm-card">
+          <div class="adm-card-title"><i data-lucide="shield-alert"></i> Admin Moderation Controls</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <button class="adm-btn adm-btn-success adm-btn-sm" id="btn-action-activate">Activate Subscription</button>
+            <button class="adm-btn adm-btn-ghost adm-btn-sm" id="btn-action-deactivate">Deactivate Subscription</button>
+            <button class="adm-btn adm-btn-danger adm-btn-sm" id="btn-action-suspend">Suspend Account</button>
+          </div>
+        </div>
+
+        <div class="adm-card">
+          <div class="adm-card-title"><i data-lucide="building"></i> Owned Listings</div>
+          <div id="prof-properties-list" style="max-height: 200px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service add/edit modal -->
+  <div class="adm-modal-overlay" id="service-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title" id="service-modal-title">Add Home Service</div>
+        <button class="adm-modal-close" onclick="closeModal('service-modal')">×</button>
+      </div>
+      <form onsubmit="saveService(event)">
+        <div class="adm-form-group">
+          <label class="adm-form-label">Service Category Name</label>
+          <input type="text" id="svc-name" class="adm-form-input" required>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Service Emoji Icon</label>
+          <input type="text" id="svc-icon" class="adm-form-input" placeholder="e.g. ⚡">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Short Description</label>
+          <textarea id="svc-desc" class="adm-form-textarea"></textarea>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Display Status</label>
+          <select id="svc-status" class="adm-form-select">
+            <option value="1">Active</option>
+            <option value="0">Disabled</option>
+          </select>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Service category</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Pricing Plan Add/Edit Modal -->
+  <div class="adm-modal-overlay" id="plan-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title" id="plan-modal-title">Create Subscription Plan</div>
+        <button class="adm-modal-close" onclick="closeModal('plan-modal')">×</button>
+      </div>
+      <form onsubmit="savePlan(event)">
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Plan Name</label>
+            <input type="text" id="plan-name" class="adm-form-input" required>
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Price (₹)</label>
+            <input type="number" id="plan-price" class="adm-form-input" required>
+          </div>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Duration (Days)</label>
+            <input type="number" id="plan-duration" class="adm-form-input" value="30" required>
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Property Listings limit</label>
+            <input type="number" id="plan-limit" class="adm-form-input" value="10" required>
+          </div>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Featured Badge limits</label>
+            <input type="number" id="plan-featured" class="adm-form-input" value="2" required>
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Display Status</label>
+            <select id="plan-status" class="adm-form-select">
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Tier Description</label>
+          <textarea id="plan-desc" class="adm-form-textarea"></textarea>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Subscription Plan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Blog post Add/Edit Modal -->
+  <div class="adm-modal-overlay" id="blog-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title" id="blog-modal-title">Write New Blog Post</div>
+        <button class="adm-modal-close" onclick="closeModal('blog-modal')">×</button>
+      </div>
+      <form onsubmit="saveBlog(event)">
+        <div class="adm-form-group">
+          <label class="adm-form-label">Post Title</label>
+          <input type="text" id="blog-title" class="adm-form-input" required>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Featured Image URL</label>
+          <input type="text" id="blog-image" class="adm-form-input">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Excerpt Summary</label>
+          <input type="text" id="blog-excerpt" class="adm-form-input">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Full Post Content</label>
+          <textarea id="blog-content" class="adm-form-textarea" style="min-height: 150px;" required></textarea>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Publishing Status</label>
+          <select id="blog-status" class="adm-form-select">
+            <option value="published">Publish instantly</option>
+            <option value="draft">Save draft</option>
+          </select>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Blog Post</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dynamic Loading Overlay spinner -->
+  <div id="adm-loading-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; display:none; align-items:center; justify-content:center;">
+    <div class="adm-spinner"></div>
+  </div>
+
+  <!-- Toast Toast Notifications popup -->
+  <div class="adm-toast" id="adm-toast">
+    <div id="adm-toast-icon"></div>
+    <div class="adm-toast-msg" id="adm-toast-msg">Successfully performed.</div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/admin.js"></script>
+  <script>
+    // Initialize Lucide Icons initially
+    lucide.createIcons();
+  </script>
+</body>
+</html>
