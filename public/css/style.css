@@ -31,7 +31,7 @@
 body {
   background-color: #FFFFFF;
   display: block;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   color: var(--text-dark);
 }
@@ -40,7 +40,7 @@ body {
 .app-shell {
   width: 100%;
   max-width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
   height: 100dvh;
   background-color: var(--background-white);
   box-shadow: none;
@@ -886,14 +886,14 @@ body {
 
 .reel-item {
   width: 100%;
-  height: calc(100vh - 72px - env(safe-area-inset-bottom, 0px)); /* height minus bottom nav */
+  height: calc(100dvh - 72px - env(safe-area-inset-bottom, 0px)); /* height minus bottom nav */
   scroll-snap-align: start;
   position: relative;
   background: #000;
 }
-@supports (height: calc(100vh - 72px - constant(safe-area-inset-bottom))) {
+@supports (height: calc(100dvh - 72px - constant(safe-area-inset-bottom))) {
   .reel-item {
-    height: calc(100vh - 72px - constant(safe-area-inset-bottom));
+    height: calc(100dvh - 72px - constant(safe-area-inset-bottom));
   }
 }
 
