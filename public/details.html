@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Details - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=119">
+  <link rel="stylesheet" href="/css/style.css?v=120">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -145,6 +145,19 @@
             <h2 style="font-size:22px; font-weight:800; color:var(--primary-red); white-space:nowrap;" id="details-price">₹0.00</h2>
           </div>
 
+          <!-- Listed On Section -->
+          <div id="details-listed-on-container" style="display:none; align-items:center; gap:12px; margin: 8px 0 16px 0; padding: 10px 14px; background: var(--accent-gray); border: 1px solid var(--border-color); border-radius: 12px; font-family: 'Outfit', sans-serif; box-sizing: border-box; width: fit-content;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); font-weight:600;">
+              <i class="bx bx-calendar" style="font-size:15px; color:var(--primary-red);"></i>
+              <span>Listed on: <span style="color:var(--text-dark);" id="details-listed-date">-</span></span>
+            </div>
+            <div style="width:1px; height:12px; background:var(--border-color);"></div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); font-weight:600;">
+              <i class="bx bx-time-five" style="font-size:15px; color:var(--primary-red);"></i>
+              <span>Time: <span style="color:var(--text-dark);" id="details-listed-time">-</span></span>
+            </div>
+          </div>
+
           <span class="verified-badge" style="position:static; display:inline-flex; margin-bottom:16px;">
             <i class="bx bxs-badge-check"></i> RERA Approved
           </span>
@@ -266,10 +279,62 @@
 
   </div>
 
-  <script src="/js/main.js?v=119"></script>
+  <script src="/js/main.js?v=120"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
+
+    function trackRecentlyViewed(property) {
+      if (!property) return;
+      try {
+        const key = 'recently_viewed';
+        let items = [];
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          items = JSON.parse(raw);
+        }
+        items = items.filter(item => item.id != property.id);
+        const coverImg = (property.images && property.images.length > 0) ? property.images[0].image_url : null;
+        items.unshift({
+          id: property.id,
+          title: property.title,
+          price: property.price,
+          city: property.city,
+          cover_image: coverImg
+        });
+        if (items.length > 10) {
+          items = items.slice(0, 10);
+        }
+        localStorage.setItem(key, JSON.stringify(items));
+      } catch (e) {
+        console.error('Error tracking recently viewed:', e);
+      }
+    }
+
+    function formatListedDate(dateStr) {
+      if (!dateStr) return null;
+      try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return null;
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
+        return {
+          date: `${day} ${month} ${year}`,
+          time: strTime
+        };
+      } catch (e) {
+        console.error('Error formatting date:', e);
+        return null;
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -290,6 +355,19 @@
           document.getElementById('details-address').innerHTML = `<i class="bx bx-map"></i> ${propertyDetails.address}, ${propertyDetails.city}`;
           document.getElementById('details-price').innerText = `₹${formatPrice(propertyDetails.price)}`;
           document.getElementById('details-description').innerText = propertyDetails.description;
+
+          // Set Listed On details
+          const dateInfo = formatListedDate(propertyDetails.created_at || propertyDetails.listed_at);
+          const listedOnContainer = document.getElementById('details-listed-on-container');
+          if (dateInfo && listedOnContainer) {
+            document.getElementById('details-listed-date').innerText = dateInfo.date;
+            document.getElementById('details-listed-time').innerText = dateInfo.time;
+            listedOnContainer.style.display = 'flex';
+          } else if (listedOnContainer) {
+            document.getElementById('details-listed-date').innerText = 'Unknown';
+            document.getElementById('details-listed-time').innerText = '--';
+            listedOnContainer.style.display = 'flex';
+          }
 
           // Set Spec items
           document.getElementById('spec-beds').innerText = propertyDetails.bedrooms + ' BHK';

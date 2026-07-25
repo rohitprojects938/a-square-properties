@@ -1,4 +1,9 @@
 const db = require('../config/db');
+const fs = require('fs');
+const path = require('path');
+
+const prodPublicHtml = '/home/u726900424/domains/houserenter.in/public_html';
+const basePublic = fs.existsSync(prodPublicHtml) ? prodPublicHtml : path.join(__dirname, '..', 'public');
 
 // Post a new property (Multi-Step Form upload)
 async function createProperty(req, res) {
@@ -150,7 +155,7 @@ async function updateProperty(req, res) {
         await db.query('DELETE FROM property_images WHERE id = ?', [dbImg.id]);
         // Delete physical file
         if (dbImg.image_url && dbImg.image_url.startsWith('/uploads/')) {
-          const fullPath = path.join(__dirname, '..', 'public', dbImg.image_url);
+          const fullPath = path.join(basePublic, dbImg.image_url);
           fs.unlink(fullPath, (err) => {
             if (err && err.code !== 'ENOENT') {
               console.error('Failed to delete physical image during edit:', fullPath, err.message);
@@ -224,7 +229,7 @@ async function updateProperty(req, res) {
       for (const v of currentVideos) {
         await db.query('DELETE FROM property_videos WHERE id = ?', [v.id]);
         if (v.video_url && v.video_url.startsWith('/uploads/')) {
-          const fullPath = path.join(__dirname, '..', 'public', v.video_url);
+          const fullPath = path.join(basePublic, v.video_url);
           fs.unlink(fullPath, (err) => {
             if (err && err.code !== 'ENOENT') {
               console.error('Failed to delete physical video:', fullPath, err.message);
@@ -670,7 +675,7 @@ async function deleteProperty(req, res) {
     const path = require('path');
     for (const img of images) {
       if (img.image_url && img.image_url.startsWith('/uploads/')) {
-        const fullPath = path.join(__dirname, '..', 'public', img.image_url);
+        const fullPath = path.join(basePublic, img.image_url);
         fs.unlink(fullPath, (err) => {
           if (err && err.code !== 'ENOENT') {
             console.error('Failed to delete physical image file:', fullPath, err.message);
@@ -692,37 +697,6 @@ async function deleteProperty(req, res) {
   }
 }
 
-async function debugFiles(req, res) {
-  const fs = require('fs');
-  const path = require('path');
-  const domainsDir = '/home/u726900424/domains/houserenter.in';
-  
-  try {
-    const parentExists = fs.existsSync(domainsDir);
-    const parentContents = parentExists ? fs.readdirSync(domainsDir) : [];
-    
-    const publicHtmlDir = path.join(domainsDir, 'public_html');
-    const publicHtmlExists = fs.existsSync(publicHtmlDir);
-    const publicHtmlContents = publicHtmlExists ? fs.readdirSync(publicHtmlDir) : [];
-
-    const publicHtmlUploads = path.join(publicHtmlDir, 'uploads', 'properties');
-    const publicHtmlUploadsExists = fs.existsSync(publicHtmlUploads);
-    const publicHtmlUploadsContents = publicHtmlUploadsExists ? fs.readdirSync(publicHtmlUploads) : [];
-
-    res.status(200).json({
-      success: true,
-      parentExists,
-      parentContents,
-      publicHtmlExists,
-      publicHtmlContents,
-      publicHtmlUploadsExists,
-      publicHtmlUploadsContents
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-}
-
 module.exports = {
   createProperty,
   updateProperty,
@@ -736,6 +710,5 @@ module.exports = {
   getReels,
   uploadReel,
   toggleReelLike,
-  addReelComment,
-  debugFiles
+  addReelComment
 };
