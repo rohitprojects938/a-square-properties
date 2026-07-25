@@ -90,7 +90,7 @@ async function seedDatabaseData() {
       id: i + 2, // admin is ID 1
       supabase_uid: `mock-builder-${i}`,
       name: builderNames[i],
-      email: `${builderNames[i].toLowerCase().replace(/\s+/g, '')}@asquare.com`,
+      email: `${builderNames[i].toLowerCase().replace(/\s+/g, '')}@houserenter.in`,
       phone: `+91992901${1000 + i}`,
       role: 'builder',
       subscription_status: 'active'
@@ -104,7 +104,7 @@ async function seedDatabaseData() {
       id: i + 7, // Starts immediately after 5 builders (IDs 2-6)
       supabase_uid: `mock-agent-${i}`,
       name: agentNames[i],
-      email: `${agentNames[i].toLowerCase().replace(/\s+/g, '')}@asquare.com`,
+      email: `${agentNames[i].toLowerCase().replace(/\s+/g, '')}@houserenter.in`,
       phone: `+91981901${2000 + i}`,
       role: 'broker',
       subscription_status: 'active'
@@ -186,7 +186,7 @@ async function seedDatabaseData() {
       user_id: mockUsersList[i % mockUsersList.length].id,
       video_url: reelVideoUrls[i % reelVideoUrls.length],
       thumbnail_url: propertyImages[i % propertyImages.length],
-      caption: `Beautiful home tour in ${cities[i % cities.length]}! #premium #asquare #realestate`,
+      caption: `Beautiful home tour in ${cities[i % cities.length]}! #premium #houserenter #realestate`,
       likes_count: 10 + (i * 5),
       views_count: 120 + (i * 32),
       approval_status: 'approved'

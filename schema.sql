@@ -1,8 +1,8 @@
--- A Square Properties Relational Database Schema
--- Database: asquare_properties
+-- House Renter Relational Database Schema
+-- Database: house_renter
 
-CREATE DATABASE IF NOT EXISTS asquare_properties;
-USE asquare_properties;
+CREATE DATABASE IF NOT EXISTS house_renter;
+USE house_renter;
 
 -- 1. Users Table
 CREATE TABLE IF NOT EXISTS users (
@@ -260,7 +260,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 -- Seed Default Data (Admin user, some default categories/services/blogs)
 INSERT INTO users (name, email, phone, password_hash, role, subscription_status)
 VALUES 
-('Manoj Soni', 'manoj@asquare.com', '+919919014220', '$2a$10$75Jb04oB8nE7v5wKzUv3g.5N9CenpWv1K/TzR8C/wE3/T/y62tGOm', 'admin', 'active')
+('Manoj Soni', 'manoj@houserenter.in', '+919919014220', '$2a$10$75Jb04oB8nE7v5wKzUv3g.5N9CenpWv1K/TzR8C/wE3/T/y62tGOm', 'admin', 'active')
 ON DUPLICATE KEY UPDATE name=name; -- Default admin password is 'admin123'
 
 INSERT INTO services (name, category, contact_number, experience_years, ratings, reviews_count, description, image_url)
@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS homepage_banners (
 -- 20. Site Settings Table
 CREATE TABLE IF NOT EXISTS site_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    site_name VARCHAR(255) DEFAULT 'A Square Properties',
+    site_name VARCHAR(255) DEFAULT 'House Renter',
     contact_email VARCHAR(255) DEFAULT 'crimesamachar1@gmail.com',
     contact_phone VARCHAR(50) DEFAULT '+919919014220',
     address TEXT,

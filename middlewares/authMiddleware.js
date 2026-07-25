@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_asquare_properties';
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_house_renter';
 
 // Canonical admin email whitelist — single source of truth
 const ADMIN_EMAILS = ['crimesamachar1@gmail.com', 'rohitcreation12345@gmail.com'];

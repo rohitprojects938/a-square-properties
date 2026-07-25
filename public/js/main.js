@@ -1,4 +1,4 @@
-/* A Square Properties - Shared Client Utilities & Navigation JavaScript */
+/* House Renter - Shared Client Utilities & Navigation JavaScript */
 
 // Unified Reusable Avatar & Image Fallback System
 window.AvatarSystem = {

@@ -58,7 +58,7 @@ app.use('/api', (req, res, next) => {
 
 // Session Management configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'asquare_properties_express_session_secret_key',
+  secret: process.env.SESSION_SECRET || 'house_renter_express_session_secret_key',
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -95,7 +95,7 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login.html' }),
   (req, res) => {
     const jwt = require('jsonwebtoken');
-    const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_asquare_properties';
+    const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_house_renter';
     const user = req.user;
     
     const token = jwt.sign(
@@ -171,7 +171,7 @@ async function startServer() {
     app.listen(PORT, HOST, () => {
       const localIP = getLocalIP();
       console.log('');
-      console.log('🚀 A Square Properties Server is running!');
+      console.log('🚀 House Renter Server is running!');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`  📍 Local:    http://localhost:${PORT}`);
       console.log(`  🌐 Network:  http://${localIP}:${PORT}`);
@@ -192,11 +192,11 @@ startServer();
 
 // Graceful shutdown handling for Ctrl+C (SIGINT) and SIGTERM
 process.on('SIGINT', () => {
-  console.log('\n🛑 Stopping A Square Properties Server...');
+  console.log('\n🛑 Stopping House Renter Server...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('\n🛑 Terminating A Square Properties Server...');
+  console.log('\n🛑 Terminating House Renter Server...');
   process.exit(0);
 });

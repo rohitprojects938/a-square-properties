@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_asquare_properties';
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_house_renter';
 
 // Helper to sign JWT
 function generateToken(user) {
@@ -155,7 +155,7 @@ async function sendOTP(req, res) {
         const twilio = require('twilio');
         const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
         await client.messages.create({
-          body: `🔑 Your A Square Properties verification code is ${otp}. Valid for 5 minutes.`,
+          body: `🔑 Your House Renter verification code is ${otp}. Valid for 5 minutes.`,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: phoneOrEmail
         });
@@ -221,7 +221,7 @@ async function verifyOTP(req, res) {
 
     // Handle user retrieval or auto-registration
     const isEmail = phoneOrEmail.includes('@');
-    const emailVal = isEmail ? phoneOrEmail : `${phoneOrEmail.replace(/[^0-9]/g, '')}@asquare.com`;
+    const emailVal = isEmail ? phoneOrEmail : `${phoneOrEmail.replace(/[^0-9]/g, '')}@houserenter.in`;
     const phoneVal = isEmail ? null : phoneOrEmail;
 
     let [users] = await db.query(

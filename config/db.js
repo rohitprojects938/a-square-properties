@@ -5,7 +5,7 @@ const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'asquare_properties',
+  database: process.env.DB_NAME || 'house_renter',
   port: parseInt(process.env.DB_PORT || '3306')
 };
 
@@ -15,7 +15,7 @@ let isMock = false;
 // Mock database storage for seamless fallback
 const mockDb = {
   users: [
-    { id: 1, supabase_uid: 'mock-admin-uid', name: 'Manoj Soni', email: 'manoj@asquare.com', phone: '+919919014220', password_hash: '$2a$10$75Jb04oB8nE7v5wKzUv3g.5N9CenpWv1K/TzR8C/wE3/T/y62tGOm', role: 'admin', subscription_status: 'active', profile_photo: null, provider: 'email' }
+    { id: 1, supabase_uid: 'mock-admin-uid', name: 'Manoj Soni', email: 'manoj@houserenter.in', phone: '+919919014220', password_hash: '$2a$10$75Jb04oB8nE7v5wKzUv3g.5N9CenpWv1K/TzR8C/wE3/T/y62tGOm', role: 'admin', subscription_status: 'active', profile_photo: null, provider: 'email' }
   ],
   otps: [],
   properties: [
@@ -120,7 +120,7 @@ const mockDb = {
   ],
   property_videos: [],
   reels: [
-    { id: 1, user_id: 1, video_url: 'https://www.w3schools.com/html/mov_bbb.mp4', thumbnail_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80', caption: '🏡 Premium 3BHK in Munshi Pulia! Book a visit today with Manoj Soni. #Lucknow #RealEstate #AsquareProperties', likes_count: 84, views_count: 1240, approval_status: 'approved', created_at: new Date() },
+    { id: 1, user_id: 1, video_url: 'https://www.w3schools.com/html/mov_bbb.mp4', thumbnail_url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80', caption: '🏡 Premium 3BHK in Munshi Pulia! Book a visit today with Manoj Soni. #Lucknow #RealEstate #houserenterProperties', likes_count: 84, views_count: 1240, approval_status: 'approved', created_at: new Date() },
     { id: 2, user_id: 1, video_url: 'https://www.w3schools.com/html/movie.mp4', thumbnail_url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=400&q=80', caption: '🌟 Luxury Villa Tour - Gomti Nagar Extension, Lucknow! DM us for site visit. #GomtiNagar #Villa #Luxury', likes_count: 142, views_count: 2840, approval_status: 'approved', created_at: new Date() },
     { id: 3, user_id: 1, video_url: 'https://www.w3schools.com/html/mov_bbb.mp4', thumbnail_url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80', caption: '✨ 2BHK Ready Home in Indra Nagar - Only ₹18,000/month! #IndiraNagar #FlatsForRent #Lucknow', likes_count: 62, views_count: 980, approval_status: 'approved', created_at: new Date() }
   ],
@@ -162,7 +162,7 @@ async function initPool() {
       throw new Error(`CRITICAL MySQL connection failed: ${error.message}`);
     } else {
       console.warn('⚠️ MySQL connection failed. Error: ', error.message);
-      console.warn('⚡ Initializing in-memory MOCK database for A Square Properties application fallback.');
+      console.warn('⚡ Initializing in-memory MOCK database for House Renter application fallback.');
       isMock = true;
     }
   }
@@ -1009,7 +1009,7 @@ async function executeMock(sql, params = []) {
   if (normalizedSql.includes('site_settings') || normalizedSql.includes('from site_settings')) {
     if (!mockDb.site_settings) {
       mockDb.site_settings = [
-        { id: 1, site_name: 'A Square Properties', contact_email: 'crimesamachar1@gmail.com', contact_phone: '+919919014220', address: 'Lucknow, UP, India', maintenance_mode: 0 }
+        { id: 1, site_name: 'House Renter', contact_email: 'crimesamachar1@gmail.com', contact_phone: '+919919014220', address: 'Lucknow, UP, India', maintenance_mode: 0 }
       ];
     }
     if (normalizedSql.startsWith('select')) {
@@ -1046,7 +1046,7 @@ async function executeMock(sql, params = []) {
       return {
         ...p,
         user_name: u.name || 'Unknown',
-        user_email: u.email || 'unknown@asquare.com'
+        user_email: u.email || 'unknown@houserenter.in'
       };
     });
     return [list];
