@@ -3,7 +3,7 @@ const router = express.Router();
 const passport = require('passport');
 const authController = require('../controllers/authController');
 const { authenticateJWT, requireAuth } = require('../middlewares/authMiddleware');
-const { registerRules, loginRules, checkValidation } = require('../middlewares/validationMiddleware');
+const { registerRules, loginRules, updateProfileRules, checkValidation } = require('../middlewares/validationMiddleware');
 const { upload } = require('../middlewares/uploadMiddleware');
 
 // Public routes
@@ -17,6 +17,6 @@ router.post('/logout', authController.logout);
 
 // Protected routes (JWT authentication applied)
 router.get('/profile', authenticateJWT, requireAuth, authController.getProfile);
-router.put('/profile', authenticateJWT, requireAuth, upload.fields([{ name: 'profile_picture', maxCount: 1 }]), authController.updateProfile);
+router.put('/profile', authenticateJWT, requireAuth, upload.fields([{ name: 'profile_picture', maxCount: 1 }]), updateProfileRules, checkValidation, authController.updateProfile);
 
 module.exports = router;

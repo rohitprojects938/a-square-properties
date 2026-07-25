@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Details - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=112">
+  <link rel="stylesheet" href="/css/style.css?v=113">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -316,7 +316,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=112"></script>
+  <script src="/js/main.js?v=113"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
@@ -496,9 +496,31 @@
       const email = document.getElementById('enq-email').value;
       const message = document.getElementById('enq-msg').value;
 
+      // Client-side validations
+      const nameTrimmed = name.trim();
+      if (nameTrimmed.length < 2 || nameTrimmed.length > 60) {
+        return alert('Name must be between 2 and 60 characters.');
+      }
+      if (/^\d+$/.test(nameTrimmed)) {
+        return alert('Name cannot contain only numbers.');
+      }
+      if (/[<>]/.test(nameTrimmed)) {
+        return alert('HTML tags are not allowed in name.');
+      }
+
+      const emailVal = email.trim().toLowerCase();
+      if (emailVal.includes('..') || emailVal.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailVal)) {
+        return alert('Please enter a valid email address.');
+      }
+
+      const phoneTrimmed = phone.trim();
+      if (!/^[6-9]\d{9}$/.test(phoneTrimmed)) {
+        return alert('Please enter a valid 10-digit Indian mobile number.');
+      }
+
       try {
         const result = await apiRequest('/api/properties/action/enquiry', 'POST', {
-          propertyId, name, phone, email, message
+          propertyId, name: nameTrimmed, phone: phoneTrimmed, email: emailVal, message
         });
         if (result.success) {
           alert('Your inquiry was successfully sent to the property owner! They will contact you shortly.');

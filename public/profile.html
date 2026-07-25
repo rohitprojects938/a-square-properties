@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>My Profile - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=112">
+  <link rel="stylesheet" href="/css/style.css?v=113">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -254,7 +254,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=112"></script>
+  <script src="/js/main.js?v=113"></script>
   <script>
     // Bind initial page loading to window.onAppReady
     window.onAppReady = async function(user) {
@@ -475,9 +475,26 @@
       const phone = document.getElementById('edit-phone').value;
       const imgInput = document.getElementById('edit-pic');
 
+      // Client-side validation
+      const nameTrimmed = name.trim();
+      if (nameTrimmed.length < 2 || nameTrimmed.length > 60) {
+        return alert('Name must be between 2 and 60 characters.');
+      }
+      if (/^\d+$/.test(nameTrimmed)) {
+        return alert('Name cannot contain only numbers.');
+      }
+      if (/[<>]/.test(nameTrimmed)) {
+        return alert('HTML tags are not allowed in name.');
+      }
+
+      const phoneTrimmed = phone.trim();
+      if (!/^[6-9]\d{9}$/.test(phoneTrimmed)) {
+        return alert('Please enter a valid 10-digit Indian mobile number.');
+      }
+
       const formData = new FormData();
-      formData.append('name', name);
-      formData.append('phone', phone);
+      formData.append('name', nameTrimmed);
+      formData.append('phone', phoneTrimmed);
       if (imgInput.files.length > 0) {
         const file = imgInput.files[0];
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];

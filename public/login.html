@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Login - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=112">
+  <link rel="stylesheet" href="/css/style.css?v=113">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     .auth-tabs {
@@ -154,7 +154,7 @@
     </div>
   </div>
 
-  <script src="/js/main.js?v=112"></script>
+  <script src="/js/main.js?v=113"></script>
   <script>
     // Initialize Google Passport login URL callback check
     function checkGoogleOAuthCallback() {
@@ -195,6 +195,12 @@
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
 
+      // Client-side email validation
+      const emailVal = email.trim().toLowerCase();
+      if (emailVal.includes('..') || emailVal.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailVal)) {
+        return alert('Please enter a valid email address.');
+      }
+
       try {
         const result = await apiRequest('/api/auth/login', 'POST', { email, password });
         if (result.success) {
@@ -217,7 +223,28 @@
       const password = document.getElementById('reg-password').value;
       const role = document.getElementById('reg-role').value;
 
-      // Basic client-side validation
+      // Client-side validations
+      const nameTrimmed = name.trim();
+      if (nameTrimmed.length < 2 || nameTrimmed.length > 60) {
+        return alert('Name must be between 2 and 60 characters.');
+      }
+      if (/^\d+$/.test(nameTrimmed)) {
+        return alert('Name cannot contain only numbers.');
+      }
+      if (/[<>]/.test(nameTrimmed)) {
+        return alert('HTML tags are not allowed in name.');
+      }
+
+      const emailVal = email.trim().toLowerCase();
+      if (emailVal.includes('..') || emailVal.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailVal)) {
+        return alert('Please enter a valid email address.');
+      }
+
+      const phoneTrimmed = phone.trim();
+      if (!/^[6-9]\d{9}$/.test(phoneTrimmed)) {
+        return alert('Please enter a valid 10-digit Indian mobile number.');
+      }
+
       if (password.length < 6) {
         return alert('Password must be at least 6 characters long.');
       }
@@ -226,7 +253,7 @@
       }
 
       try {
-        const result = await apiRequest('/api/auth/register', 'POST', { name, email, phone, password, role });
+        const result = await apiRequest('/api/auth/register', 'POST', { name, email: emailVal, phone: phoneTrimmed, password, role });
         if (result.success) {
           localStorage.setItem('token', result.token);
           localStorage.setItem('user', JSON.stringify(result.user));
@@ -245,8 +272,21 @@
         return alert('Please enter phone or email first.');
       }
 
+      const isEmail = phoneOrEmail.includes('@');
+      let normalizedVal = phoneOrEmail.trim();
+      if (isEmail) {
+        normalizedVal = normalizedVal.toLowerCase();
+        if (normalizedVal.includes('..') || normalizedVal.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(normalizedVal)) {
+          return alert('Please enter a valid email address.');
+        }
+      } else {
+        if (!/^[6-9]\d{9}$/.test(normalizedVal)) {
+          return alert('Please enter a valid 10-digit Indian mobile number.');
+        }
+      }
+
       try {
-        const result = await apiRequest('/api/auth/send-otp', 'POST', { phoneOrEmail });
+        const result = await apiRequest('/api/auth/send-otp', 'POST', { phoneOrEmail: normalizedVal });
         if (result.success) {
           document.getElementById('otp-code-group').style.display = 'block';
           document.getElementById('otp-verify-submit').style.display = 'block';
@@ -264,8 +304,21 @@
       const phoneOrEmail = document.getElementById('otp-identifier').value;
       const otp = document.getElementById('otp-code').value;
 
+      const isEmail = phoneOrEmail.includes('@');
+      let normalizedVal = phoneOrEmail.trim();
+      if (isEmail) {
+        normalizedVal = normalizedVal.toLowerCase();
+        if (normalizedVal.includes('..') || normalizedVal.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(normalizedVal)) {
+          return alert('Please enter a valid email address.');
+        }
+      } else {
+        if (!/^[6-9]\d{9}$/.test(normalizedVal)) {
+          return alert('Please enter a valid 10-digit Indian mobile number.');
+        }
+      }
+
       try {
-        const result = await apiRequest('/api/auth/verify-otp', 'POST', { phoneOrEmail, otp });
+        const result = await apiRequest('/api/auth/verify-otp', 'POST', { phoneOrEmail: normalizedVal, otp });
         if (result.success) {
           localStorage.setItem('token', result.token);
           localStorage.setItem('user', JSON.stringify(result.user));

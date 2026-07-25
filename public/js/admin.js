@@ -932,12 +932,29 @@ async function loadSettingsPanel() {
 
 window.saveSettings = async (e) => {
   e.preventDefault();
+  const site_name = document.getElementById('set-name').value.trim();
+  const contact_email = document.getElementById('set-email').value.trim();
+  const contact_phone = document.getElementById('set-phone').value.trim();
+  const address = document.getElementById('set-address').value.trim();
+  const maintenance_mode = document.getElementById('set-maintenance').value === '1';
+
+  // Email format validation
+  const emailVal = contact_email.toLowerCase();
+  if (emailVal.includes('..') || emailVal.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailVal)) {
+    return alert('Please enter a valid email address.');
+  }
+
+  // Phone validation
+  if (!/^[6-9]\d{9}$/.test(contact_phone)) {
+    return alert('Please enter a valid 10-digit Indian mobile number.');
+  }
+
   const payload = {
-    site_name: document.getElementById('set-name').value,
-    contact_email: document.getElementById('set-email').value,
-    contact_phone: document.getElementById('set-phone').value,
-    address: document.getElementById('set-address').value,
-    maintenance_mode: document.getElementById('set-maintenance').value === '1'
+    site_name,
+    contact_email: emailVal,
+    contact_phone,
+    address,
+    maintenance_mode
   };
 
   const res = await apiRequest('/api/admin/settings', 'PUT', payload);

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const admin = require('../controllers/adminController');
 const { authenticateJWT, isAdmin } = require('../middlewares/authMiddleware');
+const { adminUpdateUserRules, checkValidation } = require('../middlewares/validationMiddleware');
 
 // ── All admin routes require JWT + admin role + email whitelist ──
 router.use(authenticateJWT, isAdmin);
@@ -12,7 +13,7 @@ router.get('/stats', admin.getDashboardStats);
 // Users
 router.get('/users',           admin.getUsers);
 router.get('/users/:id',       admin.getUserById);
-router.put('/users/:id',       admin.updateUser);
+router.put('/users/:id',       adminUpdateUserRules, checkValidation, admin.updateUser);
 router.delete('/users/:id',    admin.deleteUser);
 router.post('/user/role',      admin.updateUserRole);
 

@@ -28,8 +28,9 @@ async function register(req, res) {
       return res.status(400).json({ success: false, error: 'Password must contain both letters and numbers for safety.' });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
     // Check if email already exists
-    const [existingEmail] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const [existingEmail] = await db.query('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
     if (existingEmail && existingEmail.length > 0) {
       return res.status(400).json({ success: false, error: 'Email is already registered.' });
     }
@@ -45,16 +46,16 @@ async function register(req, res) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
     let userRole = role || 'user';
-    if (email && email.toLowerCase() === 'rohitcreation12345@gmail.com') {
+    if (normalizedEmail === 'rohitcreation12345@gmail.com') {
       userRole = 'admin';
     }
 
     const [result] = await db.query(
       'INSERT INTO users (name, email, phone, password_hash, role) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone || null, passwordHash, userRole]
+      [name, normalizedEmail, phone || null, passwordHash, userRole]
     );
 
-    const newUser = { id: result.insertId, name, email, role: userRole };
+    const newUser = { id: result.insertId, name, email: normalizedEmail, role: userRole };
     const token = generateToken(newUser);
     if (req.session) {
       req.session.token = token;
@@ -79,7 +80,8 @@ async function register(req, res) {
 async function login(req, res) {
   const { email, password } = req.body;
   try {
-    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+    const normalizedEmail = email.toLowerCase().trim();
+    const [users] = await db.query('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
     if (!users || users.length === 0) {
       return res.status(400).json({ success: false, error: 'Invalid email or password.' });
     }
@@ -136,6 +138,19 @@ async function sendOTP(req, res) {
     return res.status(400).json({ success: false, error: 'Phone or Email is required for OTP verification.' });
   }
 
+  const isEmail = phoneOrEmail.includes('@');
+  if (isEmail) {
+    const val = phoneOrEmail.trim().toLowerCase();
+    if (val.includes('..') || val.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val)) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
+    }
+  } else {
+    const val = phoneOrEmail.trim();
+    if (!/^[6-9]\d{9}$/.test(val)) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid 10-digit Indian mobile number.' });
+    }
+  }
+
   try {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes validity
@@ -185,6 +200,19 @@ async function verifyOTP(req, res) {
   const { phoneOrEmail, otp } = req.body;
   if (!phoneOrEmail || !otp) {
     return res.status(400).json({ success: false, error: 'Identifier and OTP code required.' });
+  }
+
+  const isEmail = phoneOrEmail.includes('@');
+  if (isEmail) {
+    const val = phoneOrEmail.trim().toLowerCase();
+    if (val.includes('..') || val.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val)) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
+    }
+  } else {
+    const val = phoneOrEmail.trim();
+    if (!/^[6-9]\d{9}$/.test(val)) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid 10-digit Indian mobile number.' });
+    }
   }
 
   try {
