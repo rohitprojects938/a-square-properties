@@ -67,6 +67,7 @@ async function initializeDatabase() {
     await addColumnIfNotExist('properties', 'is_hidden', "ALTER TABLE properties ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE;");
     await addColumnIfNotExist('properties', 'is_featured', "ALTER TABLE properties ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;");
     await addColumnIfNotExist('property_images', 'sort_order', "ALTER TABLE property_images ADD COLUMN sort_order INT DEFAULT 0;");
+    await addColumnIfNotExist('homepage_banners', 'sort_order', "ALTER TABLE homepage_banners ADD COLUMN sort_order INT DEFAULT 0;");
 
     await seedDatabaseData();
 

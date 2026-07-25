@@ -12,7 +12,8 @@ const uploadDirs = [
   path.join(basePublic, 'uploads', 'reels'),
   path.join(basePublic, 'uploads', 'blogs'),
   path.join(basePublic, 'uploads', 'services'),
-  path.join(basePublic, 'uploads', 'profile')
+  path.join(basePublic, 'uploads', 'profile'),
+  path.join(basePublic, 'uploads', 'banners')
 ];
 
 uploadDirs.forEach(dir => {

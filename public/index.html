@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.css?v=121">
+  <link rel="stylesheet" href="/css/style.css?v=122">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
 </head>
 <body>
@@ -107,15 +107,6 @@
           </a>
         </div>
 
-        <!-- Featured Properties -->
-        <div class="section-title">
-          <span>Featured Properties</span>
-          <a href="/search.html" class="section-link">View All</a>
-        </div>
-        <div class="horizontal-scroll" id="featured-properties-list" style="margin-bottom: 20px;">
-          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading featured properties...</p>
-        </div>
-
         <!-- Trending Projects -->
         <div class="section-title">
           <span>Trending Projects</span>
@@ -132,6 +123,19 @@
         </div>
         <div class="horizontal-scroll" id="recently-added-list" style="margin-bottom: 20px;">
           <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading recently added...</p>
+        </div>
+
+        <!-- Special Offers -->
+        <div class="section-title" id="offers-section-title" style="display: none;">
+          <span>Special Offers</span>
+        </div>
+        <div class="offers-container" id="offers-section-container" style="display: none;">
+          <div class="offers-slider" id="offers-slider">
+            <!-- Loaded dynamically -->
+          </div>
+          <div class="offers-dots" id="offers-dots">
+            <!-- Loaded dynamically -->
+          </div>
         </div>
 
         <!-- Luxury Collection -->
@@ -359,7 +363,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=121"></script>
+  <script src="/js/main.js?v=122"></script>
   <script>
     // Initialize homepage slide show
     let currentSlide = 0;
@@ -454,18 +458,11 @@
 
     // Load all homepage sections independently (each fetches its own data)
     async function loadProperties() {
-      const lists = ['featured-properties-list', 'trending-projects-list', 'recently-added-list', 'luxury-collection-list', 'nearby-properties-list'];
+      const lists = ['trending-projects-list', 'recently-added-list', 'luxury-collection-list', 'nearby-properties-list'];
       lists.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = shimmerPlaceholder();
       });
-
-      // 1. Featured Properties (is_featured=1)
-      try {
-        const r = await fetchSection({ is_featured: 1, sort: 'featured' }, 8);
-        const featured = r.data || [];
-        renderPropertyList(featured, 'featured-properties-list', '/search.html?is_featured=1');
-      } catch(e) { console.warn('Featured failed:', e.message); }
 
       // 2. Trending (sort by newest, skip first 8)
       try {
@@ -497,6 +494,176 @@
         renderTopCities(r.data || []);
         renderContinueBrowsing(r.data || []);
       } catch(e) { console.warn('Cities/browsing failed:', e.message); }
+    }
+
+    // --- Special Offers Section Loader & Carousel Slider ---
+    let offerIndex = 0;
+    let offerInterval = null;
+    let totalOfferSlides = 0;
+
+    async function loadSpecialOffers() {
+      try {
+        const res = await apiRequest('/api/banners');
+        if (res.success && res.data && res.data.length > 0) {
+          const banners = res.data;
+          const slider = document.getElementById('offers-slider');
+          const dotsContainer = document.getElementById('offers-dots');
+          if (!slider) return;
+
+          slider.innerHTML = '';
+          if (dotsContainer) dotsContainer.innerHTML = '';
+
+          banners.forEach((b, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'offer-slide';
+            if (b.link_url) {
+              slide.style.cursor = 'pointer';
+              slide.onclick = () => { window.location.href = b.link_url; };
+            }
+
+            const img = document.createElement('img');
+            img.src = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22100%25%22 height%3D%22100%25%22 viewBox%3D%220 0 1200 600%22%3E%3Crect width%3D%22100%25%22 height%3D%22100%25%22 fill%3D%22%23f5f5f5%22%2F%3E%3C%2Fsvg%3E';
+            img.dataset.src = b.image_url;
+            img.alt = b.title || 'Special Offer';
+            img.className = 'lazy-load';
+
+            slide.appendChild(img);
+
+            if (b.title || b.subtitle) {
+              const overlay = document.createElement('div');
+              overlay.className = 'offer-slide-overlay';
+              if (b.title) overlay.innerHTML += `<h3>${b.title}</h3>`;
+              if (b.subtitle) overlay.innerHTML += `<p>${b.subtitle}</p>`;
+              slide.appendChild(overlay);
+            }
+
+            slider.appendChild(slide);
+
+            // Create Dot Indicator
+            if (dotsContainer && banners.length > 1) {
+              const dot = document.createElement('div');
+              dot.className = `offers-dot ${index === 0 ? 'active' : ''}`;
+              dot.onclick = () => {
+                goToOfferSlide(index);
+                resetOfferAutoplay();
+              };
+              dotsContainer.appendChild(dot);
+            }
+          });
+
+          document.getElementById('offers-section-title').style.display = 'flex';
+          document.getElementById('offers-section-container').style.display = 'block';
+
+          triggerLazyLoad();
+          initOfferSlider(banners.length);
+        } else {
+          hideOffersSection();
+        }
+      } catch (e) {
+        console.warn('Special Offers load failed:', e.message);
+        hideOffersSection();
+      }
+    }
+
+    function hideOffersSection() {
+      const title = document.getElementById('offers-section-title');
+      const container = document.getElementById('offers-section-container');
+      if (title) title.style.display = 'none';
+      if (container) container.style.display = 'none';
+    }
+
+    function triggerLazyLoad() {
+      const lazyImages = document.querySelectorAll('img.lazy-load');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries, obs) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              img.src = img.dataset.src;
+              img.classList.remove('lazy-load');
+              obs.unobserve(img);
+            }
+          });
+        });
+        lazyImages.forEach(img => observer.observe(img));
+      } else {
+        lazyImages.forEach(img => {
+          img.src = img.dataset.src;
+        });
+      }
+    }
+
+    function initOfferSlider(count) {
+      offerIndex = 0;
+      totalOfferSlides = count;
+      updateOfferSliderPosition();
+      startOfferAutoplay();
+
+      const container = document.getElementById('offers-section-container');
+      if (container && !container.dataset.swipeBound) {
+        let startX = 0;
+        let endX = 0;
+        container.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX;
+        }, { passive: true });
+
+        container.addEventListener('touchend', (e) => {
+          endX = e.changedTouches[0].clientX;
+          const diff = startX - endX;
+          if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+              nextOfferSlide();
+            } else {
+              prevOfferSlide();
+            }
+            resetOfferAutoplay();
+          }
+        }, { passive: true });
+        container.dataset.swipeBound = 'true';
+      }
+    }
+
+    function updateOfferSliderPosition() {
+      const slider = document.getElementById('offers-slider');
+      if (slider) {
+        slider.style.transform = `translateX(-${offerIndex * 100}%)`;
+      }
+      const dots = document.querySelectorAll('.offers-dot');
+      dots.forEach((dot, idx) => {
+        if (idx === offerIndex) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    function nextOfferSlide() {
+      if (totalOfferSlides <= 1) return;
+      offerIndex = (offerIndex + 1) % totalOfferSlides;
+      updateOfferSliderPosition();
+    }
+
+    function prevOfferSlide() {
+      if (totalOfferSlides <= 1) return;
+      offerIndex = (offerIndex - 1 + totalOfferSlides) % totalOfferSlides;
+      updateOfferSliderPosition();
+    }
+
+    function goToOfferSlide(index) {
+      offerIndex = index;
+      updateOfferSliderPosition();
+    }
+
+    function startOfferAutoplay() {
+      if (offerInterval) clearInterval(offerInterval);
+      if (totalOfferSlides > 1) {
+        offerInterval = setInterval(nextOfferSlide, 3000);
+      }
+    }
+
+    function resetOfferAutoplay() {
+      startOfferAutoplay();
     }
 
     function renderTopCities(allProps) {
@@ -724,6 +891,7 @@
     // Setup callback to run AFTER auth has resolved and synchronized
     window.onAppReady = function(user) {
       loadProperties();
+      loadSpecialOffers();
       loadServices();
       loadBlogs();
       loadDesktopWidgets(user);

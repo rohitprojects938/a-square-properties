@@ -15,6 +15,7 @@ let servicesList = [];
 let plansList = [];
 let paymentsList = [];
 let reelsList = [];
+let bannersList = [];
 let auditLogs = [];
 
 // Initialize Dashboard
@@ -829,30 +830,183 @@ async function loadAnalyticsCharts() {
 }
 
 // ─── BANNERS SECTION ────────────────────────────────────────────
-function loadBannersSection() {
-  const body = document.getElementById('banners-manager-container');
-  if (!body) return;
-  body.innerHTML = `
-    <div class="adm-card">
-      <div class="adm-card-title">Homepage Banner Manager</div>
-      <p style="font-size:12px; color:var(--adm-muted); margin-bottom:16px;">Replace or update the top promotional banners displayed on Desktop & Mobile.</p>
+async function loadBannersSection() {
+  const container = document.getElementById('banners-manager-container');
+  if (!container) return;
+
+  container.innerHTML = `<p style="padding: 16px; color: var(--adm-muted);">Loading promotional banners...</p>`;
+
+  try {
+    const res = await apiRequest('/api/banners/admin');
+    if (res.success) {
+      bannersList = res.data || [];
       
-      <div class="adm-form-group">
-        <label class="adm-form-label">Desktop Banner Image URL</label>
-        <input type="text" id="desk-banner-url" class="adm-form-input" value="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80">
-      </div>
-      <div class="adm-form-group">
-        <label class="adm-form-label">Mobile Banner Image URL</label>
-        <input type="text" id="mobi-banner-url" class="adm-form-input" value="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80">
-      </div>
-      <button class="adm-btn adm-btn-primary" onclick="saveBanners()">Save Banner Changes</button>
-    </div>
-  `;
+      let html = `
+        <div class="adm-card-toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap: 16px; flex-wrap: wrap;">
+          <p style="font-size:12px; color:var(--adm-muted); margin:0;">Upload new banners, reorder, or enable/disable them. Banners slide sequentially based on Sort Order.</p>
+          <button class="adm-btn adm-btn-primary" onclick="openAddBannerModal()"><i data-lucide="plus"></i> Add Banner</button>
+        </div>
+      `;
+
+      if (bannersList.length === 0) {
+        html += `<p style="padding:20px; color:var(--adm-muted); text-align:center;">No promo banners added yet.</p>`;
+      } else {
+        html += `
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px;">
+            ${bannersList.map(b => `
+              <div class="adm-card" style="display:flex; flex-direction:column; gap:12px; padding:16px; border:1px solid var(--adm-border); border-radius:12px; position:relative;">
+                <div style="position:relative; width:100%; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:#222;">
+                  <img src="${b.image_url}" style="width:100%; height:100%; object-fit:cover;">
+                  <span class="adm-badge ${b.is_active ? 'badge-orange' : 'badge-gray'}" style="position:absolute; top:8px; right:8px; z-index:2;">
+                    ${b.is_active ? '★ Active' : 'Disabled'}
+                  </span>
+                </div>
+                <div>
+                  <h4 style="margin:0 0 4px 0; font-size:14px; font-weight:700; color:var(--adm-text);">${b.title || 'Untitled Banner'}</h4>
+                  <p style="margin:0 0 8px 0; font-size:11px; color:var(--adm-muted);">${b.subtitle || 'No subtitle provided'}</p>
+                  <div style="display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--adm-muted);">
+                    <div style="word-break: break-all;"><strong>Link:</strong> ${b.link_url || 'None'}</div>
+                    <div><strong>Sort Order:</strong> ${b.sort_order || 0}</div>
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:auto; padding-top:8px; border-top:1px dashed var(--adm-border);">
+                  <button class="adm-btn adm-btn-ghost adm-btn-sm" style="flex:1; border: 1px solid var(--adm-border);" onclick="editBannerModal(${b.id})">Edit</button>
+                  <button class="adm-btn adm-btn-ghost adm-btn-sm" style="flex:1; color:var(--adm-danger); border: 1px solid var(--adm-border);" onclick="deleteBanner(${b.id})">Delete</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      if (window.lucide) window.lucide.createIcons();
+    } else {
+      container.innerHTML = `<p style="padding:16px; color:var(--adm-danger);">Failed to load promotional banners.</p>`;
+    }
+  } catch (err) {
+    container.innerHTML = `<p style="padding:16px; color:var(--adm-danger);">Error: ${err.message}</p>`;
+  }
 }
 
-window.saveBanners = () => {
-  showToast('Homepage banners updated successfully!');
-  addAuditLog('Banners updated', 'Desktop and Mobile promotional banners updated.');
+window.openAddBannerModal = () => {
+  const form = document.getElementById('banner-form');
+  form.reset();
+  form.removeAttribute('data-id');
+  document.getElementById('banner-modal-title').textContent = 'Upload Promo Banner';
+  
+  document.getElementById('banner-preview-wrapper').style.display = 'none';
+  document.getElementById('banner-preview').src = '';
+  
+  openModal('banner-modal');
+};
+
+window.editBannerModal = (bid) => {
+  const b = bannersList.find(item => item.id === bid);
+  if (!b) return;
+
+  const form = document.getElementById('banner-form');
+  form.setAttribute('data-id', bid);
+  document.getElementById('banner-modal-title').textContent = 'Edit Promo Banner';
+
+  document.getElementById('banner-file').value = '';
+  document.getElementById('banner-url').value = b.image_url || '';
+  document.getElementById('banner-title').value = b.title || '';
+  document.getElementById('banner-subtitle').value = b.subtitle || '';
+  document.getElementById('banner-link').value = b.link_url || '';
+  document.getElementById('banner-order').value = b.sort_order || 0;
+  document.getElementById('banner-status').value = b.is_active ? '1' : '0';
+
+  const previewWrapper = document.getElementById('banner-preview-wrapper');
+  const previewImg = document.getElementById('banner-preview');
+  if (b.image_url) {
+    previewImg.src = b.image_url;
+    previewWrapper.style.display = 'block';
+  } else {
+    previewWrapper.style.display = 'none';
+  }
+
+  openModal('banner-modal');
+};
+
+window.saveBanner = async (e) => {
+  e.preventDefault();
+  const form = document.getElementById('banner-form');
+  const bid = form.getAttribute('data-id');
+
+  const fileInput = document.getElementById('banner-file');
+  const urlInput = document.getElementById('banner-url');
+  const titleInput = document.getElementById('banner-title');
+  const subtitleInput = document.getElementById('banner-subtitle');
+  const linkInput = document.getElementById('banner-link');
+  const orderInput = document.getElementById('banner-order');
+  const statusSelect = document.getElementById('banner-status');
+
+  if (!fileInput.files[0] && !urlInput.value.trim()) {
+    showToast('Please upload an image file or provide an image URL.', 'danger');
+    return;
+  }
+
+  const formData = new FormData();
+  if (fileInput.files[0]) {
+    formData.append('image', fileInput.files[0]);
+  }
+  formData.append('imageUrl', urlInput.value.trim());
+  formData.append('title', titleInput.value.trim());
+  formData.append('subtitle', subtitleInput.value.trim());
+  formData.append('linkUrl', linkInput.value.trim());
+  formData.append('sortOrder', orderInput.value);
+  formData.append('isActive', statusSelect.value === '1');
+
+  const url = bid ? `/api/banners/${bid}` : '/api/banners';
+  const method = bid ? 'PUT' : 'POST';
+
+  showLoader();
+  try {
+    const res = await apiRequest(url, method, formData, true);
+    if (res.success) {
+      showToast(bid ? 'Promo banner updated successfully!' : 'Promo banner created successfully!');
+      closeModal('banner-modal');
+      loadBannersSection();
+      addAuditLog(bid ? 'Banner updated' : 'Banner created', `Title: ${titleInput.value.trim()}`);
+    }
+  } catch (err) {
+    showToast(err.message, 'danger');
+  } finally {
+    hideLoader();
+  }
+};
+
+window.deleteBanner = async (bid) => {
+  if (confirm('Are you sure you want to delete this promotional banner? This action cannot be undone.')) {
+    showLoader();
+    try {
+      const res = await apiRequest(`/api/banners/${bid}`, 'DELETE');
+      if (res.success) {
+        showToast('Promotional banner deleted.');
+        loadBannersSection();
+        addAuditLog('Banner deleted', `Banner ID: ${bid}`);
+      }
+    } catch (err) {
+      showToast(err.message, 'danger');
+    } finally {
+      hideLoader();
+    }
+  }
+};
+
+window.previewBannerImage = (input) => {
+  const previewWrapper = document.getElementById('banner-preview-wrapper');
+  const previewImg = document.getElementById('banner-preview');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewImg.src = e.target.result;
+      previewWrapper.style.display = 'block';
+    }
+    reader.readAsDataURL(input.files[0]);
+  } else {
+    previewWrapper.style.display = 'none';
+  }
 };
 
 // ─── NOTIFICATIONS BROADCASTER ──────────────────────────────────

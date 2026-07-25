@@ -697,6 +697,55 @@
     </div>
   </div>
 
+  <!-- Banner Add/Edit Modal -->
+  <div class="adm-modal-overlay" id="banner-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title" id="banner-modal-title">Upload Promo Banner</div>
+        <button class="adm-modal-close" onclick="closeModal('banner-modal')">×</button>
+      </div>
+      <form id="banner-form" onsubmit="saveBanner(event)">
+        <div class="adm-form-group">
+          <label class="adm-form-label">Banner Image (Upload)</label>
+          <input type="file" id="banner-file" class="adm-form-input" accept="image/*" onchange="previewBannerImage(this)">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Or Image URL</label>
+          <input type="text" id="banner-url" class="adm-form-input" placeholder="https://example.com/image.jpg">
+        </div>
+        <div class="adm-form-group" id="banner-preview-wrapper" style="display:none; text-align:center; margin-bottom:12px;">
+          <img id="banner-preview" src="" style="max-height:120px; border-radius:8px; object-fit:cover; border:1px solid var(--adm-border);">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Title (Optional)</label>
+          <input type="text" id="banner-title" class="adm-form-input" placeholder="e.g. Special Offer 50% Off">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Subtitle (Optional)</label>
+          <input type="text" id="banner-subtitle" class="adm-form-input" placeholder="e.g. Valid until next Sunday">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Link URL (Optional)</label>
+          <input type="text" id="banner-link" class="adm-form-input" placeholder="e.g. /search.html?category=villa">
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Sort Order</label>
+            <input type="number" id="banner-order" class="adm-form-input" value="0">
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Display Status</label>
+            <select id="banner-status" class="adm-form-select">
+              <option value="1">Active</option>
+              <option value="0">Disabled</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Banner</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Dynamic Loading Overlay spinner -->
   <div id="adm-loading-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99999; display:none; align-items:center; justify-content:center;">
     <div class="adm-spinner"></div>
