@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Details - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=114">
+  <link rel="stylesheet" href="/css/style.css?v=115">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -194,56 +194,6 @@
           <h3 style="font-size:16px; font-weight:700; margin-top:20px;">Map Location</h3>
           <div id="map"></div>
 
-          <!-- Local Amenities list -->
-          <h3 style="font-size:16px; font-weight:700; margin-top:20px;">Nearby Amenities</h3>
-          <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
-            <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid var(--border-color);">
-              <span>🏫 St. Mary High School</span>
-              <strong style="color:var(--primary-red);">0.5 km</strong>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid var(--border-color);">
-              <span>🏥 City Medical Hospital</span>
-              <strong style="color:var(--primary-red);">1.2 km</strong>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid var(--border-color);">
-              <span>🛒 More Supermarket Retail</span>
-              <strong style="color:var(--primary-red);">0.3 km</strong>
-            </div>
-          </div>
-
-          <!-- EMI Loan Calculator -->
-          <div class="emi-card">
-            <h3 style="font-size:15px; font-weight:700;"><i class="bx bx-calculator" style="color:var(--primary-red);"></i> EMI Loan Calculator</h3>
-            <div class="form-group" style="margin-top:12px;">
-              <label class="form-label" style="display:flex; justify-content:space-between;">
-                <span>Loan Amount (₹)</span>
-                <span id="loan-amt-txt" style="font-weight:bold; color:var(--primary-red);">₹10,00,000</span>
-              </label>
-              <input type="range" id="loan-amount-slider" min="100000" max="50000000" step="50000" value="1000000" style="accent-color:var(--primary-red);" oninput="runEMI()">
-            </div>
-            <div class="form-group">
-              <label class="form-label" style="display:flex; justify-content:space-between;">
-                <span>Interest Rate (%)</span>
-                <span id="loan-rate-txt" style="font-weight:bold;">8.5%</span>
-              </label>
-              <input type="range" id="loan-rate-slider" min="5" max="18" step="0.1" value="8.5" style="accent-color:var(--primary-red);" oninput="runEMI()">
-            </div>
-            <div style="margin-top:16px; background:var(--accent-gray); padding:12px; border-radius:12px; text-align:center;">
-              <span style="font-size:12px; color:var(--text-muted);">Estimated Monthly EMI</span>
-              <h2 style="color:var(--primary-red); font-size:24px; font-weight:800; margin-top:2px;" id="emi-output">₹0 / month</h2>
-            </div>
-          </div>
-
-          <!-- Visit Scheduler -->
-          <div class="emi-card" style="margin-top:16px;">
-            <h3 style="font-size:15px; font-weight:700;"><i class="bx bx-calendar-event" style="color:var(--primary-red);"></i> Schedule a Visit</h3>
-            <div class="form-group" style="margin-top:12px;">
-              <label class="form-label">Choose Visit Date</label>
-              <input type="datetime-local" id="visit-date-input" class="form-input">
-            </div>
-            <button class="btn-primary" onclick="handleScheduleVisit()">Schedule Visit</button>
-          </div>
-
           <!-- Owner card profile summary -->
           <div class="owner-card">
             <div style="display:flex; align-items:center; gap:12px;">
@@ -316,7 +266,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=114"></script>
+  <script src="/js/main.js?v=115"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
@@ -383,13 +333,6 @@
           const lat = parseFloat(propertyDetails.latitude) || 17.385; // Default Hyderabad lat
           const lng = parseFloat(propertyDetails.longitude) || 78.486; // Default Hyderabad lng
           renderLeafletMap('map', lat, lng, propertyDetails.title);
-
-          // Setup Loan Calculator initial sliders
-          document.getElementById('loan-amount-slider').max = propertyDetails.price;
-          document.getElementById('loan-amount-slider').value = Math.round(propertyDetails.price * 0.8); // 80% default
-          runEMI();
-
-          // Track recently viewed listing
           trackRecentlyViewed(propertyDetails);
 
           // Setup desktop widgets
@@ -476,17 +419,6 @@
       }
     });
 
-    // Run Loan Calculator Calculation
-    function runEMI() {
-      const p = parseFloat(document.getElementById('loan-amount-slider').value);
-      const r = parseFloat(document.getElementById('loan-rate-slider').value);
-      
-      document.getElementById('loan-amt-txt').innerText = `₹${p.toLocaleString('en-IN')}`;
-      document.getElementById('loan-rate-txt').innerText = `${r}%`;
-
-      const monthlyEMI = calculateEMI(p, r, 240); // 20 year default term
-      document.getElementById('emi-output').innerText = `₹${monthlyEMI.toLocaleString('en-IN')} / mo`;
-    }
 
     // Inquiry Dispatcher
     async function handleSendEnquiry(e) {
@@ -531,24 +463,6 @@
       }
     }
 
-    // Visit Scheduler Dispatcher
-    async function handleScheduleVisit() {
-      const visitDate = document.getElementById('visit-date-input').value;
-      if (!visitDate) {
-        return alert('Please select a visit date and time.');
-      }
-
-      try {
-        const result = await apiRequest('/api/properties/action/visit', 'POST', {
-          propertyId, visitDate
-        });
-        if (result.success) {
-          alert('Visit scheduled! The listing owner has been notified of your schedule request.');
-        }
-      } catch (err) {
-        alert(err.message);
-      }
-    }
 
     // Share action
     function handleShareLink() {
