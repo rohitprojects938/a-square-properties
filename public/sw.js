@@ -1,10 +1,10 @@
-const CACHE_NAME = 'houserenter-pwa-cache-v105';
+const CACHE_NAME = 'houserenter-pwa-cache-v106';
 const ASSETS = [
   '/',
   '/index.html',
   '/login.html',
-  '/css/style.css?v=105',
-  '/js/main.js?v=105',
+  '/css/style.css?v=106',
+  '/js/main.js?v=106',
   '/uploads/profile/default-avatar.png'
 ];
 
