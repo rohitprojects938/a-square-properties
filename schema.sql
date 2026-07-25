@@ -1,8 +1,6 @@
 -- House Renter Relational Database Schema
 -- Database: house_renter
 
-CREATE DATABASE IF NOT EXISTS house_renter;
-USE house_renter;
 
 -- 1. Users Table
 CREATE TABLE IF NOT EXISTS users (
