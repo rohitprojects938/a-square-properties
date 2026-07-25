@@ -66,6 +66,7 @@ async function initializeDatabase() {
     await addColumnIfNotExist('users', 'provider', "ALTER TABLE users ADD COLUMN provider VARCHAR(50) DEFAULT 'email';");
     await addColumnIfNotExist('properties', 'is_hidden', "ALTER TABLE properties ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE;");
     await addColumnIfNotExist('properties', 'is_featured', "ALTER TABLE properties ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;");
+    await addColumnIfNotExist('property_images', 'sort_order', "ALTER TABLE property_images ADD COLUMN sort_order INT DEFAULT 0;");
 
     await seedDatabaseData();
 

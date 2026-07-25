@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Post Property - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=110">
+  <link rel="stylesheet" href="/css/style.css?v=111">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -249,8 +249,14 @@
             <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">UPLOAD MEDIA</h3>
 
             <div class="form-group">
-              <label class="form-label">Upload Property Images (Max 5)</label>
-              <input type="file" id="post-media-files" class="form-input" accept="image/*" multiple required>
+              <label class="form-label">Upload Property Images (1 to 6 images)</label>
+              <input type="file" id="post-media-files" class="form-input" accept="image/*" multiple style="display:none;">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('post-media-files').click()" style="margin-bottom:12px; display:flex; align-items:center; gap:6px; font-weight:700;"><i class="bx bx-image-add" style="font-size:18px;"></i> Choose Images</button>
+              
+              <!-- Previews Grid -->
+              <div id="image-previews-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                <!-- Previews loaded dynamically -->
+              </div>
             </div>
 
             <div class="form-group">
@@ -283,7 +289,7 @@
     </div>
   </div>
 
-  <script src="/js/main.js?v=110"></script>
+  <script src="/js/main.js?v=111"></script>
   <script>
     let currentWizardStep = 1;
     let leafMap = null;
@@ -329,9 +335,134 @@
       });
     }
 
+    let selectedImages = []; // Array of { file: File, previewUrl: String, existingUrl: String }
+
+    // Listen to image choosing changes
+    document.getElementById('post-media-files').addEventListener('change', function(e) {
+      const files = e.target.files;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`Image "${file.name}" exceeds 5MB size limit.`);
+          continue;
+        }
+        if (selectedImages.length >= 6) {
+          alert("You can upload a maximum of 6 images.");
+          break;
+        }
+        const previewUrl = URL.createObjectURL(file);
+        selectedImages.push({ file, previewUrl });
+      }
+      e.target.value = ''; // Reset input selection
+      renderPreviews();
+    });
+
+    function renderPreviews() {
+      const container = document.getElementById('image-previews-container');
+      container.innerHTML = '';
+      selectedImages.forEach((img, index) => {
+        const url = img.existingUrl || img.previewUrl;
+        const card = document.createElement('div');
+        card.style.cssText = 'position:relative; aspect-ratio:1; border:1px solid var(--border-color); border-radius:8px; overflow:hidden; background:#f3f4f6; display:flex; flex-direction:column; align-items:center; justify-content:center;';
+        card.innerHTML = `
+          <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
+          <div style="position:absolute; top:4px; left:4px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700;">#${index + 1}</div>
+          ${index === 0 ? '<div style="position:absolute; bottom:4px; left:4px; background:var(--primary-red); color:white; font-size:9px; padding:1px 4px; border-radius:2px; font-weight:700;">COVER</div>' : ''}
+          <button type="button" onclick="removeImage(${index})" style="position:absolute; top:4px; right:4px; background:rgba(220,38,38,0.85); color:white; border:none; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;"><i class="bx bx-x"></i></button>
+          <div style="position:absolute; bottom:4px; right:4px; display:flex; gap:2px; background:rgba(0,0,0,0.6); padding:2px; border-radius:4px;">
+            <button type="button" onclick="moveImageLeft(${index})" style="background:transparent; border:none; color:white; cursor:pointer; font-size:14px; padding:0 2px;"><i class="bx bx-chevron-left"></i></button>
+            <button type="button" onclick="moveImageRight(${index})" style="background:transparent; border:none; color:white; cursor:pointer; font-size:14px; padding:0 2px;"><i class="bx bx-chevron-right"></i></button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    window.removeImage = function(index) {
+      const removed = selectedImages.splice(index, 1)[0];
+      if (removed.previewUrl) {
+        URL.revokeObjectURL(removed.previewUrl);
+      }
+      renderPreviews();
+    };
+
+    window.moveImageLeft = function(index) {
+      if (index === 0) return;
+      const temp = selectedImages[index];
+      selectedImages[index] = selectedImages[index - 1];
+      selectedImages[index - 1] = temp;
+      renderPreviews();
+    };
+
+    window.moveImageRight = function(index) {
+      if (index === selectedImages.length - 1) return;
+      const temp = selectedImages[index];
+      selectedImages[index] = selectedImages[index + 1];
+      selectedImages[index + 1] = temp;
+      renderPreviews();
+    };
+
+    // Load edit data
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+
+    if (editId) {
+      document.querySelector('.logo').innerText = 'Edit Property';
+      const publishBtn = document.querySelector('.btn-primary[onclick="handlePublishProperty()"]');
+      if (publishBtn) publishBtn.innerText = 'Save Changes';
+      document.title = 'Edit Property - House Rental';
+      loadEditData(editId);
+    }
+
+    async function loadEditData(id) {
+      try {
+        const result = await apiRequest(`/api/properties/${id}`);
+        if (result.success && result.data) {
+          const p = result.data;
+          
+          // Verify owner/admin access
+          const userStr = localStorage.getItem('user');
+          const user = userStr ? JSON.parse(userStr) : {};
+          if (p.user_id !== user.id && user.role !== 'admin') {
+            alert('You are not authorized to edit this listing.');
+            window.location.href = '/profile.html';
+            return;
+          }
+          
+          document.getElementById('post-title').value = p.title || '';
+          document.getElementById('post-description').value = p.description || '';
+          document.getElementById('post-category').value = p.category || 'apartment';
+          document.getElementById('post-listing-type').value = p.listing_type || 'rent';
+          document.getElementById('post-category-type').value = p.category_type || 'new';
+          document.getElementById('post-price').value = p.price || '';
+          document.getElementById('post-area').value = p.area_sqft || '';
+          document.getElementById('post-beds').value = p.bedrooms || 0;
+          document.getElementById('post-baths').value = p.bathrooms || 0;
+          document.getElementById('post-furnish').value = p.furnishing_status || 'unfurnished';
+          document.getElementById('post-facing').value = p.facing || 'East';
+          document.getElementById('post-floor').value = p.floor_number || 0;
+          document.getElementById('post-parking').value = p.parking_spaces || 0;
+          document.getElementById('post-address').value = p.address || '';
+          document.getElementById('post-city').value = p.city || '';
+          document.getElementById('post-state').value = p.state || '';
+          document.getElementById('post-pincode').value = p.pincode || '';
+          document.getElementById('post-lat').value = p.latitude || '';
+          document.getElementById('post-lng').value = p.longitude || '';
+
+          if (p.images && p.images.length > 0) {
+            selectedImages = p.images.map(img => ({
+              existingUrl: img.image_url
+            }));
+            renderPreviews();
+          }
+        }
+      } catch (err) {
+        alert('Failed to load property details: ' + err.message);
+      }
+    }
+
     async function handlePublishProperty() {
-      const imgInput = document.getElementById('post-media-files');
-      if (imgInput.files.length === 0) {
+      if (selectedImages.length === 0) {
         return alert('Please select at least 1 image to showcase your property.');
       }
 
@@ -356,25 +487,54 @@
       formData.append('latitude', document.getElementById('post-lat').value);
       formData.append('longitude', document.getElementById('post-lng').value);
 
-      // Append images
-      for (let i = 0; i < imgInput.files.length; i++) {
-        formData.append('images', imgInput.files[i]);
-      }
-
-      // Append video
+      // Append video if selected
       const vidInput = document.getElementById('post-video-file');
       if (vidInput.files.length > 0) {
         formData.append('video', vidInput.files[0]);
       }
 
-      try {
-        const result = await apiRequest('/api/properties', 'POST', formData, true);
-        if (result.success) {
-          alert('Property published successfully!');
-          window.location.href = '/profile.html';
+      if (editId) {
+        const keptImages = [];
+        const imageOrder = [];
+        let newFileIndex = 0;
+
+        selectedImages.forEach(img => {
+          if (img.existingUrl) {
+            keptImages.push(img.existingUrl);
+            imageOrder.push(img.existingUrl);
+          } else {
+            formData.append('images', img.file);
+            imageOrder.push(`new-${newFileIndex}`);
+            newFileIndex++;
+          }
+        });
+
+        formData.append('kept_images', JSON.stringify(keptImages));
+        formData.append('image_order', JSON.stringify(imageOrder));
+
+        try {
+          const result = await apiRequest(`/api/properties/${editId}`, 'PUT', formData, true);
+          if (result.success) {
+            alert('Property updated successfully!');
+            window.location.href = '/profile.html';
+          }
+        } catch (err) {
+          alert('Failed to update listing: ' + err.message);
         }
-      } catch (err) {
-        alert('Failed to publish listing: ' + err.message);
+      } else {
+        selectedImages.forEach(img => {
+          formData.append('images', img.file);
+        });
+
+        try {
+          const result = await apiRequest('/api/properties', 'POST', formData, true);
+          if (result.success) {
+            alert('Property published successfully!');
+            window.location.href = '/profile.html';
+          }
+        } catch (err) {
+          alert('Failed to publish listing: ' + err.message);
+        }
       }
     }
   </script>

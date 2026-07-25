@@ -347,6 +347,7 @@ async function loadListingsTable(page = 1) {
         <td><span class="adm-badge ${p.is_featured ? 'badge-orange' : 'badge-gray'}">${p.is_featured ? '★ Featured' : 'Normal'}</span></td>
         <td>
           <div class="adm-actions">
+            <a href="/post.html?edit=${p.id}" class="adm-btn adm-btn-ghost adm-btn-sm" style="text-decoration:none; display:inline-flex; align-items:center;">Edit</a>
             <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="toggleListingFeatured(${p.id}, ${p.is_featured ? 0 : 1})">${p.is_featured ? 'Unfeature' : 'Feature'}</button>
             <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="toggleListingVisibility(${p.id}, ${p.is_hidden ? 0 : 1})">${p.is_hidden ? 'Show' : 'Hide'}</button>
             <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteListingPrompt(${p.id})"><i data-lucide="trash-2"></i></button>
@@ -414,6 +415,7 @@ async function loadApprovalQueue() {
           <div class="adm-approval-title">${p.title}</div>
           <div class="adm-approval-meta">City: ${p.city} • Category: ${p.category} • Price: ₹${formatNumber(p.price)} • Date: ${new Date(p.created_at).toLocaleDateString()}</div>
           <div class="adm-approval-actions">
+            <a href="/post.html?edit=${p.id}" class="adm-btn adm-btn-ghost adm-btn-sm" style="text-decoration:none; display:inline-flex; align-items:center;">Edit</a>
             <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveProperty(${p.id})">Approve</button>
             <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectProperty(${p.id})">Reject</button>
           </div>

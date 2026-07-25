@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>My Profile - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=110">
+  <link rel="stylesheet" href="/css/style.css?v=111">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -254,7 +254,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=110"></script>
+  <script src="/js/main.js?v=111"></script>
   <script>
     // Bind initial page loading to window.onAppReady
     window.onAppReady = async function(user) {
@@ -342,8 +342,9 @@
               <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Price: ₹${p.price.toLocaleString()} • Status: ${p.approval_status.toUpperCase()}</p>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
-              <a href="/details.html?id=${p.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px;">View</a>
-              <button onclick="deleteListing(${p.id})" style="padding:6px 12px; font-size:11px; background:#dc2626; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Delete</button>
+              <a href="/details.html?id=${p.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px; text-decoration:none; display:flex; align-items:center;">View</a>
+              <a href="/post.html?edit=${p.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px; text-decoration:none; background:var(--primary-red); color:white; border:none; display:flex; align-items:center;">Edit</a>
+              <button onclick="deleteListing(${p.id})" style="padding:6px 12px; font-size:11px; background:#dc2626; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; display:flex; align-items:center; justify-content:center;">Delete</button>
             </div>
           `;
           propCont.appendChild(row);

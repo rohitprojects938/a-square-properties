@@ -48,8 +48,8 @@ async function createProperty(req, res) {
 
           // Insert path to database
           await db.query(
-            'INSERT INTO property_images (property_id, image_url, is_cover) VALUES (?, ?, ?)',
-            [propertyId, savedPath, i === 0] // First image is cover
+            'INSERT INTO property_images (property_id, image_url, is_cover, sort_order) VALUES (?, ?, ?, ?)',
+            [propertyId, savedPath, i === 0, i] // First image is cover, sort_order is i
           );
         }
       }
@@ -77,6 +77,174 @@ async function createProperty(req, res) {
   } catch (error) {
     console.error('Create property error: ', error.message);
     res.status(500).json({ success: false, error: 'Server property posting failure.' });
+  }
+}
+
+// Update an existing property listing
+async function updateProperty(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+
+  const { id } = req.params;
+
+  try {
+    // 1. Check if property exists and verify authorization (owner or admin)
+    const [rows] = await db.query('SELECT user_id FROM properties WHERE id = ?', [id]);
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Property not found.' });
+    }
+    const property = rows[0];
+    if (property.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'You are not authorized to edit this listing.' });
+    }
+
+    const {
+      title, description, category, listing_type, category_type, price, area_sqft,
+      bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status,
+      address, city, state, pincode, latitude, longitude,
+      kept_images, image_order
+    } = req.body;
+
+    // 2. Update text fields in properties table
+    await db.query(
+      `UPDATE properties SET 
+        title = ?, description = ?, category = ?, listing_type = ?, category_type = ?, 
+        price = ?, area_sqft = ?, bedrooms = ?, bathrooms = ?, facing = ?, 
+        floor_number = ?, parking_spaces = ?, furnishing_status = ?, address = ?, 
+        city = ?, state = ?, pincode = ?, 
+        latitude = ?, longitude = ? 
+      WHERE id = ?`,
+      [
+        title, description, category, listing_type, category_type || 'new',
+        parseFloat(price), parseInt(area_sqft), parseInt(bedrooms || 0), parseInt(bathrooms || 0),
+        facing || null, parseInt(floor_number || 0), parseInt(parking_spaces || 0), furnishing_status || 'unfurnished',
+        address, city, state, pincode,
+        latitude ? parseFloat(latitude) : null,
+        longitude ? parseFloat(longitude) : null,
+        id
+      ]
+    );
+
+    const { processImage, processVideo } = require('../middlewares/uploadMiddleware');
+    const fs = require('fs');
+    const path = require('path');
+
+    // 3. Process image deletions
+    let keptImagesList = [];
+    if (kept_images) {
+      try {
+        keptImagesList = typeof kept_images === 'string' ? JSON.parse(kept_images) : kept_images;
+      } catch (e) {
+        keptImagesList = [];
+      }
+    }
+
+    // Get all current images from database
+    const [currentDbImages] = await db.query('SELECT id, image_url FROM property_images WHERE property_id = ?', [id]);
+    
+    // Delete any image NOT in the kept list
+    for (const dbImg of currentDbImages) {
+      if (!keptImagesList.includes(dbImg.image_url)) {
+        // Delete database record
+        await db.query('DELETE FROM property_images WHERE id = ?', [dbImg.id]);
+        // Delete physical file
+        if (dbImg.image_url && dbImg.image_url.startsWith('/uploads/')) {
+          const fullPath = path.join(__dirname, '..', 'public', dbImg.image_url);
+          fs.unlink(fullPath, (err) => {
+            if (err && err.code !== 'ENOENT') {
+              console.error('Failed to delete physical image during edit:', fullPath, err.message);
+            }
+          });
+        }
+      }
+    }
+
+    // 4. Process new image uploads
+    let newImagePaths = [];
+    if (req.files && req.files.images) {
+      for (let i = 0; i < req.files.images.length; i++) {
+        const file = req.files.images[i];
+        const savedPath = await processImage(file.buffer, 'properties', `property-${id}`);
+        newImagePaths.push(savedPath);
+      }
+    }
+
+    // 5. Build final sorted image list
+    let orderedList = [];
+    if (image_order) {
+      try {
+        orderedList = typeof image_order === 'string' ? JSON.parse(image_order) : image_order;
+      } catch (e) {
+        orderedList = [];
+      }
+    }
+
+    // Replace placeholders like "new-0", "new-1" with actual new image paths
+    const finalImagesList = orderedList.map(item => {
+      if (typeof item === 'string' && item.startsWith('new-')) {
+        const index = parseInt(item.split('-')[1]);
+        return newImagePaths[index] || null;
+      }
+      return item;
+    }).filter(item => item !== null);
+
+    // If orderedList was not provided or empty, fallback to keeping all remaining + new images
+    if (finalImagesList.length === 0) {
+      const [remainingDbImages] = await db.query('SELECT image_url FROM property_images WHERE property_id = ?', [id]);
+      remainingDbImages.forEach(img => finalImagesList.push(img.image_url));
+      newImagePaths.forEach(path => finalImagesList.push(path));
+    }
+
+    // Remove any duplicates just in case
+    const uniqueImagesList = [...new Set(finalImagesList)];
+
+    // 6. Update database records for property_images with new sort_order and is_cover flags
+    for (let i = 0; i < uniqueImagesList.length; i++) {
+      const imgUrl = uniqueImagesList[i];
+      const isCover = (i === 0);
+
+      // Check if it already exists in db
+      const [existImg] = await db.query('SELECT id FROM property_images WHERE property_id = ? AND image_url = ?', [id, imgUrl]);
+      if (existImg.length > 0) {
+        // Update sorting and cover status
+        await db.query('UPDATE property_images SET sort_order = ?, is_cover = ? WHERE id = ?', [i, isCover, existImg[0].id]);
+      } else {
+        // Insert new image
+        await db.query('INSERT INTO property_images (property_id, image_url, is_cover, sort_order) VALUES (?, ?, ?, ?)', [id, imgUrl, isCover, i]);
+      }
+    }
+
+    // 7. Handle video update if new video is uploaded
+    if (req.files && req.files.video) {
+      const file = req.files.video[0];
+      
+      // Fetch existing video to delete physical file
+      const [currentVideos] = await db.query('SELECT id, video_url FROM property_videos WHERE property_id = ?', [id]);
+      for (const v of currentVideos) {
+        await db.query('DELETE FROM property_videos WHERE id = ?', [v.id]);
+        if (v.video_url && v.video_url.startsWith('/uploads/')) {
+          const fullPath = path.join(__dirname, '..', 'public', v.video_url);
+          fs.unlink(fullPath, (err) => {
+            if (err && err.code !== 'ENOENT') {
+              console.error('Failed to delete physical video:', fullPath, err.message);
+            }
+          });
+        }
+      }
+
+      // Process and save new video
+      const savedVideoPath = await processVideo(file.buffer, file.originalname, 'properties');
+      await db.query('INSERT INTO property_videos (property_id, video_url) VALUES (?, ?)', [id, savedVideoPath]);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Property updated successfully!'
+    });
+  } catch (error) {
+    console.error('Update property error: ', error.message);
+    res.status(500).json({ success: false, error: 'Server property update failure.' });
   }
 }
 
@@ -195,7 +363,7 @@ async function getPropertyById(req, res) {
     await db.query('INSERT INTO property_views (user_id, property_id) VALUES (?, ?)', [req.user ? req.user.id : null, id]);
 
     // Fetch images and videos
-    const [images] = await db.query('SELECT * FROM property_images WHERE property_id = ?', [id]);
+    const [images] = await db.query('SELECT * FROM property_images WHERE property_id = ? ORDER BY sort_order ASC, id ASC', [id]);
     const [videos] = await db.query('SELECT * FROM property_videos WHERE property_id = ?', [id]);
     const [reviews] = await db.query('SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.property_id = ? ORDER BY r.id DESC', [id]);
 
@@ -482,6 +650,21 @@ async function deleteProperty(req, res) {
       return res.status(403).json({ success: false, error: 'You can only delete your own listings.' });
     }
 
+    // Fetch all related images to delete physical files
+    const [images] = await db.query('SELECT image_url FROM property_images WHERE property_id = ?', [id]);
+    const fs = require('fs');
+    const path = require('path');
+    for (const img of images) {
+      if (img.image_url && img.image_url.startsWith('/uploads/')) {
+        const fullPath = path.join(__dirname, '..', 'public', img.image_url);
+        fs.unlink(fullPath, (err) => {
+          if (err && err.code !== 'ENOENT') {
+            console.error('Failed to delete physical image file:', fullPath, err.message);
+          }
+        });
+      }
+    }
+
     // Delete related images, saves, views first
     await db.query('DELETE FROM property_images WHERE property_id = ?', [id]);
     await db.query('DELETE FROM saved_properties WHERE property_id = ?', [id]);
@@ -497,6 +680,7 @@ async function deleteProperty(req, res) {
 
 module.exports = {
   createProperty,
+  updateProperty,
   deleteProperty,
   getProperties,
   getPropertyById,

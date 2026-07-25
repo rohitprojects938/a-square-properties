@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS property_images (
     property_id INT NOT NULL,
     image_url VARCHAR(255) NOT NULL,
     is_cover BOOLEAN DEFAULT FALSE,
+    sort_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
 );

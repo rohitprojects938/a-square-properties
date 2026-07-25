@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Details - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=110">
+  <link rel="stylesheet" href="/css/style.css?v=111">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -123,8 +123,16 @@
       <!-- Left Column (Property Details) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Image slider -->
-        <div class="slider-container" id="details-image-slider">
-          <img class="slider-img" id="slider-img-target" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80">
+        <div class="slider-container" id="details-image-slider" style="position:relative; aspect-ratio:16/9; overflow:hidden;">
+          <img class="slider-img" id="slider-img-target" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" style="width:100%; height:100%; object-fit:cover; transition: opacity 0.2s ease;">
+          
+          <button type="button" onclick="navigateDetailsImage(-1)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;"><i class="bx bx-chevron-left" style="font-size:24px;"></i></button>
+          <button type="button" onclick="navigateDetailsImage(1)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;"><i class="bx bx-chevron-right" style="font-size:24px;"></i></button>
+        </div>
+
+        <!-- Thumbnails row -->
+        <div id="details-thumbnails-row" style="display:flex; gap:8px; overflow-x:auto; padding:8px 16px; scrollbar-width:none;">
+          <!-- Thumbnails loaded dynamically -->
         </div>
 
         <!-- Information Summary block -->
@@ -308,7 +316,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=110"></script>
+  <script src="/js/main.js?v=111"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
@@ -341,10 +349,10 @@
           document.getElementById('spec-parking').innerText = propertyDetails.parking_spaces;
           document.getElementById('spec-furnish').innerText = propertyDetails.furnishing_status.toUpperCase();
 
-          // Set Slider Image
-          if (propertyDetails.images && propertyDetails.images.length > 0) {
-            document.getElementById('slider-img-target').src = propertyDetails.images[0].image_url;
-          }
+          // Set Gallery Images & Swipe Setup
+          activeImageIndex = 0;
+          renderGallery();
+          setupSwipeListeners();
 
           // Set Owner Cards
           document.getElementById('owner-name').innerText = propertyDetails.owner_name;
@@ -531,6 +539,79 @@
         navigator.clipboard.writeText(window.location.href);
         alert('Property link copied to clipboard!');
       }
+    }
+
+    let activeImageIndex = 0;
+
+    function renderGallery() {
+      const sliderImg = document.getElementById('slider-img-target');
+      const thumbsContainer = document.getElementById('details-thumbnails-row');
+      
+      const images = propertyDetails?.images || [];
+      if (images.length === 0) {
+        sliderImg.src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
+        thumbsContainer.innerHTML = '';
+        return;
+      }
+
+      // Show active image
+      sliderImg.style.opacity = 0;
+      setTimeout(() => {
+        sliderImg.src = images[activeImageIndex].image_url;
+        sliderImg.style.opacity = 1;
+      }, 150);
+
+      // Populate Thumbnails
+      thumbsContainer.innerHTML = '';
+      images.forEach((img, index) => {
+        const thumb = document.createElement('div');
+        thumb.style.cssText = `
+          width: 60px;
+          height: 60px;
+          border-radius: 6px;
+          overflow: hidden;
+          cursor: pointer;
+          flex-shrink: 0;
+          border: 2px solid ${index === activeImageIndex ? 'var(--primary-red)' : 'transparent'};
+          opacity: ${index === activeImageIndex ? '1' : '0.6'};
+          transition: all 0.2s;
+        `;
+        thumb.innerHTML = `<img src="${img.image_url}" style="width:100%; height:100%; object-fit:cover;">`;
+        thumb.addEventListener('click', () => {
+          activeImageIndex = index;
+          renderGallery();
+        });
+        thumbsContainer.appendChild(thumb);
+      });
+    }
+
+    window.navigateDetailsImage = function(direction) {
+      const images = propertyDetails?.images || [];
+      if (images.length <= 1) return;
+      activeImageIndex = (activeImageIndex + direction + images.length) % images.length;
+      renderGallery();
+    };
+
+    function setupSwipeListeners() {
+      const sliderContainer = document.getElementById('details-image-slider');
+      if (!sliderContainer) return;
+      
+      let startX = 0;
+      let endX = 0;
+      
+      sliderContainer.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+      }, { passive: true });
+      
+      sliderContainer.addEventListener('touchend', (e) => {
+        endX = e.changedTouches[0].clientX;
+        const threshold = 50;
+        if (startX - endX > threshold) {
+          navigateDetailsImage(1);
+        } else if (endX - startX > threshold) {
+          navigateDetailsImage(-1);
+        }
+      }, { passive: true });
     }
 
     function formatPrice(num) {
