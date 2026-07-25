@@ -1,10 +1,10 @@
-const CACHE_NAME = 'asquare-pwa-cache-v103';
+const CACHE_NAME = 'asquare-pwa-cache-v105';
 const ASSETS = [
   '/',
   '/index.html',
   '/login.html',
-  '/css/style.css?v=99',
-  '/js/main.js?v=99',
+  '/css/style.css?v=105',
+  '/js/main.js?v=105',
   '/uploads/profile/default-avatar.png'
 ];
 
