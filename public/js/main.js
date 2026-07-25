@@ -516,10 +516,10 @@ function injectDesktopLayout(user) {
     { name: 'Explore Properties', path: '/search.html', icon: 'search' },
     { name: 'Post Property', path: '/post.html', icon: 'plus-circle' },
     { name: 'Property Reels', path: '/reels.html', icon: 'play' },
+    { name: 'About Us', path: '/about.html', icon: 'info' },
     { name: 'Home Services', path: '/marketplace.html', icon: 'wrench' },
     { name: 'Blogs & Guides', path: '/blogs.html', icon: 'book-open' },
-    { name: 'My Profile', path: '/profile.html', icon: 'user' },
-    { name: 'About Us', path: '/about.html', icon: 'info' }
+    { name: 'My Profile', path: '/profile.html', icon: 'user' }
   ];
 
   if (isAdmin) {
