@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_house_renter';
 

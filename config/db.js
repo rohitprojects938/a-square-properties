@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
@@ -150,7 +150,20 @@ async function initPool() {
   const explicitMock = process.env.DB_MOCK === 'true';
 
   try {
-    // Try connecting to database
+    console.log('🔍 DEBUG DB ENV VARIABLES:');
+    console.log('  DB_HOST:', process.env.DB_HOST);
+    console.log('  DB_USER:', process.env.DB_USER);
+    console.log('  DB_NAME:', process.env.DB_NAME);
+    console.log('  DB_PORT:', process.env.DB_PORT);
+    console.log('  NODE_ENV:', process.env.NODE_ENV);
+    console.log('  Password length:', process.env.DB_PASSWORD ? process.env.DB_PASSWORD.length : 0);
+    console.log('🔍 EXACT dbConfig object passed to mysql.createPool():', JSON.stringify({
+      host: dbConfig.host,
+      user: dbConfig.user,
+      database: dbConfig.database,
+      port: dbConfig.port,
+      password: dbConfig.password ? 'REDACTED (Length: ' + dbConfig.password.length + ')' : 'EMPTY'
+    }));
     pool = mysql.createPool(dbConfig);
     // Test connection
     const conn = await pool.getConnection();

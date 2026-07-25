@@ -20,7 +20,7 @@ function getLocalIP() {
 }
 
 // Load env variables
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const { secureHeaders, sanitizeInput } = require('./middlewares/securityMiddleware');
 const initializeDatabase = require('./config/initDb');

@@ -1,5 +1,5 @@
 const Razorpay = require('razorpay');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const keyId = process.env.RAZORPAY_KEY_ID || '';
 const keySecret = process.env.RAZORPAY_KEY_SECRET || '';

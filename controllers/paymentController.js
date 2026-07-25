@@ -1,6 +1,6 @@
 const db = require('../config/db');
 const crypto = require('crypto');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 // Standard initialization of Razorpay only if variables exist
 let razorpayInstance = null;
