@@ -518,7 +518,8 @@ function injectDesktopLayout(user) {
     { name: 'Property Reels', path: '/reels.html', icon: 'play' },
     { name: 'Home Services', path: '/marketplace.html', icon: 'wrench' },
     { name: 'Blogs & Guides', path: '/blogs.html', icon: 'book-open' },
-    { name: 'My Profile', path: '/profile.html', icon: 'user' }
+    { name: 'My Profile', path: '/profile.html', icon: 'user' },
+    { name: 'About Us', path: '/about.html', icon: 'info' }
   ];
 
   if (isAdmin) {

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>About Us - House Rental</title>
+  <link rel="stylesheet" href="/css/style.css?v=117">
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <style>
+    .about-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--soft-shadow);
+    }
+    .about-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .about-title i {
+      color: var(--primary-red);
+      font-size: 24px;
+    }
+    .about-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .about-text:last-child {
+      margin-bottom: 0;
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .service-mini-card {
+      background: var(--accent-gray);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .service-mini-card i {
+      font-size: 24px;
+      color: var(--primary-red);
+    }
+    .service-mini-card span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .reasons-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (min-width: 480px) {
+      .reasons-list {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .reason-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    .reason-item i {
+      color: #25D366;
+      font-size: 18px;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-dark);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .contact-item:last-child {
+      border-bottom: none;
+    }
+    .contact-item i {
+      font-size: 20px;
+      color: var(--primary-red);
+      width: 24px;
+    }
+    .contact-item span {
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
+      <div class="logo" style="font-size:18px;">About Us</div>
+      <div style="width:38px;"></div>
+    </header>
+
+    <!-- App Content Area -->
+    <div class="app-content">
+      
+      <!-- Main Content Block -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px; padding:16px;">
+        
+        <!-- Section 1: Welcome to Houserenter.in -->
+        <div class="about-card">
+          <h2 class="about-title">
+            <i class="bx bx-buildings"></i> About Houserenter.in
+          </h2>
+          <p class="about-text">
+            <strong>Welcome to Houserenter.in</strong>
+          </p>
+          <p class="about-text">
+            Houserenter.in is a trusted Lucknow-based real estate platform dedicated to making property renting, buying, and selling simple, secure, and hassle-free.
+          </p>
+          <p class="about-text">
+            Whether you are looking for your dream home, a rental property, or want to sell your property at the best value, we are here to help you at every step.
+          </p>
+          <p class="about-text">
+            Our mission is to connect property owners with genuine buyers and tenants through a transparent and reliable platform.
+          </p>
+          <p class="about-text">
+            We believe that finding the right property should be easy, fast, and stress-free.
+          </p>
+        </div>
+
+        <!-- Section 2: Our Services -->
+        <div class="about-card">
+          <h2 class="about-title">
+            <i class="bx bx-wrench"></i> Our Services
+          </h2>
+          <div class="services-grid">
+            <div class="service-mini-card">
+              <i class="bx bx-home-alt"></i>
+              <span>Home & Flat Rentals</span>
+            </div>
+            <div class="service-mini-card">
+              <i class="bx bx-trending-up"></i>
+              <span>Residential & Commercial Property Sales</span>
+            </div>
+            <div class="service-mini-card">
+              <i class="bx bx-list-ul"></i>
+              <span>Property Listings</span>
+            </div>
+            <div class="service-mini-card">
+              <i class="bx bx-support"></i>
+              <span>Buyer & Seller Assistance</span>
+            </div>
+            <div class="service-mini-card">
+              <i class="bx bx-check-shield"></i>
+              <span>Tenant & Owner Verification</span>
+            </div>
+            <div class="service-mini-card">
+              <i class="bx bx-briefcase"></i>
+              <span>End-to-End Property Support</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Why Choose Us -->
+        <div class="about-card">
+          <h2 class="about-title">
+            <i class="bx bx-like"></i> Why Choose Us
+          </h2>
+          <div class="reasons-list">
+            <div class="reason-item">
+              <i class="bx bx-check-circle"></i> Trusted Platform
+            </div>
+            <div class="reason-item">
+              <i class="bx bx-check-circle"></i> Verified Property Listings
+            </div>
+            <div class="reason-item">
+              <i class="bx bx-check-circle"></i> Transparent Process
+            </div>
+            <div class="reason-item">
+              <i class="bx bx-check-circle"></i> Dedicated Customer Support
+            </div>
+            <div class="reason-item">
+              <i class="bx bx-check-circle"></i> Easy Property Discovery
+            </div>
+            <div class="reason-item">
+              <i class="bx bx-check-circle"></i> Secure Experience
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Contact Us -->
+        <div class="about-card" style="margin-bottom:24px;">
+          <h2 class="about-title">
+            <i class="bx bx-envelope"></i> Contact Us
+          </h2>
+          <div style="display:flex; flex-direction:column;">
+            <div class="contact-item">
+              <i class="bx bx-map"></i>
+              <span>Lucknow, Uttar Pradesh, India</span>
+            </div>
+            <div class="contact-item">
+              <i class="bx bx-phone"></i>
+              <span>+91 9919014220</span>
+            </div>
+            <div class="contact-item">
+              <i class="bx bx-envelope"></i>
+              <span>houserenter@gmail.com</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Text -->
+        <div style="text-align:center; padding:16px 0; border-top:1px solid var(--border-color); color:var(--text-muted); font-size:12px; line-height:1.6;">
+          <strong style="color:var(--text-dark);">Houserenter.in</strong><br>
+          Your Trusted Partner for Renting, Buying & Selling Properties.
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Sticky Bottom Navigation -->
+    <nav class="bottom-nav"></nav>
+
+  </div>
+
+  <script src="/js/main.js?v=117"></script>
+</body>
+</html>
