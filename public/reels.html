@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Reels - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=113">
+  <link rel="stylesheet" href="/css/style.css?v=114">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* Full height scrolling for Reels */
@@ -179,7 +179,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=113"></script>
+  <script src="/js/main.js?v=114"></script>
   <script>
     let reelsData = [];
     let currentReelIndex = 0;
@@ -319,7 +319,7 @@
         const item = document.createElement('div');
         item.className = 'reel-item';
         item.innerHTML = `
-          <video class="reel-video" src="${r.video_url}" loop playsinline onclick="togglePlayState(this)"></video>
+          <video class="reel-video" src="${r.video_url}" loop playsinline muted autoplay onerror="handleVideoError(this)" onclick="togglePlayState(this)"></video>
           <div class="reel-overlay-play"><i class="bx bx-play"></i></div>
           
           <!-- Actions -->
@@ -368,14 +368,41 @@
 
     function togglePlayState(vid) {
       const playIcon = vid.parentElement.querySelector('.reel-overlay-play');
+      
+      // First click unmutes the video (matching Instagram)
+      if (vid.muted) {
+        vid.muted = false;
+        if (vid.paused) {
+          vid.play().catch(() => {});
+        }
+        playIcon.style.opacity = 0;
+        return;
+      }
+
       if (vid.paused) {
-        vid.play();
+        vid.play().catch(() => {});
         playIcon.style.opacity = 0;
       } else {
         vid.pause();
         playIcon.style.opacity = 1;
         setTimeout(() => { playIcon.style.opacity = 0; }, 1000);
       }
+    }
+
+    function handleVideoError(vid) {
+      console.warn("Reel video failed to load:", vid.src);
+      const parent = vid.parentElement;
+      if (parent.querySelector('.video-error-fallback')) return;
+      
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'video-error-fallback';
+      errorDiv.style.cssText = 'position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111; color:#fff; gap:12px; font-size:14px; z-index:2;';
+      errorDiv.innerHTML = `
+        <i class="bx bx-video-off" style="font-size:48px; color:var(--text-muted);"></i>
+        <p>Video unavailable</p>
+      `;
+      vid.style.display = 'none';
+      parent.appendChild(errorDiv);
     }
 
     // Like Action (Optimistic UI Update)
@@ -479,6 +506,10 @@
       e.preventDefault();
       const videoFile = document.getElementById('reel-video-file').files[0];
       const caption = document.getElementById('reel-caption-txt').value;
+
+      if (videoFile && !videoFile.name.toLowerCase().endsWith('.mp4')) {
+        return alert('Only portrait MP4 videos are supported for reels.');
+      }
 
       const formData = new FormData();
       formData.append('video', videoFile);

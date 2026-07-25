@@ -92,11 +92,25 @@ window.getAuth = function(forceRefresh = false) {
         throw new Error('Invalid session response');
       }
     } catch (err) {
-      console.warn('⚠️ Session invalid or sync failed. Clearing credentials:', err.message);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.currentUser = null;
-      window.authProfileData = null;
+      console.warn('⚠️ Session sync result:', err.message);
+      // Only clear credentials if the server explicitly returned 401/403/400 (auth failed)
+      if (err.status === 401 || err.status === 403 || err.status === 400) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.currentUser = null;
+        window.authProfileData = null;
+      } else {
+        // Network error or 5xx server error: keep the cached local user
+        const cachedUser = localStorage.getItem('user');
+        if (cachedUser) {
+          try {
+            window.currentUser = JSON.parse(cachedUser);
+            console.log("ℹ️ Server unreachable. Using cached local profile.");
+          } catch (e) {
+            window.currentUser = null;
+          }
+        }
+      }
     }
     window.isAuthInitialized = true;
     return window.currentUser;
@@ -432,9 +446,15 @@ async function apiRequest(url, method = 'GET', body = null, isMultipart = false)
 
   try {
     const response = await fetch(url, options);
-    const result = await response.json();
+    let result = {};
+    try {
+      result = await response.json();
+    } catch (e) {}
+
     if (!response.ok) {
-      throw new Error(result.error || 'Network response failure.');
+      const err = new Error(result.error || 'Network response failure.');
+      err.status = response.status;
+      throw err;
     }
     return result;
   } catch (error) {

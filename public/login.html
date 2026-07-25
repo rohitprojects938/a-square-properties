@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Login - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=113">
+  <link rel="stylesheet" href="/css/style.css?v=114">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     .auth-tabs {
@@ -154,7 +154,7 @@
     </div>
   </div>
 
-  <script src="/js/main.js?v=113"></script>
+  <script src="/js/main.js?v=114"></script>
   <script>
     // Initialize Google Passport login URL callback check
     function checkGoogleOAuthCallback() {
@@ -172,6 +172,20 @@
       }
     }
     checkGoogleOAuthCallback();
+
+    // Auto-login if session/token is still valid
+    async function checkAutoLogin() {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await apiRequest('/api/auth/profile');
+          if (res.success) {
+            window.location.href = '/index.html';
+          }
+        } catch (e) {}
+      }
+    }
+    checkAutoLogin();
 
     function switchAuthMode(mode) {
       document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));

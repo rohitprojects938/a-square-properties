@@ -565,6 +565,12 @@ async function uploadReel(req, res) {
     }
 
     const file = req.files.video[0];
+    const path = require('path');
+    const fileExt = path.extname(file.originalname).toLowerCase();
+    if (fileExt !== '.mp4') {
+      return res.status(400).json({ success: false, error: 'Only portrait MP4 videos are supported for reels.' });
+    }
+
     const { processVideo } = require('../middlewares/uploadMiddleware');
     const savedPath = await processVideo(file.buffer, file.originalname, 'reels');
 
