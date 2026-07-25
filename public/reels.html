@@ -4,19 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Reels - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=111">
+  <link rel="stylesheet" href="/css/style.css?v=112">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* Full height scrolling for Reels */
     .reels-wrapper {
       height: calc(100% - 88px); /* Full height minus fixed bottom nav */
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
+      overflow: hidden !important; /* Lock native scrolling */
       background: #000;
+      position: relative;
     }
     .reel-item {
       height: 100%;
-      scroll-snap-align: start;
       position: relative;
       background: #111;
       display: flex;
@@ -49,9 +48,9 @@
         flex-direction: column;
         align-items: center;
         background: #0b0b0b;
-        overflow-y: auto;
+        overflow: hidden !important; /* Lock desktop native scroll too */
         padding: 20px 0;
-        scroll-snap-type: none;
+        position: relative;
       }
       .reel-item {
         width: 360px;
@@ -59,7 +58,6 @@
         border-radius: 20px;
         overflow: hidden;
         margin-bottom: 24px;
-        scroll-snap-align: none;
         flex-shrink: 0;
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       }
@@ -181,7 +179,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=111"></script>
+  <script src="/js/main.js?v=112"></script>
   <script>
     let reelsData = [];
     let currentReelIndex = 0;
@@ -194,40 +192,71 @@
       }
       loadReelsFeed();
       
-      // Auto play video adjustments during scroll
+      // Premium Snap-Scroll Management for Reels (Mobile & Desktop)
       const scroller = document.getElementById('reels-scroller');
-      if (window.innerWidth <= 768) {
-        scroller.addEventListener('scroll', () => {
-          const index = Math.round(scroller.scrollTop / scroller.clientHeight);
-          if (index !== currentReelIndex) {
-            playReelVideo(index);
-          }
-        });
-      } else {
-        // Intersection observer play-on-view for desktop
-        if ('IntersectionObserver' in window) {
-          const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-              const vid = entry.target.querySelector('video');
-              if (vid) {
-                if (entry.isIntersecting) {
-                  vid.play().catch(() => {});
-                  const playIcon = entry.target.querySelector('.reel-overlay-play');
-                  if (playIcon) playIcon.style.opacity = 0;
-                } else {
-                  vid.pause();
-                }
-              }
-            });
-          }, { threshold: 0.6 });
+      let startY = 0;
+      let isTouchActive = false;
+      let isScrollingState = false;
+      let wheelAccumulator = 0;
 
-          window.observeReelItems = () => {
-            document.querySelectorAll('.reel-item').forEach(item => {
-              observer.observe(item);
-            });
-          };
+      // Snapping scroll executor
+      window.scrollToReel = function(index) {
+        if (index < 0 || index >= reelsData.length) return;
+        currentReelIndex = index;
+        isScrollingState = true;
+        
+        const reelItems = document.querySelectorAll('.reel-item');
+        if (reelItems[index]) {
+          reelItems[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+          playReelVideo(index);
         }
-      }
+        
+        setTimeout(() => {
+          isScrollingState = false;
+          wheelAccumulator = 0;
+        }, 600); // 600ms transition lock
+      };
+
+      // Desktop wheel scroll handler
+      scroller.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (isScrollingState) return;
+
+        wheelAccumulator += e.deltaY;
+        const threshold = 120; // Requires stronger intentional scroll input
+        
+        if (Math.abs(wheelAccumulator) >= threshold) {
+          const direction = wheelAccumulator > 0 ? 1 : -1;
+          const nextIndex = currentReelIndex + direction;
+          scrollToReel(nextIndex);
+        }
+      }, { passive: false });
+
+      // Mobile Touch Gestures
+      scroller.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+        isTouchActive = true;
+      }, { passive: true });
+
+      scroller.addEventListener('touchmove', (e) => {
+        if (!isTouchActive) return;
+        // Optionally lock screen during drag
+      }, { passive: true });
+
+      scroller.addEventListener('touchend', (e) => {
+        if (!isTouchActive) return;
+        isTouchActive = false;
+
+        const endY = e.changedTouches[0].clientY;
+        const deltaY = startY - endY; // positive means swiped UP (next reel)
+        const threshold = 100; // Enforce intentional swipe
+
+        if (Math.abs(deltaY) >= threshold) {
+          const direction = deltaY > 0 ? 1 : -1;
+          const nextIndex = currentReelIndex + direction;
+          scrollToReel(nextIndex);
+        }
+      }, { passive: true });
     });
 
     // Toggle comments panel
@@ -321,13 +350,8 @@
         wrapper.appendChild(item);
       });
 
-      // Play first video automatically if mobile
-      if (window.innerWidth <= 768) {
-        setTimeout(() => playReelVideo(0), 500);
-      } else if (window.observeReelItems) {
-        // Run intersection observer bindings for desktop
-        setTimeout(() => window.observeReelItems(), 500);
-      }
+      // Play first video automatically
+      setTimeout(() => playReelVideo(0), 500);
     }
 
     function playReelVideo(idx) {
@@ -354,29 +378,53 @@
       }
     }
 
-    // Like Action
+    // Like Action (Optimistic UI Update)
     async function handleLikeReel(rid, btn) {
       if (!localStorage.getItem('token')) {
         return alert('Login required to like video reels.');
       }
+
+      const icon = btn.querySelector('i');
+      const countSpan = btn.querySelector('span');
+      
+      const isCurrentlyLiked = btn.classList.contains('active');
+      const currentCount = parseInt(countSpan.innerText) || 0;
+
+      // Optimistic update
+      const newLikedState = !isCurrentlyLiked;
+      const newCount = newLikedState ? (currentCount + 1) : Math.max(0, currentCount - 1);
+
+      btn.classList.toggle('active', newLikedState);
+      icon.className = newLikedState ? 'bx bxs-heart' : 'bx bx-heart';
+      countSpan.innerText = newCount;
+
       try {
         const result = await apiRequest(`/api/properties/feed/reels/${rid}/like`, 'POST');
         if (result.success) {
-          const icon = btn.querySelector('i');
-          const countSpan = btn.querySelector('span');
-          let count = parseInt(countSpan.innerText);
-
-          if (result.liked) {
-            btn.classList.add('active');
-            icon.className = 'bx bxs-heart';
-            countSpan.innerText = count + 1;
-          } else {
-            btn.classList.remove('active');
-            icon.className = 'bx bx-heart';
-            countSpan.innerText = count - 1;
+          // Sync with exact server count
+          if (typeof result.likesCount === 'number') {
+            countSpan.innerText = result.likesCount;
           }
+          btn.classList.toggle('active', result.liked);
+          icon.className = result.liked ? 'bx bxs-heart' : 'bx bx-heart';
+          
+          // Keep reelsData state in sync
+          const reelItem = reelsData.find(r => r.id === rid);
+          if (reelItem) {
+            reelItem.is_liked = result.liked;
+            reelItem.likes_count = result.likesCount;
+          }
+        } else {
+          // Revert optimistic update
+          btn.classList.toggle('active', isCurrentlyLiked);
+          icon.className = isCurrentlyLiked ? 'bx bxs-heart' : 'bx bx-heart';
+          countSpan.innerText = currentCount;
         }
       } catch (err) {
+        // Revert optimistic update
+        btn.classList.toggle('active', isCurrentlyLiked);
+        icon.className = isCurrentlyLiked ? 'bx bxs-heart' : 'bx bx-heart';
+        countSpan.innerText = currentCount;
         alert(err.message);
       }
     }

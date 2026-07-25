@@ -593,14 +593,22 @@ async function toggleReelLike(req, res) {
 
   try {
     const [existing] = await db.query('SELECT * FROM reel_likes WHERE user_id = ? AND reel_id = ?', [req.user.id, id]);
+    let liked = false;
 
     if (existing.length > 0) {
       await db.query('DELETE FROM reel_likes WHERE user_id = ? AND reel_id = ?', [req.user.id, id]);
-      return res.status(200).json({ success: true, liked: false });
+      liked = false;
     } else {
       await db.query('INSERT INTO reel_likes (user_id, reel_id) VALUES (?, ?)', [req.user.id, id]);
-      return res.status(200).json({ success: true, liked: true });
+      liked = true;
     }
+
+    // Sync likes count
+    const [likesCountRows] = await db.query('SELECT COUNT(*) as count FROM reel_likes WHERE reel_id = ?', [id]);
+    const finalCount = likesCountRows[0].count;
+    await db.query('UPDATE reels SET likes_count = ? WHERE id = ?', [finalCount, id]);
+
+    return res.status(200).json({ success: true, liked, likesCount: finalCount });
   } catch (error) {
     console.error('Reel like error: ', error.message);
     res.status(500).json({ success: false, error: 'Server interaction logging failure.' });

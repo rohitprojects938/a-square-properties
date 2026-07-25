@@ -77,6 +77,14 @@ async function initializeDatabase() {
     } catch (e) {
       console.warn('⚠️ Cleanup warning:', e.message);
     }
+
+    // Ensure only real user reels are in the DB: delete mock/sample reels
+    try {
+      await db.query("DELETE FROM reels WHERE video_url IN ('https://www.w3schools.com/html/mov_bbb.mp4', 'https://www.w3schools.com/html/movie.mp4');");
+      console.log('✅ MySQL Cleanup: Removed sample video reels.');
+    } catch (e) {
+      console.warn('⚠️ Reels cleanup warning:', e.message);
+    }
   } catch (error) {
     console.error('❌ Failed to run database migrations: ', error.message);
   }

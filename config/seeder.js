@@ -181,24 +181,8 @@ async function seedDatabaseData() {
     });
   }
 
-  // 4. Seed 100 Reels
-  const reelVideoUrls = [
-    'https://www.w3schools.com/html/mov_bbb.mp4',
-    'https://www.w3schools.com/html/movie.mp4'
-  ];
-  for (let i = 0; i < 100; i++) {
-    const reelObj = {
-      id: i + 4, // Start after 3 pre-seeded reels
-      user_id: mockUsersList[i % mockUsersList.length].id,
-      video_url: reelVideoUrls[i % reelVideoUrls.length],
-      thumbnail_url: propertyImages[i % propertyImages.length],
-      caption: `Beautiful home tour in ${cities[i % cities.length]}! #premium #houserenter #realestate`,
-      likes_count: 10 + (i * 5),
-      views_count: 120 + (i * 32),
-      approval_status: 'approved'
-    };
-    mockReelsList.push(reelObj);
-  }
+  // 4. Seed 100 Reels (Disabled for production safety)
+  // Only user-uploaded reels are permitted. Feed begins empty.
 
   // 5. Seed 100 Services
   const serviceCats = ['painter', 'electrician', 'plumber', 'packers', 'interior', 'cleaning', 'gardening', 'vastu', 'architecture', 'contractor'];
