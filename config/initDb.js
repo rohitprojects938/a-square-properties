@@ -3,6 +3,24 @@ const path = require('path');
 const db = require('./db');
 const { seedDatabaseData } = require('./seeder');
 
+async function addColumnIfNotExist(tableName, columnName, alterQuery) {
+  try {
+    const [rows] = await db.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = DATABASE() 
+         AND TABLE_NAME = ? 
+         AND COLUMN_NAME = ?`,
+      [tableName, columnName]
+    );
+    if (rows && rows.length === 0) {
+      await db.query(alterQuery);
+      console.log(`✅ MySQL Migration: Added column '${columnName}' to '${tableName}' table.`);
+    }
+  } catch (error) {
+    console.error(`❌ Migration check failed for '${tableName}.${columnName}':`, error.message);
+  }
+}
+
 async function initializeDatabase() {
   await db.initPool();
 
@@ -43,40 +61,11 @@ async function initializeDatabase() {
     console.log('✅ MySQL Database Schema initialized successfully!');
 
     // Incremental Migrations
-    try {
-      await db.query("ALTER TABLE otps ADD COLUMN attempts INT DEFAULT 0;");
-      console.log('✅ MySQL Migration: Added attempts column to otps table.');
-    } catch (e) {
-      // Ignored if column already exists
-    }
-
-    try {
-      await db.query("ALTER TABLE users ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL;");
-      console.log('✅ MySQL Migration: Added profile_photo column to users table.');
-    } catch (e) {
-      // Ignored if column already exists
-    }
-
-    try {
-      await db.query("ALTER TABLE users ADD COLUMN provider VARCHAR(50) DEFAULT 'email';");
-      console.log('✅ MySQL Migration: Added provider column to users table.');
-    } catch (e) {
-      // Ignored if column already exists
-    }
-
-    try {
-      await db.query("ALTER TABLE properties ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE;");
-      console.log('✅ MySQL Migration: Added is_hidden column to properties table.');
-    } catch (e) {
-      // Ignored if column already exists
-    }
-
-    try {
-      await db.query("ALTER TABLE properties ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;");
-      console.log('✅ MySQL Migration: Added is_featured column to properties table.');
-    } catch (e) {
-      // Ignored if column already exists
-    }
+    await addColumnIfNotExist('otps', 'attempts', "ALTER TABLE otps ADD COLUMN attempts INT DEFAULT 0;");
+    await addColumnIfNotExist('users', 'profile_photo', "ALTER TABLE users ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'provider', "ALTER TABLE users ADD COLUMN provider VARCHAR(50) DEFAULT 'email';");
+    await addColumnIfNotExist('properties', 'is_hidden', "ALTER TABLE properties ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE;");
+    await addColumnIfNotExist('properties', 'is_featured', "ALTER TABLE properties ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;");
 
     await seedDatabaseData();
   } catch (error) {
