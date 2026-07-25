@@ -58,6 +58,8 @@ CREATE TABLE IF NOT EXISTS properties (
     longitude DECIMAL(11, 8) DEFAULT NULL,
     is_verified BOOLEAN DEFAULT FALSE,
     approval_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    is_hidden BOOLEAN DEFAULT FALSE,
+    is_featured BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -256,10 +258,11 @@ CREATE TABLE IF NOT EXISTS reviews (
 );
 
 -- Seed Default Data (Admin user, some default categories/services/blogs)
+-- Default admin password is 'admin123'
 INSERT INTO users (name, email, phone, password_hash, role, subscription_status)
 VALUES 
 ('Manoj Soni', 'manoj@houserenter.in', '+919919014220', '$2a$10$75Jb04oB8nE7v5wKzUv3g.5N9CenpWv1K/TzR8C/wE3/T/y62tGOm', 'admin', 'active')
-ON DUPLICATE KEY UPDATE name=name; -- Default admin password is 'admin123'
+ON DUPLICATE KEY UPDATE name=name;
 
 INSERT INTO services (name, category, contact_number, experience_years, ratings, reviews_count, description, image_url)
 VALUES 

@@ -58,6 +58,20 @@ async function initializeDatabase() {
       // Ignored if column already exists
     }
 
+    try {
+      await db.query("ALTER TABLE properties ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE;");
+      console.log('✅ MySQL Migration: Added is_hidden column to properties table.');
+    } catch (e) {
+      // Ignored if column already exists
+    }
+
+    try {
+      await db.query("ALTER TABLE properties ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;");
+      console.log('✅ MySQL Migration: Added is_featured column to properties table.');
+    } catch (e) {
+      // Ignored if column already exists
+    }
+
     await seedDatabaseData();
   } catch (error) {
     console.error('❌ Failed to run database migrations: ', error.message);
