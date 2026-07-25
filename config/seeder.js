@@ -125,6 +125,12 @@ async function seedDatabaseData() {
     const category = propCategories[i % propCategories.length];
     const listingType = types[i % types.length];
     const BHK = (i % 4) + 1; // 1 to 4 BHK
+
+    // Skip generating the specific Delhi farmhouse listing: "4 BHK Luxury farmhouse in Delhi"
+    if (city === 'Delhi' && category === 'farmhouse' && BHK === 4) {
+      continue;
+    }
+
     const price = listingType === 'sale' ? (2000000 + (i * 350000)) : (8000 + (i * 1200));
     const area = 600 + (i * 24);
     const locality = city === 'Lucknow' ? lucknowAreas[i % lucknowAreas.length] : `Sector ${(i % 15) + 1}`;

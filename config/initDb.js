@@ -68,6 +68,14 @@ async function initializeDatabase() {
     await addColumnIfNotExist('properties', 'is_featured', "ALTER TABLE properties ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;");
 
     await seedDatabaseData();
+
+    // Ensure the specific Delhi farmhouse listing is deleted from the database
+    try {
+      await db.query("DELETE FROM properties WHERE title = '4 BHK Luxury farmhouse in Delhi';");
+      console.log('✅ MySQL Cleanup: Removed 4 BHK Luxury farmhouse in Delhi listing.');
+    } catch (e) {
+      console.warn('⚠️ Cleanup warning:', e.message);
+    }
   } catch (error) {
     console.error('❌ Failed to run database migrations: ', error.message);
   }
