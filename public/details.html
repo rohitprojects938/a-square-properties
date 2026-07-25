@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Details - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=120">
+  <link rel="stylesheet" href="/css/style.css?v=121">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -279,7 +279,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=120"></script>
+  <script src="/js/main.js?v=121"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
@@ -421,12 +421,69 @@
       }
     }
 
+    function toggleComparison(property) {
+      if (!property) return;
+      try {
+        const key = 'compare_list';
+        let items = [];
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          items = JSON.parse(raw);
+        }
+        const exists = items.some(item => item.id == property.id);
+        if (exists) {
+          items = items.filter(item => item.id != property.id);
+          localStorage.setItem(key, JSON.stringify(items));
+          alert('Property removed from comparison list.');
+          updateCompareButtonUI(false);
+        } else {
+          if (items.length >= 3) {
+            alert('You can compare up to 3 properties at a time.');
+            return;
+          }
+          items.push({
+            id: property.id,
+            title: property.title,
+            price: property.price,
+            city: property.city,
+            cover_image: (property.images && property.images.length > 0) ? property.images[0].image_url : null
+          });
+          localStorage.setItem(key, JSON.stringify(items));
+          alert('Property added to comparison list!');
+          updateCompareButtonUI(true);
+        }
+      } catch (e) {
+        console.error('Error toggling comparison:', e);
+      }
+    }
+
+    function updateCompareButtonUI(isAdded) {
+      const compBtn = document.getElementById('desktop-compare-btn');
+      if (compBtn) {
+        if (isAdded) {
+          compBtn.innerHTML = `<i data-lucide="check"></i> Added to Compare`;
+          compBtn.style.background = '#25D366';
+        } else {
+          compBtn.innerHTML = `<i data-lucide="git-compare"></i> Add to Compare`;
+          compBtn.style.background = '';
+        }
+        if (window.lucide) window.lucide.createIcons();
+      }
+    }
+
     function setupDesktopWidgets() {
       if (window.innerWidth <= 768) return;
 
       // 1. Compare Button
       const compBtn = document.getElementById('desktop-compare-btn');
       if (compBtn && propertyDetails) {
+        // Initialize compare button state
+        const key = 'compare_list';
+        const raw = localStorage.getItem(key);
+        const items = raw ? JSON.parse(raw) : [];
+        const isInCompare = items.some(item => item.id == propertyDetails.id);
+        updateCompareButtonUI(isInCompare);
+
         compBtn.addEventListener('click', () => {
           toggleComparison(propertyDetails);
         });
