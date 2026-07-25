@@ -9,6 +9,7 @@ const { upload } = require('../middlewares/uploadMiddleware');
 router.post('/', authenticateJWT, requireAuth, upload.fields([{ name: 'images', maxCount: 10 }, { name: 'video', maxCount: 1 }]), propertyController.createProperty);
 router.put('/:id', authenticateJWT, requireAuth, upload.fields([{ name: 'images', maxCount: 10 }, { name: 'video', maxCount: 1 }]), propertyController.updateProperty);
 router.get('/', authenticateJWT, propertyController.getProperties);
+router.get('/debug/files', propertyController.debugFiles);
 router.get('/:id', authenticateJWT, propertyController.getPropertyById);
 router.delete('/:id', authenticateJWT, requireAuth, propertyController.deleteProperty);
 router.post('/:id/save', authenticateJWT, requireAuth, propertyController.toggleSaveProperty);

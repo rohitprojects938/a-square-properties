@@ -692,6 +692,26 @@ async function deleteProperty(req, res) {
   }
 }
 
+async function debugFiles(req, res) {
+  const fs = require('fs');
+  const path = require('path');
+  const targetDir = path.join(__dirname, '..', 'public', 'uploads', 'properties');
+  try {
+    const exists = fs.existsSync(targetDir);
+    const files = exists ? fs.readdirSync(targetDir) : [];
+    res.status(200).json({
+      success: true,
+      __dirname,
+      targetDir,
+      exists,
+      files,
+      cwd: process.cwd()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
 module.exports = {
   createProperty,
   updateProperty,
@@ -705,5 +725,6 @@ module.exports = {
   getReels,
   uploadReel,
   toggleReelLike,
-  addReelComment
+  addReelComment,
+  debugFiles
 };
