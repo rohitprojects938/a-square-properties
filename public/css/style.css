@@ -28,15 +28,14 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html {
+html, body {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
   background-color: #FFFFFF;
   display: block;
-  min-height: 100%;
-  overflow-x: hidden;
   color: var(--text-dark);
 }
 
@@ -44,12 +43,11 @@ body {
 .app-shell {
   width: 100%;
   max-width: 100%;
-  min-height: 100%;
   height: 100%;
   background-color: var(--background-white);
   box-shadow: none;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -139,7 +137,9 @@ body {
 
 /* Side Drawer (Drawer Menu) */
 .drawer-overlay {
-  position: fixed;
+/* Side Drawer (Drawer Menu) */
+.drawer-overlay {
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -158,7 +158,7 @@ body {
 }
 
 .drawer {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: -280px;
   width: 280px;
@@ -272,7 +272,7 @@ body {
 
 /* Sticky Bottom Navigation */
 .bottom-nav {
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -283,7 +283,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  z-index: 9999;
+  z-index: 99;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
 }
 
@@ -336,13 +336,13 @@ body {
 
 /* Bottom Sheet Modal */
 .bottom-sheet-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0,0,0,0.5);
-  z-index: 10000;
+  z-index: 1100;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
@@ -355,7 +355,7 @@ body {
 }
 
 .bottom-sheet {
-  position: fixed;
+  position: absolute;
   bottom: -400px;
   left: 0;
   width: 100%;
@@ -364,7 +364,7 @@ body {
   border-top-right-radius: 28px;
   box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
   padding: 24px;
-  z-index: 10001;
+  z-index: 1101;
   transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
   display: flex;
   flex-direction: column;
@@ -871,7 +871,7 @@ body {
 
 .reel-item {
   width: 100%;
-  height: calc(100vh - 72px); /* height minus fixed bottom nav */
+  height: 100%;
   scroll-snap-align: start;
   position: relative;
   background: #000;
@@ -1084,7 +1084,7 @@ body {
 
 /* Comments pane slide up */
 .comments-pane {
-  position: fixed;
+  position: absolute;
   bottom: -400px;
   left: 0;
   width: 100%;
@@ -1092,7 +1092,7 @@ body {
   background: white;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  z-index: 10002;
+  z-index: 1102;
   transition: bottom 0.3s ease;
   padding: 16px;
   display: flex;
