@@ -28,11 +28,17 @@ async function initializeDatabase() {
       .filter(q => q.length > 0);
 
     console.log(`⏳ Running ${queries.length} queries to initialize database schema...`);
+    let queryIndex = 1;
     for (let q of queries) {
       const queryClean = q.replace(/--.*$/gm, '').trim();
       if (queryClean) {
+        console.log(`\nExecuting Query ${queryIndex}/${queries.length}`);
+        console.log('-------------------------------------------');
+        console.log(queryClean);
+        console.log('-------------------------------------------');
         await db.query(queryClean);
       }
+      queryIndex++;
     }
     console.log('✅ MySQL Database Schema initialized successfully!');
 
