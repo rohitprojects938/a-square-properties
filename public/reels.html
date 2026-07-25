@@ -9,15 +9,10 @@
   <style>
     /* Full height scrolling for Reels */
     .reels-wrapper {
-      height: calc(100dvh - 72px - env(safe-area-inset-bottom, 0px)); /* Full height minus footer tab nav */
+      height: calc(100vh - 72px); /* Full height minus fixed bottom nav */
       overflow-y: scroll;
       scroll-snap-type: y mandatory;
       background: #000;
-    }
-    @supports (height: calc(100dvh - 72px - constant(safe-area-inset-bottom))) {
-      .reels-wrapper {
-        height: calc(100dvh - 72px - constant(safe-area-inset-bottom));
-      }
     }
     .reel-item {
       height: 100%;
