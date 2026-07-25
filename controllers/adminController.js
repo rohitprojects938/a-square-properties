@@ -520,7 +520,7 @@ async function getSettings(req, res) {
     const [rows] = await db.query('SELECT * FROM site_settings LIMIT 1');
     res.json({ success: true, data: rows[0] || {} });
   } catch (e) {
-    res.json({ success: true, data: { site_name: 'House Renter', contact_email: 'admin@houserenter.in' } });
+    res.json({ success: true, data: { site_name: 'House Rental', contact_email: 'admin@houserenter.in' } });
   }
 }
 

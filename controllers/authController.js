@@ -155,7 +155,7 @@ async function sendOTP(req, res) {
         const twilio = require('twilio');
         const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
         await client.messages.create({
-          body: `🔑 Your House Renter verification code is ${otp}. Valid for 5 minutes.`,
+          body: `🔑 Your House Rental verification code is ${otp}. Valid for 5 minutes.`,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: phoneOrEmail
         });

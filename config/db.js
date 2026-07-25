@@ -175,7 +175,7 @@ async function initPool() {
       throw new Error(`CRITICAL MySQL connection failed: ${error.message}`);
     } else {
       console.warn('⚠️ MySQL connection failed. Error: ', error.message);
-      console.warn('⚡ Initializing in-memory MOCK database for House Renter application fallback.');
+      console.warn('⚡ Initializing in-memory MOCK database for House Rental application fallback.');
       isMock = true;
     }
   }
@@ -1022,7 +1022,7 @@ async function executeMock(sql, params = []) {
   if (normalizedSql.includes('site_settings') || normalizedSql.includes('from site_settings')) {
     if (!mockDb.site_settings) {
       mockDb.site_settings = [
-        { id: 1, site_name: 'House Renter', contact_email: 'crimesamachar1@gmail.com', contact_phone: '+919919014220', address: 'Lucknow, UP, India', maintenance_mode: 0 }
+        { id: 1, site_name: 'House Rental', contact_email: 'crimesamachar1@gmail.com', contact_phone: '+919919014220', address: 'Lucknow, UP, India', maintenance_mode: 0 }
       ];
     }
     if (normalizedSql.startsWith('select')) {

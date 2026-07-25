@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Property Details - House Renter</title>
-  <link rel="stylesheet" href="/css/style.css?v=106">
+  <title>Property Details - House Rental</title>
+  <link rel="stylesheet" href="/css/style.css?v=107">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -308,7 +308,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=106"></script>
+  <script src="/js/main.js?v=107"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
@@ -366,7 +366,7 @@
 
           // Set Call / Whatsapp links
           document.getElementById('call-action-btn').href = `tel:${propertyDetails.owner_phone}`;
-          document.getElementById('whatsapp-action-btn').href = `https://wa.me/${propertyDetails.owner_phone.replace('+', '')}?text=I am interested in your property "${propertyDetails.title}" listed on House Renter.`;
+          document.getElementById('whatsapp-action-btn').href = `https://wa.me/${propertyDetails.owner_phone.replace('+', '')}?text=I am interested in your property "${propertyDetails.title}" listed on House Rental.`;
 
           // Setup Favorite icon status
           checkFavStatus();

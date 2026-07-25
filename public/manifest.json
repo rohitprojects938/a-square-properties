@@ -1,6 +1,6 @@
 {
-  "name": "House Renter",
-  "short_name": "A² Properties",
+  "name": "House Rental",
+  "short_name": "House Rental",
   "description": "Premium Mobile-First Real Estate Marketplace",
   "start_url": "/index.html",
   "display": "standalone",

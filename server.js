@@ -171,7 +171,7 @@ async function startServer() {
     app.listen(PORT, HOST, () => {
       const localIP = getLocalIP();
       console.log('');
-      console.log('🚀 House Renter Server is running!');
+      console.log('🚀 House Rental Server is running!');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`  📍 Local:    http://localhost:${PORT}`);
       console.log(`  🌐 Network:  http://${localIP}:${PORT}`);
@@ -192,11 +192,11 @@ startServer();
 
 // Graceful shutdown handling for Ctrl+C (SIGINT) and SIGTERM
 process.on('SIGINT', () => {
-  console.log('\n🛑 Stopping House Renter Server...');
+  console.log('\n🛑 Stopping House Rental Server...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('\n🛑 Terminating House Renter Server...');
+  console.log('\n🛑 Terminating House Rental Server...');
   process.exit(0);
 });

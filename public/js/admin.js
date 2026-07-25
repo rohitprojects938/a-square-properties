@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// House Renter — Modern SaaS Admin Panel JS Core
+// House Rental — Modern SaaS Admin Panel JS Core
 // ═══════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -401,7 +401,7 @@ async function loadApprovalQueue() {
         <div class="adm-empty">
           <div class="adm-empty-icon">✓</div>
           <div class="adm-empty-title">Queue is empty</div>
-          <div class="adm-empty-desc">All submitted property listings have been approved or rejected.</div>
+          <div class="adm-empty-desc">All submitted House Rental Listings have been approved or rejected.</div>
         </div>
       `;
       return;
@@ -920,7 +920,7 @@ async function loadSettingsPanel() {
   const res = await apiRequest('/api/admin/settings');
   if (res.success) {
     const s = res.data;
-    document.getElementById('set-name').value = s.site_name || 'House Renter';
+    document.getElementById('set-name').value = s.site_name || 'House Rental';
     document.getElementById('set-email').value = s.contact_email || 'admin@houserenter.in';
     document.getElementById('set-phone').value = s.contact_phone || '+919919014220';
     document.getElementById('set-address').value = s.address || 'Lucknow, UP, India';

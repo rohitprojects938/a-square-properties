@@ -1,4 +1,4 @@
--- House Renter Relational Database Schema
+-- House Rental Relational Database Schema
 -- Database: house_renter
 
 
@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS homepage_banners (
 -- 20. Site Settings Table
 CREATE TABLE IF NOT EXISTS site_settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    site_name VARCHAR(255) DEFAULT 'House Renter',
+    site_name VARCHAR(255) DEFAULT 'House Rental',
     contact_email VARCHAR(255) DEFAULT 'crimesamachar1@gmail.com',
     contact_phone VARCHAR(50) DEFAULT '+919919014220',
     address TEXT,

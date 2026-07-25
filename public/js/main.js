@@ -1,4 +1,4 @@
-/* House Renter - Shared Client Utilities & Navigation JavaScript */
+/* House Rental - Shared Client Utilities & Navigation JavaScript */
 
 // Unified Reusable Avatar & Image Fallback System
 window.AvatarSystem = {
@@ -519,7 +519,7 @@ function injectDesktopLayout(user) {
   drawer.innerHTML = `
     <div class="desktop-drawer-header">
       <div class="desktop-drawer-logo">
-        <i data-lucide="building"></i> A² Properties
+        <i data-lucide="building"></i> House Rental
       </div>
       <button class="desktop-drawer-close-btn" id="desktop-drawer-close-btn" title="Close Menu">
         <i data-lucide="x"></i>
@@ -552,7 +552,7 @@ function injectDesktopLayout(user) {
         <i data-lucide="menu"></i>
       </button>
       <div class="desktop-drawer-logo" style="margin-right: 24px; pointer-events: none; background: linear-gradient(135deg, #111 0%, var(--secondary-orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-        <i data-lucide="building"></i> A² Properties
+        <i data-lucide="building"></i> House Rental
       </div>
       <div class="desktop-header-search">
         <i data-lucide="search"></i>

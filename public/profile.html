@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>My Profile - House Renter</title>
-  <link rel="stylesheet" href="/css/style.css?v=106">
+  <title>My Profile - House Rental</title>
+  <link rel="stylesheet" href="/css/style.css?v=107">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -104,7 +104,7 @@
         
         <!-- 1. My Listings -->
         <div class="dashboard-section active" id="tab-properties">
-          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">My Property Listings</h3>
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">My House Rental Listings</h3>
           <div style="display:flex; flex-direction:column; gap:12px;" id="posted-properties-container">
             <p style="font-size:12px; color:var(--text-muted);">Loading listings...</p>
           </div>
@@ -254,7 +254,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=106"></script>
+  <script src="/js/main.js?v=107"></script>
   <script>
     // Bind initial page loading to window.onAppReady
     window.onAppReady = async function(user) {
@@ -330,7 +330,7 @@
       const propCont = document.getElementById('posted-properties-container');
       propCont.innerHTML = '';
       if (result.properties.length === 0) {
-        propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">You have not uploaded any property listings yet.</p>';
+        propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">You have not uploaded any House Rental Listings yet.</p>';
       } else {
         result.properties.forEach(p => {
           const row = document.createElement('div');
@@ -534,7 +534,7 @@
             key: orderResult.keyId,
             amount: orderResult.amount,
             currency: orderResult.currency,
-            name: "House Renter",
+            name: "House Rental",
             description: "₹1 Listing Subscription Activation",
             order_id: orderResult.orderId,
             handler: async function (response) {
@@ -594,7 +594,7 @@
           // Show empty message if no listings left
           const propCont = document.getElementById('posted-properties-container');
           if (propCont && propCont.children.length === 0) {
-            propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted)">You have not uploaded any property listings yet.</p>';
+            propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted)">You have not uploaded any House Rental Listings yet.</p>';
           }
           // Invalidate cache in background
           invalidateAuthCache();
