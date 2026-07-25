@@ -452,7 +452,8 @@ async function apiRequest(url, method = 'GET', body = null, isMultipart = false)
     } catch (e) {}
 
     if (!response.ok) {
-      const err = new Error(result.error || 'Network response failure.');
+      const errMsg = result.detail ? `${result.error} (${result.detail})` : (result.error || 'Network response failure.');
+      const err = new Error(errMsg);
       err.status = response.status;
       throw err;
     }

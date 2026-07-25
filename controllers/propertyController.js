@@ -80,8 +80,11 @@ async function createProperty(req, res) {
       videos: videoPaths
     });
   } catch (error) {
-    console.error('Create property error: ', error.message);
-    res.status(500).json({ success: false, error: 'Server property posting failure.' });
+    console.error('Create property error:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('Request body keys:', req.body ? Object.keys(req.body) : 'NO BODY');
+    console.error('Request files keys:', req.files ? Object.keys(req.files) : 'NO FILES');
+    res.status(500).json({ success: false, error: 'Server property posting failure.', detail: error.message });
   }
 }
 
