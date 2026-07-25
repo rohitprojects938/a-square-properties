@@ -695,17 +695,28 @@ async function deleteProperty(req, res) {
 async function debugFiles(req, res) {
   const fs = require('fs');
   const path = require('path');
-  const targetDir = path.join(__dirname, '..', 'public', 'uploads', 'properties');
+  const domainsDir = '/home/u726900424/domains/houserenter.in';
+  
   try {
-    const exists = fs.existsSync(targetDir);
-    const files = exists ? fs.readdirSync(targetDir) : [];
+    const parentExists = fs.existsSync(domainsDir);
+    const parentContents = parentExists ? fs.readdirSync(domainsDir) : [];
+    
+    const publicHtmlDir = path.join(domainsDir, 'public_html');
+    const publicHtmlExists = fs.existsSync(publicHtmlDir);
+    const publicHtmlContents = publicHtmlExists ? fs.readdirSync(publicHtmlDir) : [];
+
+    const publicHtmlUploads = path.join(publicHtmlDir, 'uploads', 'properties');
+    const publicHtmlUploadsExists = fs.existsSync(publicHtmlUploads);
+    const publicHtmlUploadsContents = publicHtmlUploadsExists ? fs.readdirSync(publicHtmlUploads) : [];
+
     res.status(200).json({
       success: true,
-      __dirname,
-      targetDir,
-      exists,
-      files,
-      cwd: process.cwd()
+      parentExists,
+      parentContents,
+      publicHtmlExists,
+      publicHtmlContents,
+      publicHtmlUploadsExists,
+      publicHtmlUploadsContents
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
