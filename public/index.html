@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.css?v=107">
+  <link rel="stylesheet" href="/css/style.css?v=108">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
 </head>
 <body>
@@ -152,14 +152,6 @@
           <p style="font-size:12px; color:var(--text-muted); padding:16px;">Allow GPS location to see nearby listings.</p>
         </div>
 
-        <!-- Verified Builders -->
-        <div class="section-title">
-          <span>Verified Builders</span>
-        </div>
-        <div class="horizontal-scroll" id="verified-builders-list" style="margin-bottom: 20px; gap: 16px;">
-          <!-- Loaded dynamically -->
-        </div>
-
         <!-- Top Cities -->
         <div class="section-title">
           <span>Top Cities</span>
@@ -188,14 +180,6 @@
           <a href="/search.html?city=Jaipur" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Plots in Jaipur</a>
         </div>
 
-        <!-- Services Marketplace -->
-        <div class="section-title">
-          <span>Home Services</span>
-          <a href="/marketplace.html" class="section-link">Explore Services</a>
-        </div>
-        <div class="services-grid" id="services-summary-list" style="margin-bottom: 20px;">
-          <!-- Seeder services filled from API -->
-        </div>
 
         <!-- Latest Blogs & Property News -->
         <div class="section-title">
@@ -412,7 +396,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=107"></script>
+  <script src="/js/main.js?v=108"></script>
   <script>
     // Initialize homepage slide show
     let currentSlide = 0;
@@ -544,22 +528,20 @@
         renderPropertyList(r.data || [], 'nearby-properties-list', '/search.html');
       } catch(e) { console.warn('Nearby failed:', e.message); }
 
-      // 6. Top Cities (just use first 8 from newest)
+      // 6. Top Cities & Recently viewed
       try {
         const r = await fetchSection({ sort: 'newest' }, 50);
         renderTopCities(r.data || []);
         renderContinueBrowsing(r.data || []);
-        loadVerifiedBuilders();
-      } catch(e) { console.warn('Cities failed:', e.message); }
+      } catch(e) { console.warn('Cities/browsing failed:', e.message); }
     }
-
 
     function renderTopCities(allProps) {
       const container = document.getElementById('top-cities-list');
       if (!container) return;
       container.innerHTML = '';
 
-      const cityList = ['Lucknow', 'Delhi', 'Noida', 'Gurgaon', 'Jaipur', 'Pune', 'Hyderabad', 'Mumbai', 'Bangalore', 'Ahmedabad'];
+      const cityList = ['Lucknow'];
 
       cityList.forEach(city => {
         const count = allProps.filter(p => p.city.toLowerCase() === city.toLowerCase()).length;
@@ -571,37 +553,6 @@
         pill.style.background = '#FFFFFF';
         pill.innerHTML = `<strong>${city}</strong> <span style="font-size:10px; color:var(--text-muted); margin-left:4px;">(${count})</span>`;
         container.appendChild(pill);
-      });
-    }
-
-    async function loadVerifiedBuilders() {
-      const container = document.getElementById('verified-builders-list');
-      if (!container) return;
-      container.innerHTML = '';
-
-      const builderList = [
-        { name: 'DLF Group', logo: 'D' },
-        { name: 'Lodha Developers', logo: 'L' },
-        { name: 'Godrej Properties', logo: 'G' },
-        { name: 'Prestige Group', logo: 'P' },
-        { name: 'Tata Housing', logo: 'T' }
-      ];
-
-      builderList.forEach(b => {
-        const wrapper = document.createElement('a');
-        wrapper.href = `/search.html?builder=${b.name}`;
-        wrapper.style.display = 'flex';
-        wrapper.style.flexDirection = 'column';
-        wrapper.style.alignItems = 'center';
-        wrapper.style.textDecoration = 'none';
-        wrapper.style.color = 'var(--text-dark)';
-        wrapper.style.gap = '6px';
-        wrapper.style.minWidth = '80px';
-        wrapper.innerHTML = `
-          <div style="width:50px; height:50px; border-radius:50%; background:#111111; color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;">${b.logo}</div>
-          <span style="font-size:10px; font-weight:600; text-align:center;">${b.name}</span>
-        `;
-        container.appendChild(wrapper);
       });
     }
 
