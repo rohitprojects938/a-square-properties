@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>My Profile - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=124">
+  <link rel="stylesheet" href="/css/style.css?v=125">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -309,7 +309,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=124"></script>
+  <script src="/js/main.js?v=125"></script>
   <script>
     // Bind initial page loading to window.onAppReady
     window.onAppReady = async function(user) {
@@ -342,6 +342,17 @@
     function loadProfileData() {
       const result = window.authProfileData;
       if (!result || !result.success) {
+        const propCont = document.getElementById('posted-properties-container');
+        if (propCont) propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load listings.</p>';
+        
+        const reelCont = document.getElementById('posted-reels-container');
+        if (reelCont) reelCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load reels.</p>';
+        
+        const savedCont = document.getElementById('saved-properties-container');
+        if (savedCont) savedCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load bookmarks.</p>';
+        
+        const visitCont = document.getElementById('visits-container');
+        if (visitCont) visitCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load scheduled visits.</p>';
         return;
       }
 
