@@ -190,7 +190,7 @@ app.get('/api/debug-reels', async (req, res) => {
       }
       return list;
     };
-    const allMp4s = findMp4s('/home/u726900424');
+    const allMp4s = findMp4s('/home/u726900424/domains/houserenter.in');
     res.json({
       success: true,
       allMp4s
