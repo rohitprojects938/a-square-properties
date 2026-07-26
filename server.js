@@ -168,32 +168,11 @@ app.get('/auth/google', passport.authenticate('google', {
 
 app.get('/api/debug-reels', async (req, res) => {
   try {
-    const fs = require('fs');
-    const path = require('path');
-    const findMp4s = (dir, list = []) => {
-      if (!fs.existsSync(dir)) return list;
-      try {
-        const files = fs.readdirSync(dir);
-        for (const f of files) {
-          if (f === '.npm' || f === '.cagefs' || f === 'nodejs' || f === 'node_modules' || f === '.git' || f === '.gemini') continue;
-          const fp = path.join(dir, f);
-          const stat = fs.lstatSync(fp);
-          if (stat.isSymbolicLink()) continue; // skip symlinks
-          if (stat.isDirectory()) {
-            findMp4s(fp, list);
-          } else if (f.endsWith('.mp4')) {
-            list.push({ name: f, path: fp, size: stat.size });
-          }
-        }
-      } catch (e) {
-        // ignore errors
-      }
-      return list;
-    };
-    const allMp4s = findMp4s('/home/u726900424/domains/houserenter.in');
+    const db = require('./config/db');
+    await db.query("DELETE FROM reels WHERE id IN (105, 106)");
     res.json({
       success: true,
-      allMp4s
+      message: 'Reels 105 and 106 successfully deleted from database.'
     });
   } catch (err) {
     res.json({ success: false, error: err.message });
