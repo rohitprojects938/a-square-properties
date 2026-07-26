@@ -166,6 +166,34 @@ app.get('/auth/google', passport.authenticate('google', {
   prompt: 'select_account'
 }));
 
+app.get('/api/debug-reels', async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const getDirs = (dir) => {
+      if (!fs.existsSync(dir)) return ['Not Exists'];
+      try {
+        return fs.readdirSync(dir);
+      } catch (e) {
+        return [e.message];
+      }
+    };
+    const dirsHome = getDirs('/home/u726900424');
+    const dirsDomains = getDirs('/home/u726900424/domains');
+    const dirsHouserenter = getDirs('/home/u726900424/domains/houserenter.in');
+    
+    // Check if a backup folder exists and search for any .mp4 files inside it
+    res.json({
+      success: true,
+      dirsHome,
+      dirsDomains,
+      dirsHouserenter
+    });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login.html' }),
   (req, res) => {
