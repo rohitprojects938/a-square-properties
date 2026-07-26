@@ -296,8 +296,18 @@
           return;
         }
         overlay.style.display = 'block';
+        
+        // Pause all background video feeds to silence voice output
+        const videos = document.querySelectorAll('.reel-video');
+        videos.forEach(vid => vid.pause());
       } else {
         overlay.style.display = 'none';
+        
+        // Resume playing current reel video when overlay form is closed
+        const videos = document.querySelectorAll('.reel-video');
+        if (videos[currentReelIndex]) {
+          videos[currentReelIndex].play().catch(() => {});
+        }
       }
     }
 
@@ -370,6 +380,12 @@
     }
 
     function playReelVideo(idx) {
+      // Do not play any reel audio/video if the upload form is active
+      const overlay = document.getElementById('reels-upload-container');
+      if (overlay && overlay.style.display === 'block') {
+        return;
+      }
+
       currentReelIndex = idx;
       const videos = document.querySelectorAll('.reel-video');
       videos.forEach((vid, i) => {
