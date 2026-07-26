@@ -14,10 +14,6 @@ window.AvatarSystem = {
     return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   },
 
-  getDefaultAvatarUri() {
-    return '/uploads/profile/default-avatar.png';
-  },
-
   renderHtml(user, classNames = '', extraStyles = '') {
     const classNameAttr = classNames ? `class="${classNames}"` : '';
     const styleAttr = extraStyles ? `style="${extraStyles}"` : '';
@@ -34,7 +30,6 @@ window.AvatarSystem = {
     return `<img src="${photo || initialsUri}" ` +
            `alt="${(user.name || 'User').replace(/"/g, '&quot;')}" ` +
            `data-fallback-initials="${initialsUri}" ` +
-           `data-fallback-default="${this.getDefaultAvatarUri()}" ` +
            `onerror="window.AvatarSystem.handleImageError(this)" ` +
            `${classNameAttr} ` +
            `${styleAttr} />`;
@@ -44,11 +39,8 @@ window.AvatarSystem = {
     if (!imgEl) return;
     imgEl.onerror = null;
     const initialsFallback = imgEl.getAttribute('data-fallback-initials');
-    const defaultFallback = imgEl.getAttribute('data-fallback-default') || '/uploads/profile/default-avatar.png';
-    if (imgEl.src !== initialsFallback) {
+    if (initialsFallback) {
       imgEl.src = initialsFallback;
-    } else if (imgEl.src !== defaultFallback) {
-      imgEl.src = defaultFallback;
     }
   },
 
@@ -177,7 +169,6 @@ window.renderUserUI = function(user) {
       if (picSrc) {
         headerProfilePic.src = picSrc;
         headerProfilePic.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(user.name));
-        headerProfilePic.setAttribute('data-fallback-default', window.AvatarSystem.getDefaultAvatarUri());
         headerProfilePic.onerror = function() { window.AvatarSystem.handleImageError(this); };
       } else {
         headerProfilePic.src = window.AvatarSystem.getInitialsDataUri(user.name);

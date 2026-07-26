@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>My Profile - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=123">
+  <link rel="stylesheet" href="/css/style.css?v=124">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -286,7 +286,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=123"></script>
+  <script src="/js/main.js?v=124"></script>
   <script>
     // Bind initial page loading to window.onAppReady
     window.onAppReady = async function(user) {
@@ -331,7 +331,6 @@
         if (picSrc) {
           picEl.src = picSrc;
           picEl.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(user.name));
-          picEl.setAttribute('data-fallback-default', window.AvatarSystem.getDefaultAvatarUri());
           picEl.onerror = function() { window.AvatarSystem.handleImageError(this); };
         } else {
           picEl.src = window.AvatarSystem.getInitialsDataUri(user.name);
@@ -606,7 +605,6 @@
             if (freshPic) {
               headerImg.src = freshPic;
               headerImg.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(freshUser.name));
-              headerImg.setAttribute('data-fallback-default', window.AvatarSystem.getDefaultAvatarUri());
               headerImg.onerror = function() { window.AvatarSystem.handleImageError(this); };
             } else {
               headerImg.src = window.AvatarSystem.getInitialsDataUri(freshUser.name);

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Details - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=123">
+  <link rel="stylesheet" href="/css/style.css?v=124">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -279,7 +279,7 @@
 
   </div>
 
-  <script src="/js/main.js?v=123"></script>
+  <script src="/js/main.js?v=124"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
@@ -392,7 +392,6 @@
             if (ownerPic) {
               ownerAvatar.src = ownerPic;
               ownerAvatar.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(propertyDetails.owner_name));
-              ownerAvatar.setAttribute('data-fallback-default', window.AvatarSystem.getDefaultAvatarUri());
               ownerAvatar.onerror = function() { window.AvatarSystem.handleImageError(this); };
             } else {
               ownerAvatar.src = window.AvatarSystem.getInitialsDataUri(propertyDetails.owner_name);

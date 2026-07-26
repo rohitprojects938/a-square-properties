@@ -517,6 +517,9 @@ async function updateProfile(req, res) {
   let profilePic = null;
 
   try {
+    const [userRows] = await db.query('SELECT profile_picture, profile_photo FROM users WHERE id = ?', [req.user.id]);
+    const currentUser = (userRows && userRows.length > 0) ? userRows[0] : {};
+
     // Process image if updated
     if (req.files && req.files.profile_picture) {
       const file = req.files.profile_picture[0];
@@ -538,14 +541,15 @@ async function updateProfile(req, res) {
       }
 
       const { processProfileImage } = require('../middlewares/uploadMiddleware');
-      profilePic = await processProfileImage(file.buffer);
+      const rawProfilePic = await processProfileImage(file.buffer);
+      profilePic = `${rawProfilePic}?v=${Date.now()}`;
 
       // Clean up old avatar from disk
-      const [userRows] = await db.query('SELECT profile_picture FROM users WHERE id = ?', [req.user.id]);
-      if (userRows && userRows.length > 0) {
-        const oldPic = userRows[0].profile_picture;
-        if (oldPic && oldPic.startsWith('/uploads/') && !oldPic.includes('default-avatar.png')) {
-          const relativePath = oldPic.replace(/^\/uploads\//, '');
+      const oldPic = currentUser.profile_picture;
+      if (oldPic) {
+        const cleanOldPic = oldPic.split('?')[0];
+        if (cleanOldPic.startsWith('/uploads/') && !cleanOldPic.includes('default-avatar.png')) {
+          const relativePath = cleanOldPic.replace(/^\/uploads\//, '');
           const oldPath = path.join(baseUploads, relativePath);
           if (fs.existsSync(oldPath)) {
             try {
@@ -574,8 +578,8 @@ async function updateProfile(req, res) {
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully!',
-      profile_picture: profilePic || req.user.profile_picture,
-      profile_photo: profilePic || req.user.profile_photo || req.user.profile_picture
+      profile_picture: profilePic || currentUser.profile_picture,
+      profile_photo: profilePic || currentUser.profile_photo || currentUser.profile_picture
     });
   } catch (error) {
     console.error('Update profile error: ', error.message);

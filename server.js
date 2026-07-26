@@ -77,8 +77,30 @@ app.use(passport.session());
 // Serve static frontend assets
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Helper to recursively copy directories
+function copyFolderSync(from, to) {
+  if (!fs.existsSync(from)) return;
+  if (!fs.existsSync(to)) {
+    fs.mkdirSync(to, { recursive: true });
+  }
+  fs.readdirSync(from).forEach(element => {
+    const fromPath = path.join(from, element);
+    const toPath = path.join(to, element);
+    if (fs.lstatSync(fromPath).isDirectory()) {
+      copyFolderSync(fromPath, toPath);
+    } else {
+      try {
+        fs.copyFileSync(fromPath, toPath);
+      } catch (err) {
+        console.warn(`⚠️ Failed to copy ${fromPath} to ${toPath}:`, err.message);
+      }
+    }
+  });
+}
+
 // Configure persistent uploads directory serving
 const prodPersistentDir = '/home/u726900424/domains/houserenter.in/persistent_uploads';
+const publicHtmlUploads = '/home/u726900424/domains/houserenter.in/public_html/uploads';
 let persistentUploadsDir = path.join(__dirname, 'public', 'uploads');
 
 if (fs.existsSync('/home/u726900424/domains/houserenter.in')) {
@@ -91,8 +113,25 @@ if (fs.existsSync('/home/u726900424/domains/houserenter.in')) {
     fs.unlinkSync(testFile);
     persistentUploadsDir = prodPersistentDir;
     console.log('✅ Persistent uploads directory is writeable.');
+
+    // Programmatically align /public_html/uploads with persistent uploads via symlink
+    if (fs.existsSync(publicHtmlUploads)) {
+      const stats = fs.lstatSync(publicHtmlUploads);
+      if (!stats.isSymbolicLink()) {
+        console.log('ℹ️ Found physical public_html/uploads directory. Migrating and replacing with symlink...');
+        copyFolderSync(publicHtmlUploads, prodPersistentDir);
+        fs.rmSync(publicHtmlUploads, { recursive: true, force: true });
+        fs.symlinkSync(prodPersistentDir, publicHtmlUploads, 'dir');
+        console.log('✅ Symbolic link established from public_html/uploads to persistent_uploads.');
+      } else {
+        console.log('✅ public_html/uploads is already a symbolic link.');
+      }
+    } else {
+      fs.symlinkSync(prodPersistentDir, publicHtmlUploads, 'dir');
+      console.log('✅ Created symbolic link from public_html/uploads to persistent_uploads.');
+    }
   } catch (err) {
-    console.warn('⚠️ Persistent uploads directory write check failed, falling back to local public/uploads:', err.message);
+    console.warn('⚠️ Persistent uploads setup / symlinking failed, falling back to local public/uploads:', err.message);
   }
 }
 
