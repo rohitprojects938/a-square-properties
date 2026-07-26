@@ -298,13 +298,11 @@
     </div>
 
     <!-- Video Player Modal -->
-    <div class="bottom-sheet-overlay" id="reel-player-overlay" onclick="closeReelPlayerModal()"></div>
-    <div class="bottom-sheet" id="reel-player-sheet" style="padding:20px; text-align:center; z-index:1100;">
-      <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;" id="player-reel-title">Reel Playback</h3>
-      <div style="position:relative; width:100%; max-width:320px; margin:0 auto 16px auto; aspect-ratio:9/16; background:#000; border-radius:12px; overflow:hidden;">
-        <video id="player-reel-video" controls autoplay style="width:100%; height:100%; object-fit:cover;"></video>
+    <div id="fullscreen-reel-player" style="position: fixed; inset: 0; background: #000000; z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center;">
+      <button onclick="closeReelPlayerModal()" style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; font-size: 24px; z-index: 100001;"><i class="bx bx-x"></i></button>
+      <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative;">
+        <video id="player-reel-video" controls autoplay playsinline style="height: 100%; width: 100%; max-width: 500px; object-fit: contain; background: #000;"></video>
       </div>
-      <button class="btn-secondary" style="width:100%; border:1px solid var(--border-color); cursor:pointer;" onclick="closeReelPlayerModal()">Close</button>
     </div>
 
   </div>
@@ -446,7 +444,6 @@
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
               <button onclick="playReel('${r.video_url}', '${cleanCaption}')" class="btn-secondary" style="padding: 6px 12px; font-size:11px; display:flex; align-items:center; cursor:pointer;"><i class="bx bx-play-circle" style="font-size:14px; margin-right:2px;"></i> Play</button>
-              <button onclick="editReel(${r.id}, '${cleanCaption}')" class="btn-secondary" style="padding: 6px 12px; font-size:11px; background:var(--primary-red); color:white; border:none; display:flex; align-items:center; cursor:pointer;"><i class="bx bx-edit" style="font-size:14px; margin-right:2px;"></i> Edit</button>
               <button onclick="deleteReel(${r.id})" style="padding:6px 12px; font-size:11px; background:#dc2626; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; display:flex; align-items:center; justify-content:center;"><i class="bx bx-trash" style="font-size:14px;"></i></button>
             </div>
           `;
@@ -801,22 +798,19 @@
 
     // Function to play reel
     function playReel(videoUrl, caption) {
-      document.getElementById('player-reel-title').innerText = caption || 'Reel Playback';
       const videoEl = document.getElementById('player-reel-video');
       videoEl.src = videoUrl;
       videoEl.load();
       videoEl.play().catch(() => {});
       
-      document.getElementById('reel-player-overlay').classList.add('active');
-      document.getElementById('reel-player-sheet').classList.add('active');
+      document.getElementById('fullscreen-reel-player').style.display = 'flex';
     }
 
     function closeReelPlayerModal() {
       const videoEl = document.getElementById('player-reel-video');
       videoEl.pause();
       videoEl.src = '';
-      document.getElementById('reel-player-overlay').classList.remove('active');
-      document.getElementById('reel-player-sheet').classList.remove('active');
+      document.getElementById('fullscreen-reel-player').style.display = 'none';
     }
   </script>
 </body>
