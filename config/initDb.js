@@ -70,6 +70,12 @@ async function initializeDatabase() {
     await addColumnIfNotExist('homepage_banners', 'sort_order', "ALTER TABLE homepage_banners ADD COLUMN sort_order INT DEFAULT 0;");
     await addColumnIfNotExist('properties', 'status', "ALTER TABLE properties ADD COLUMN status VARCHAR(50) DEFAULT 'active';");
 
+    // Blog table schema alignment — admin controller uses these columns
+    await addColumnIfNotExist('blogs', 'excerpt', "ALTER TABLE blogs ADD COLUMN excerpt TEXT DEFAULT NULL;");
+    await addColumnIfNotExist('blogs', 'featured_image', "ALTER TABLE blogs ADD COLUMN featured_image VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('blogs', 'status', "ALTER TABLE blogs ADD COLUMN status VARCHAR(50) DEFAULT 'draft';");
+    await addColumnIfNotExist('blogs', 'author', "ALTER TABLE blogs ADD COLUMN author VARCHAR(100) DEFAULT NULL;");
+
     await seedDatabaseData();
 
     // Ensure the specific Delhi farmhouse listing is deleted from the database

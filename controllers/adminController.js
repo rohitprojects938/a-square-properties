@@ -198,8 +198,12 @@ async function deleteProperty(req, res) {
   const { id } = req.params;
   try {
     await db.query('DELETE FROM property_images WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM property_videos WHERE property_id = ?', [id]);
     await db.query('DELETE FROM saved_properties WHERE property_id = ?', [id]);
     await db.query('DELETE FROM property_views WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM reviews WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM enquiries WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM visits WHERE property_id = ?', [id]);
     await db.query('DELETE FROM properties WHERE id = ?', [id]);
     res.json({ success: true, message: 'Property deleted.' });
   } catch (e) {
