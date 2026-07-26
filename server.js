@@ -151,27 +151,6 @@ subDirs.forEach(sub => {
 // Map static route to serving folder
 app.use('/uploads', express.static(persistentUploadsDir));
 
-app.get('/api/debug-reels', async (req, res) => {
-  const db = require('./config/db');
-  try {
-    // Restore the database URLs of Yash Soni's reels to point to active working video files
-    await db.query("UPDATE reels SET video_url = '/uploads/reels/vid-1784889341305-467311896.mp4' WHERE id = 105");
-    await db.query("UPDATE reels SET video_url = '/uploads/reels/vid-1784891605901-988290673.mp4' WHERE id = 106");
-
-    const [users] = await db.query("SELECT id, name, email FROM users WHERE name LIKE '%Yash%' OR name LIKE '%Soni%'");
-    const [reels] = await db.query("SELECT * FROM reels");
-
-    res.json({
-      success: true,
-      message: 'Reels successfully recovered/updated to working files!',
-      users,
-      reels
-    });
-  } catch (err) {
-    res.json({ success: false, error: err.message });
-  }
-});
-
 // API Route bindings
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/properties', require('./routes/propertyRoutes'));
