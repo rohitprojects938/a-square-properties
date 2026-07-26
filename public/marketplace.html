@@ -164,6 +164,7 @@
             return;
           }
 
+          result.data.forEach(s => {
             const safeCategory = window.SafeRender.safeText(s.category, 'service');
             const safeContact = window.SafeRender.safeText(s.contact_number, '');
             const safeName = window.SafeRender.safeText(s.name, 'Verified Provider');

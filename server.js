@@ -98,6 +98,56 @@ function copyFolderSync(from, to) {
   });
 }
 
+// Helper to recursively synchronize directories (excluding uploads folder)
+function syncPublicHtml() {
+  const nodejsPublic = path.join(__dirname, 'public');
+  const publicHtml = '/home/u726900424/domains/houserenter.in/public_html';
+  if (!fs.existsSync(publicHtml) || !fs.existsSync(nodejsPublic)) return;
+  
+  console.log('ℹ️ Syncing public assets from nodejs/public to public_html...');
+  
+  function syncDir(src, dest) {
+    if (!fs.existsSync(dest)) {
+      fs.mkdirSync(dest, { recursive: true });
+    }
+    const items = fs.readdirSync(src);
+    items.forEach(item => {
+      if (item === 'uploads') return; // Skip uploads folder completely
+      
+      const srcPath = path.join(src, item);
+      const destPath = path.join(dest, item);
+      const stat = fs.lstatSync(srcPath);
+      
+      if (stat.isDirectory()) {
+        syncDir(srcPath, destPath);
+      } else {
+        try {
+          let shouldCopy = true;
+          if (fs.existsSync(destPath)) {
+            const srcSize = stat.size;
+            const destSize = fs.statSync(destPath).size;
+            if (srcSize === destSize) {
+              shouldCopy = false;
+            }
+          }
+          if (shouldCopy) {
+            fs.copyFileSync(srcPath, destPath);
+          }
+        } catch (copyErr) {
+          console.warn(`⚠️ Failed to sync ${srcPath} to ${destPath}:`, copyErr.message);
+        }
+      }
+    });
+  }
+  
+  try {
+    syncDir(nodejsPublic, publicHtml);
+    console.log('✅ public_html sync complete.');
+  } catch (syncErr) {
+    console.error('❌ Failed public_html sync:', syncErr.message);
+  }
+}
+
 // Configure persistent uploads directory serving
 const prodPersistentDir = '/home/u726900424/domains/houserenter.in/persistent_uploads';
 const publicHtmlUploads = '/home/u726900424/domains/houserenter.in/public_html/uploads';
@@ -130,6 +180,9 @@ if (fs.existsSync('/home/u726900424/domains/houserenter.in')) {
       fs.symlinkSync(prodPersistentDir, publicHtmlUploads, 'dir');
       console.log('✅ Created symbolic link from public_html/uploads to persistent_uploads.');
     }
+
+    // Trigger synchronization of frontend files to public_html on startup
+    syncPublicHtml();
   } catch (err) {
     console.warn('⚠️ Persistent uploads setup / symlinking failed, falling back to local public/uploads:', err.message);
   }
