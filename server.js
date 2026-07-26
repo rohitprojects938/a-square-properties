@@ -159,25 +159,34 @@ app.get('/api/debug-reels', async (req, res) => {
     
     const fs = require('fs');
     const path = require('path');
-    const getFiles = (dir) => {
-      if (!fs.existsSync(dir)) return ['Not Exists'];
+    const findMp4s = (dir, list = []) => {
+      if (!fs.existsSync(dir)) return list;
       try {
-        return fs.readdirSync(dir);
+        const files = fs.readdirSync(dir);
+        for (const f of files) {
+          const fp = path.join(dir, f);
+          if (fs.lstatSync(fp).isDirectory()) {
+            findMp4s(fp, list);
+          } else if (f.endsWith('.mp4')) {
+            list.push({ name: f, path: fp });
+          }
+        }
       } catch (e) {
-        return [e.message];
+        list.push({ error: e.message });
       }
+      return list;
     };
-    const filesPersistent = getFiles('/home/u726900424/domains/houserenter.in/persistent_uploads/reels');
-    const filesNodejs = getFiles('/home/u726900424/domains/houserenter.in/nodejs/public/uploads/reels');
-    const filesPublicHtml = getFiles('/home/u726900424/domains/houserenter.in/public_html/uploads/reels');
+    const mp4sPersistent = findMp4s('/home/u726900424/domains/houserenter.in/persistent_uploads');
+    const mp4sNodejs = findMp4s('/home/u726900424/domains/houserenter.in/nodejs/public/uploads');
+    const mp4sPublicHtml = findMp4s('/home/u726900424/domains/houserenter.in/public_html/uploads');
 
     res.json({
       success: true,
       users,
       reels,
-      filesPersistent,
-      filesNodejs,
-      filesPublicHtml
+      mp4sPersistent,
+      mp4sNodejs,
+      mp4sPublicHtml
     });
   } catch (err) {
     res.json({ success: false, error: err.message });
