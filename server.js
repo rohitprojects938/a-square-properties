@@ -170,24 +170,30 @@ app.get('/api/debug-reels', async (req, res) => {
   try {
     const fs = require('fs');
     const path = require('path');
-    const getDirs = (dir) => {
-      if (!fs.existsSync(dir)) return ['Not Exists'];
+    const findMp4s = (dir, list = []) => {
+      if (!fs.existsSync(dir)) return list;
       try {
-        return fs.readdirSync(dir);
+        const files = fs.readdirSync(dir);
+        for (const f of files) {
+          if (f === '.npm' || f === '.cagefs' || f === 'nodejs' || f === 'node_modules' || f === '.git' || f === '.gemini') continue;
+          const fp = path.join(dir, f);
+          const stat = fs.lstatSync(fp);
+          if (stat.isSymbolicLink()) continue; // skip symlinks
+          if (stat.isDirectory()) {
+            findMp4s(fp, list);
+          } else if (f.endsWith('.mp4')) {
+            list.push({ name: f, path: fp, size: stat.size });
+          }
+        }
       } catch (e) {
-        return [e.message];
+        // ignore errors
       }
+      return list;
     };
-    const dirsHome = getDirs('/home/u726900424');
-    const dirsDomains = getDirs('/home/u726900424/domains');
-    const dirsHouserenter = getDirs('/home/u726900424/domains/houserenter.in');
-    
-    // Check if a backup folder exists and search for any .mp4 files inside it
+    const allMp4s = findMp4s('/home/u726900424');
     res.json({
       success: true,
-      dirsHome,
-      dirsDomains,
-      dirsHouserenter
+      allMp4s
     });
   } catch (err) {
     res.json({ success: false, error: err.message });
