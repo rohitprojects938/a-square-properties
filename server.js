@@ -122,6 +122,7 @@ app.get('/api/test-db-status', async (req, res) => {
     let propertiesCount = -1;
     let tables = [];
     
+    let cols = [];
     if (!isMock) {
       const [b] = await db.query('SELECT COUNT(*) as count FROM homepage_banners');
       bannerCount = b[0].count;
@@ -131,6 +132,8 @@ app.get('/api/test-db-status', async (req, res) => {
       propertiesCount = p[0].count;
       const [t] = await db.query('SHOW TABLES');
       tables = t;
+      const [c] = await db.query('DESCRIBE properties');
+      cols = c.map(col => col.Field);
     }
     
     res.json({
@@ -142,7 +145,8 @@ app.get('/api/test-db-status', async (req, res) => {
       bannerCount,
       usersCount,
       propertiesCount,
-      tables
+      tables,
+      propertiesColumns: cols
     });
   } catch (err) {
     res.json({
