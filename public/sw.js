@@ -3,8 +3,8 @@ const ASSETS = [
   '/',
   '/index.html',
   '/login.html',
-  '/css/style.css?v=125',
-  '/js/main.js?v=125',
+  '/css/style.v125.css',
+  '/js/main.v125.js',
   '/uploads/profile/default-avatar.png'
 ];
 

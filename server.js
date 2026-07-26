@@ -213,18 +213,6 @@ app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 
-// Temporary deployment debug route
-app.get('/api/debug-deploy', (req, res) => {
-  const fs = require('fs');
-  const path = require('path');
-  res.json({
-    __dirname,
-    cwd: process.cwd(),
-    mainJsLocalSize: fs.existsSync(path.join(__dirname, 'public', 'js', 'main.js')) ? fs.statSync(path.join(__dirname, 'public', 'js', 'main.js')).size : 'not found',
-    mainJsPublicHtmlSize: fs.existsSync('/home/u726900424/domains/houserenter.in/public_html/js/main.js') ? fs.statSync('/home/u726900424/domains/houserenter.in/public_html/js/main.js').size : 'not found'
-  });
-});
-
 // Google Passport OAuth routes (root-level for SMM-panel redirect compliance)
 app.get('/auth/google', passport.authenticate('google', {
   scope: ['profile', 'email'],
