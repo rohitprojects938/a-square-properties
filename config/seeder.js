@@ -49,6 +49,7 @@ const propertyImages = [
 ];
 
 async function seedDatabaseData() {
+  return; // Disabled: Only preserve real users and listings in production
   console.log('🚀 Checking database seeding requirements...');
 
   let userCount = 0;

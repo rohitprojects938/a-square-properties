@@ -93,6 +93,14 @@ async function initializeDatabase() {
     } catch (e) {
       console.warn('⚠️ Reels cleanup warning:', e.message);
     }
+
+    // Clean up test users (all users with @houserenter.in email except admin)
+    try {
+      const [result] = await db.query("DELETE FROM users WHERE email LIKE '%@houserenter.in' AND email != 'manoj@houserenter.in';");
+      console.log(`✅ MySQL Cleanup: Deleted test users (${result.affectedRows} rows affected). All associated listings cascaded.`);
+    } catch (e) {
+      console.warn('⚠️ Test users cleanup warning:', e.message);
+    }
   } catch (error) {
     console.error('❌ Failed to run database migrations: ', error.message);
   }
