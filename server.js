@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
 const os = require('os');
 const dotenv = require('dotenv');
 
@@ -75,6 +76,24 @@ app.use(passport.session());
 
 // Serve static frontend assets
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Configure persistent uploads directory serving
+const prodPersistentDir = '/home/u726900424/domains/houserenter.in/persistent_uploads';
+const persistentUploadsDir = fs.existsSync('/home/u726900424/domains/houserenter.in')
+  ? prodPersistentDir
+  : path.join(__dirname, 'public', 'uploads');
+
+// Dynamically check & initialize directories
+const subDirs = ['properties', 'reels', 'blogs', 'services', 'profile', 'banners'];
+subDirs.forEach(sub => {
+  const dirPath = path.join(persistentUploadsDir, sub);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+});
+
+// Map static route to serving folder
+app.use('/uploads', express.static(persistentUploadsDir));
 
 // Temporary DB diagnostic route
 app.get('/api/test-db-status', async (req, res) => {

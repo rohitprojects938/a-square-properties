@@ -170,13 +170,13 @@ async function initPool() {
     console.log('✅ Connected to MySQL Database: ' + dbConfig.database);
     conn.release();
   } catch (error) {
-    if (isProduction || !explicitMock) {
-      console.error('❌ CRITICAL MySQL connection failed: ', error.message);
-      throw new Error(`CRITICAL MySQL connection failed: ${error.message}`);
-    } else {
+    if (explicitMock) {
       console.warn('⚠️ MySQL connection failed. Error: ', error.message);
       console.warn('⚡ Initializing in-memory MOCK database for House Rental application fallback.');
       isMock = true;
+    } else {
+      console.error('❌ CRITICAL MySQL connection failed: ', error.message);
+      throw new Error(`CRITICAL MySQL connection failed: ${error.message}`);
     }
   }
 }

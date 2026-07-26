@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>My Profile - House Rental</title>
-  <link rel="stylesheet" href="/css/style.css?v=122">
+  <link rel="stylesheet" href="/css/style.css?v=123">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Razorpay Checkout SDK -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -93,7 +93,7 @@
 
         <!-- Dashboard Tabs -->
         <div class="profile-tabs">
-          <div class="profile-tab active" data-target="tab-properties" onclick="switchSection('tab-properties', this)">My Listings</div>
+          <div class="profile-tab active" data-target="tab-properties" onclick="switchSection('tab-properties', this)">My Content</div>
           <div class="profile-tab" data-target="tab-saved" onclick="switchSection('tab-saved', this)">Saved Items</div>
           <div class="profile-tab" data-target="tab-visits" onclick="switchSection('tab-visits', this)">Visits</div>
           <div class="profile-tab" data-target="tab-subscription" onclick="switchSection('tab-subscription', this)">Subscription</div>
@@ -102,11 +102,22 @@
 
         <!-- SECTIONS -->
         
-        <!-- 1. My Listings -->
+        <!-- 1. My Content (Properties & Reels) -->
         <div class="dashboard-section active" id="tab-properties">
-          <h3 style="font-size:15px; font-weight:700; margin-bottom:12px;">My House Rental Listings</h3>
-          <div style="display:flex; flex-direction:column; gap:12px;" id="posted-properties-container">
-            <p style="font-size:12px; color:var(--text-muted);">Loading listings...</p>
+          <!-- Properties Section -->
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px;"><i class="bx bx-building-house"></i> My Properties</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;" id="posted-properties-container">
+              <p style="font-size:12px; color:var(--text-muted);">Loading listings...</p>
+            </div>
+          </div>
+
+          <!-- Reels Section -->
+          <div>
+            <h3 style="font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px;"><i class="bx bx-video"></i> My Reels</h3>
+            <div style="display:flex; flex-direction:column; gap:12px;" id="posted-reels-container">
+              <p style="font-size:12px; color:var(--text-muted);">Loading reels...</p>
+            </div>
           </div>
         </div>
 
@@ -252,9 +263,30 @@
       </a>
     </div>
 
+    <!-- Reel Caption Edit Modal -->
+    <div class="bottom-sheet-overlay" id="reel-edit-overlay" onclick="closeReelEditModal()"></div>
+    <div class="bottom-sheet" id="reel-edit-sheet" style="padding:20px; z-index:1100;">
+      <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;">Edit Reel Caption</h3>
+      <textarea id="edit-reel-caption" class="form-input" rows="3" style="width:100%; border-radius:8px; padding:10px; margin-bottom:16px;"></textarea>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-primary" style="flex:1; border:none; cursor:pointer;" onclick="saveReelEdit()">Save Caption</button>
+        <button class="btn-secondary" style="flex:1; border:1px solid var(--border-color); cursor:pointer;" onclick="closeReelEditModal()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div class="bottom-sheet-overlay" id="reel-player-overlay" onclick="closeReelPlayerModal()"></div>
+    <div class="bottom-sheet" id="reel-player-sheet" style="padding:20px; text-align:center; z-index:1100;">
+      <h3 style="font-size:16px; font-weight:700; margin-bottom:12px;" id="player-reel-title">Reel Playback</h3>
+      <div style="position:relative; width:100%; max-width:320px; margin:0 auto 16px auto; aspect-ratio:9/16; background:#000; border-radius:12px; overflow:hidden;">
+        <video id="player-reel-video" controls autoplay style="width:100%; height:100%; object-fit:cover;"></video>
+      </div>
+      <button class="btn-secondary" style="width:100%; border:1px solid var(--border-color); cursor:pointer;" onclick="closeReelPlayerModal()">Close</button>
+    </div>
+
   </div>
 
-  <script src="/js/main.js?v=122"></script>
+  <script src="/js/main.js?v=123"></script>
   <script>
     // Bind initial page loading to window.onAppReady
     window.onAppReady = async function(user) {
@@ -336,10 +368,24 @@
           const row = document.createElement('div');
           row.className = 'invoice-card';
           row.id = `listing-row-${p.id}`;
+          
+          // Generate status dropdown options
+          const currentStatus = p.status || 'active';
+          const statusOptions = ['active', 'sold', 'rented'].map(opt => {
+            const selected = opt === currentStatus ? 'selected' : '';
+            return `<option value="${opt}" ${selected}>${opt.toUpperCase()}</option>`;
+          }).join('');
+
           row.innerHTML = `
             <div>
               <h4 style="font-size:13px; font-weight:700;">${p.title}</h4>
-              <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Price: ₹${p.price.toLocaleString()} • Status: ${p.approval_status.toUpperCase()}</p>
+              <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Price: ₹${p.price.toLocaleString()} • Approval: ${p.approval_status.toUpperCase()}</p>
+              <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:10px; font-weight:700; color:var(--text-muted);">Status:</span>
+                <select onchange="updateListingStatus(${p.id}, this.value)" style="font-size:11px; padding:3px 6px; border-radius:6px; border:1px solid var(--border-color); background:#fff; font-weight:700; cursor:pointer;">
+                  ${statusOptions}
+                </select>
+              </div>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
               <a href="/details.html?id=${p.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px; text-decoration:none; display:flex; align-items:center;">View</a>
@@ -348,6 +394,36 @@
             </div>
           `;
           propCont.appendChild(row);
+        });
+      }
+
+      // Populate reels list
+      const reelCont = document.getElementById('posted-reels-container');
+      reelCont.innerHTML = '';
+      const reelsList = result.reels || [];
+      if (reelsList.length === 0) {
+        reelCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">You have not uploaded any reels yet.</p>';
+      } else {
+        reelsList.forEach(r => {
+          const row = document.createElement('div');
+          row.className = 'invoice-card';
+          row.id = `reel-row-${r.id}`;
+          
+          const uploadDate = new Date(r.created_at).toLocaleDateString();
+          const cleanCaption = (r.caption || '').replace(/"/g, '&quot;');
+          
+          row.innerHTML = `
+            <div style="flex:1; padding-right:12px;">
+              <h4 style="font-size:13px; font-weight:700; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:240px;">${r.caption || 'Untitled Reel'}</h4>
+              <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Uploaded: ${uploadDate} • Views: ${r.views_count || 0}</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+              <button onclick="playReel('${r.video_url}', '${cleanCaption}')" class="btn-secondary" style="padding: 6px 12px; font-size:11px; display:flex; align-items:center; cursor:pointer;"><i class="bx bx-play-circle" style="font-size:14px; margin-right:2px;"></i> Play</button>
+              <button onclick="editReel(${r.id}, '${cleanCaption}')" class="btn-secondary" style="padding: 6px 12px; font-size:11px; background:var(--primary-red); color:white; border:none; display:flex; align-items:center; cursor:pointer;"><i class="bx bx-edit" style="font-size:14px; margin-right:2px;"></i> Edit</button>
+              <button onclick="deleteReel(${r.id})" style="padding:6px 12px; font-size:11px; background:#dc2626; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; display:flex; align-items:center; justify-content:center;"><i class="bx bx-trash" style="font-size:14px;"></i></button>
+            </div>
+          `;
+          reelCont.appendChild(row);
         });
       }
 
@@ -623,6 +699,104 @@
       } catch (err) {
         alert('Delete failed: ' + err.message);
       }
+    }
+
+    // Global placeholder for edited reel
+    let currentEditingReelId = null;
+
+    // Function to update property listing status
+    async function updateListingStatus(propertyId, newStatus) {
+      try {
+        const result = await apiRequest(`/api/properties/${propertyId}/status`, 'PATCH', { status: newStatus });
+        if (result.success) {
+          alert('Status updated successfully!');
+          invalidateAuthCache();
+          await getAuth();
+          loadProfileData();
+        } else {
+          alert('Failed to update status: ' + (result.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Failed to update status: ' + err.message);
+      }
+    }
+
+    // Function to open reel edit modal
+    function editReel(reelId, currentCaption) {
+      currentEditingReelId = reelId;
+      document.getElementById('edit-reel-caption').value = currentCaption || '';
+      document.getElementById('reel-edit-overlay').classList.add('active');
+      document.getElementById('reel-edit-sheet').classList.add('active');
+    }
+
+    function closeReelEditModal() {
+      currentEditingReelId = null;
+      document.getElementById('reel-edit-overlay').classList.remove('active');
+      document.getElementById('reel-edit-sheet').classList.remove('active');
+    }
+
+    // Function to save edited reel caption
+    async function saveReelEdit() {
+      if (!currentEditingReelId) return;
+      const newCaption = document.getElementById('edit-reel-caption').value;
+      try {
+        const result = await apiRequest(`/api/properties/feed/reels/${currentEditingReelId}`, 'PUT', { caption: newCaption });
+        if (result.success) {
+          alert('Reel updated successfully!');
+          closeReelEditModal();
+          invalidateAuthCache();
+          await getAuth();
+          loadProfileData();
+        } else {
+          alert('Failed to update reel: ' + (result.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Failed to update reel: ' + err.message);
+      }
+    }
+
+    // Function to delete reel
+    async function deleteReel(reelId) {
+      if (!confirm('Are you sure you want to delete this reel? This cannot be undone.')) return;
+      try {
+        const result = await apiRequest(`/api/properties/feed/reels/${reelId}`, 'DELETE');
+        if (result.success) {
+          alert('Reel deleted successfully!');
+          const row = document.getElementById(`reel-row-${reelId}`);
+          if (row) row.remove();
+          
+          const reelCont = document.getElementById('posted-reels-container');
+          if (reelCont && reelCont.children.length === 0) {
+            reelCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted)">You have not uploaded any reels yet.</p>';
+          }
+          invalidateAuthCache();
+          getAuth();
+        } else {
+          alert('Delete failed: ' + (result.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Delete failed: ' + err.message);
+      }
+    }
+
+    // Function to play reel
+    function playReel(videoUrl, caption) {
+      document.getElementById('player-reel-title').innerText = caption || 'Reel Playback';
+      const videoEl = document.getElementById('player-reel-video');
+      videoEl.src = videoUrl;
+      videoEl.load();
+      videoEl.play().catch(() => {});
+      
+      document.getElementById('reel-player-overlay').classList.add('active');
+      document.getElementById('reel-player-sheet').classList.add('active');
+    }
+
+    function closeReelPlayerModal() {
+      const videoEl = document.getElementById('player-reel-video');
+      videoEl.pause();
+      videoEl.src = '';
+      document.getElementById('reel-player-overlay').classList.remove('active');
+      document.getElementById('reel-player-sheet').classList.remove('active');
     }
   </script>
 </body>

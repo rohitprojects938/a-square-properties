@@ -1,7 +1,14 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
+const prodPersistentDir = '/home/u726900424/domains/houserenter.in/persistent_uploads';
+const baseUploads = fs.existsSync('/home/u726900424/domains/houserenter.in')
+  ? prodPersistentDir
+  : path.join(__dirname, '..', 'public', 'uploads');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_house_renter';
 
@@ -457,12 +464,13 @@ async function getProfile(req, res) {
         properties: [],
         saved: [],
         visits: [],
-        enquiries: []
+        enquiries: [],
+        reels: []
       });
     }
 
     const user = users[0];
-    // Fetch associated properties, saved items, schedules, visits
+    // Fetch associated properties, saved items, schedules, visits, reels
     const [properties] = await db.query(
       'SELECT p.*, (SELECT COUNT(*) FROM property_views v WHERE v.property_id = p.id) as views_count FROM properties p WHERE p.user_id = ? ORDER BY p.id DESC',
       [req.user.id]
@@ -479,6 +487,10 @@ async function getProfile(req, res) {
       'SELECT e.*, p.title as property_title FROM enquiries e JOIN properties p ON e.property_id = p.id WHERE p.user_id = ? ORDER BY e.id DESC',
       [req.user.id]
     );
+    const [reels] = await db.query(
+      'SELECT * FROM reels WHERE user_id = ? ORDER BY id DESC',
+      [req.user.id]
+    );
 
     res.status(200).json({
       success: true,
@@ -486,7 +498,8 @@ async function getProfile(req, res) {
       properties,
       saved,
       visits,
-      enquiries
+      enquiries,
+      reels
     });
   } catch (error) {
     console.error('Get profile error: ', error.message);
@@ -528,12 +541,12 @@ async function updateProfile(req, res) {
       profilePic = await processProfileImage(file.buffer);
 
       // Clean up old avatar from disk
-      const fs = require('fs');
       const [userRows] = await db.query('SELECT profile_picture FROM users WHERE id = ?', [req.user.id]);
       if (userRows && userRows.length > 0) {
         const oldPic = userRows[0].profile_picture;
-        if (oldPic && oldPic.startsWith('/uploads/profile/') && !oldPic.includes('default-avatar.png')) {
-          const oldPath = path.join(__dirname, '..', 'public', oldPic);
+        if (oldPic && oldPic.startsWith('/uploads/') && !oldPic.includes('default-avatar.png')) {
+          const relativePath = oldPic.replace(/^\/uploads\//, '');
+          const oldPath = path.join(baseUploads, relativePath);
           if (fs.existsSync(oldPath)) {
             try {
               fs.unlinkSync(oldPath);

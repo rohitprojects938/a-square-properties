@@ -11,6 +11,7 @@ router.put('/:id', authenticateJWT, requireAuth, upload.fields([{ name: 'images'
 router.get('/', authenticateJWT, propertyController.getProperties);
 router.get('/:id', authenticateJWT, propertyController.getPropertyById);
 router.delete('/:id', authenticateJWT, requireAuth, propertyController.deleteProperty);
+router.patch('/:id/status', authenticateJWT, requireAuth, propertyController.updatePropertyStatus);
 router.post('/:id/save', authenticateJWT, requireAuth, propertyController.toggleSaveProperty);
 
 // Visit, Inquiry and review routes
@@ -23,5 +24,7 @@ router.get('/feed/reels', authenticateJWT, propertyController.getReels);
 router.post('/feed/reels', authenticateJWT, requireAuth, upload.fields([{ name: 'video', maxCount: 1 }]), propertyController.uploadReel);
 router.post('/feed/reels/:id/like', authenticateJWT, requireAuth, propertyController.toggleReelLike);
 router.post('/feed/reels/:id/comment', authenticateJWT, requireAuth, propertyController.addReelComment);
+router.put('/feed/reels/:id', authenticateJWT, requireAuth, propertyController.updateReel);
+router.delete('/feed/reels/:id', authenticateJWT, requireAuth, propertyController.deleteReel);
 
 module.exports = router;

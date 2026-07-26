@@ -2,8 +2,10 @@ const db = require('../config/db');
 const fs = require('fs');
 const path = require('path');
 
-const prodPublicHtml = '/home/u726900424/domains/houserenter.in/public_html';
-const basePublic = fs.existsSync(prodPublicHtml) ? prodPublicHtml : path.join(__dirname, '..', 'public');
+const prodPersistentDir = '/home/u726900424/domains/houserenter.in/persistent_uploads';
+const baseUploads = fs.existsSync('/home/u726900424/domains/houserenter.in')
+  ? prodPersistentDir
+  : path.join(__dirname, '..', 'public', 'uploads');
 
 // Post a new property (Multi-Step Form upload)
 async function createProperty(req, res) {
@@ -110,7 +112,7 @@ async function updateProperty(req, res) {
     const {
       title, description, category, listing_type, category_type, price, area_sqft,
       bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status,
-      address, city, state, pincode, latitude, longitude,
+      address, city, state, pincode, latitude, longitude, status,
       kept_images, image_order
     } = req.body;
 
@@ -121,7 +123,7 @@ async function updateProperty(req, res) {
         price = ?, area_sqft = ?, bedrooms = ?, bathrooms = ?, facing = ?, 
         floor_number = ?, parking_spaces = ?, furnishing_status = ?, address = ?, 
         city = ?, state = ?, pincode = ?, 
-        latitude = ?, longitude = ? 
+        latitude = ?, longitude = ?, status = ? 
       WHERE id = ?`,
       [
         title, description, category, listing_type, category_type || 'new',
@@ -130,6 +132,7 @@ async function updateProperty(req, res) {
         address, city, state, pincode,
         latitude ? parseFloat(latitude) : null,
         longitude ? parseFloat(longitude) : null,
+        status || 'active',
         id
       ]
     );
@@ -158,7 +161,8 @@ async function updateProperty(req, res) {
         await db.query('DELETE FROM property_images WHERE id = ?', [dbImg.id]);
         // Delete physical file
         if (dbImg.image_url && dbImg.image_url.startsWith('/uploads/')) {
-          const fullPath = path.join(basePublic, dbImg.image_url);
+          const relativePath = dbImg.image_url.replace(/^\/uploads\//, '');
+          const fullPath = path.join(baseUploads, relativePath);
           fs.unlink(fullPath, (err) => {
             if (err && err.code !== 'ENOENT') {
               console.error('Failed to delete physical image during edit:', fullPath, err.message);
@@ -232,7 +236,8 @@ async function updateProperty(req, res) {
       for (const v of currentVideos) {
         await db.query('DELETE FROM property_videos WHERE id = ?', [v.id]);
         if (v.video_url && v.video_url.startsWith('/uploads/')) {
-          const fullPath = path.join(basePublic, v.video_url);
+          const relativePath = v.video_url.replace(/^\/uploads\//, '');
+          const fullPath = path.join(baseUploads, relativePath);
           fs.unlink(fullPath, (err) => {
             if (err && err.code !== 'ENOENT') {
               console.error('Failed to delete physical video:', fullPath, err.message);
@@ -678,7 +683,8 @@ async function deleteProperty(req, res) {
     const path = require('path');
     for (const img of images) {
       if (img.image_url && img.image_url.startsWith('/uploads/')) {
-        const fullPath = path.join(basePublic, img.image_url);
+        const relativePath = img.image_url.replace(/^\/uploads\//, '');
+        const fullPath = path.join(baseUploads, relativePath);
         fs.unlink(fullPath, (err) => {
           if (err && err.code !== 'ENOENT') {
             console.error('Failed to delete physical image file:', fullPath, err.message);
@@ -687,8 +693,23 @@ async function deleteProperty(req, res) {
       }
     }
 
-    // Delete related images, saves, views first
+    // Fetch and delete related physical video files
+    const [videos] = await db.query('SELECT video_url FROM property_videos WHERE property_id = ?', [id]);
+    for (const v of videos) {
+      if (v.video_url && v.video_url.startsWith('/uploads/')) {
+        const relativePath = v.video_url.replace(/^\/uploads\//, '');
+        const fullPath = path.join(baseUploads, relativePath);
+        fs.unlink(fullPath, (err) => {
+          if (err && err.code !== 'ENOENT') {
+            console.error('Failed to delete physical video file:', fullPath, err.message);
+          }
+        });
+      }
+    }
+
+    // Delete related database tables first
     await db.query('DELETE FROM property_images WHERE property_id = ?', [id]);
+    await db.query('DELETE FROM property_videos WHERE property_id = ?', [id]);
     await db.query('DELETE FROM saved_properties WHERE property_id = ?', [id]);
     await db.query('DELETE FROM property_views WHERE property_id = ?', [id]);
     await db.query('DELETE FROM properties WHERE id = ?', [id]);
@@ -697,6 +718,129 @@ async function deleteProperty(req, res) {
   } catch (error) {
     console.error('Delete property error:', error.message);
     res.status(500).json({ success: false, error: 'Server error while deleting property.' });
+  }
+}
+
+module.exports = {
+// Delete a reel (owner or admin only)
+async function deleteReel(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+  const { id } = req.params;
+  try {
+    let rows;
+    if (db.isMock()) {
+      rows = (db.mockDb.reels || []).filter(r => r.id == id);
+    } else {
+      [rows] = await db.query('SELECT user_id, video_url FROM reels WHERE id = ?', [id]);
+    }
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Reel not found.' });
+    }
+    const reel = rows[0];
+    if (reel.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'You can only delete your own reels.' });
+    }
+
+    // Delete physical video file
+    if (reel.video_url && reel.video_url.startsWith('/uploads/')) {
+      const fs = require('fs');
+      const path = require('path');
+      const relativePath = reel.video_url.replace(/^\/uploads\//, '');
+      const fullPath = path.join(baseUploads, relativePath);
+      fs.unlink(fullPath, (err) => {
+        if (err && err.code !== 'ENOENT') {
+          console.error('Failed to delete physical video file for reel:', fullPath, err.message);
+        }
+      });
+    }
+
+    if (db.isMock()) {
+      db.mockDb.reels = (db.mockDb.reels || []).filter(r => r.id != id);
+    } else {
+      await db.query('DELETE FROM reels WHERE id = ?', [id]);
+    }
+    res.status(200).json({ success: true, message: 'Reel deleted successfully.' });
+  } catch (error) {
+    console.error('Delete reel error:', error.message);
+    res.status(500).json({ success: false, error: 'Server error while deleting reel.' });
+  }
+}
+
+// Update reel details (owner or admin only)
+async function updateReel(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+  const { id } = req.params;
+  const { caption } = req.body;
+  try {
+    let rows;
+    if (db.isMock()) {
+      rows = (db.mockDb.reels || []).filter(r => r.id == id);
+    } else {
+      [rows] = await db.query('SELECT user_id FROM reels WHERE id = ?', [id]);
+    }
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Reel not found.' });
+    }
+    const reel = rows[0];
+    if (reel.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'You are not authorized to edit this reel.' });
+    }
+
+    if (db.isMock()) {
+      const match = (db.mockDb.reels || []).find(r => r.id == id);
+      if (match) match.caption = caption || '';
+    } else {
+      await db.query('UPDATE reels SET caption = ? WHERE id = ?', [caption || '', id]);
+    }
+    res.status(200).json({ success: true, message: 'Reel updated successfully.' });
+  } catch (error) {
+    console.error('Update reel error:', error.message);
+    res.status(500).json({ success: false, error: 'Server error while updating reel.' });
+  }
+}
+
+// Update property status (owner or admin only)
+async function updatePropertyStatus(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized.' });
+  }
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!status) {
+    return res.status(400).json({ success: false, error: 'Status is required.' });
+  }
+  try {
+    let rows;
+    if (db.isMock()) {
+      rows = db.mockDb.properties.filter(p => p.id == id);
+    } else {
+      [rows] = await db.query('SELECT user_id FROM properties WHERE id = ?', [id]);
+    }
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Property not found.' });
+    }
+    const property = rows[0];
+    if (property.user_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'You are not authorized to update this listing.' });
+    }
+
+    if (db.isMock()) {
+      const match = db.mockDb.properties.find(p => p.id == id);
+      if (match) match.status = status;
+    } else {
+      await db.query('UPDATE properties SET status = ? WHERE id = ?', [status, id]);
+    }
+    res.status(200).json({ success: true, message: 'Property status updated successfully.' });
+  } catch (error) {
+    console.error('Update property status error:', error.message);
+    res.status(500).json({ success: false, error: 'Server error while updating property status.' });
   }
 }
 
@@ -713,5 +857,8 @@ module.exports = {
   getReels,
   uploadReel,
   toggleReelLike,
-  addReelComment
+  addReelComment,
+  deleteReel,
+  updateReel,
+  updatePropertyStatus
 };
