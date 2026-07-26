@@ -87,6 +87,28 @@
         top: 90px !important;
       }
     }
+
+    /* Mobile specific reels upload scroll overrides */
+    @media (max-width: 768px) {
+      .reels-upload-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 2000 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        background: #ffffff !important;
+        display: none;
+      }
+      #reel-preview-video {
+        pointer-events: none !important;
+        max-height: 280px !important;
+        width: 100% !important;
+        object-fit: contain !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -133,7 +155,7 @@
         </div>
         <!-- Video Instant Preview Container -->
         <div class="form-group" id="reel-preview-wrapper" style="display:none; margin-bottom:16px; text-align:center; position:relative;">
-          <video id="reel-preview-video" style="max-height:220px; width:auto; border-radius:12px; background:#000; box-shadow: 0 4px 15px rgba(0,0,0,0.15);" controls muted autoplay></video>
+          <video id="reel-preview-video" style="max-height:220px; width:auto; border-radius:12px; background:#000; box-shadow: 0 4px 15px rgba(0,0,0,0.15); pointer-events: none;" loop muted autoplay playsinline></video>
         </div>
         <div class="form-group">
           <label class="form-label">Caption / Description (Optional)</label>
