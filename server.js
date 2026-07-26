@@ -156,10 +156,28 @@ app.get('/api/debug-reels', async (req, res) => {
   try {
     const [users] = await db.query("SELECT id, name, email FROM users WHERE name LIKE '%Yash%' OR name LIKE '%Soni%'");
     const [reels] = await db.query("SELECT * FROM reels");
+    
+    const fs = require('fs');
+    const path = require('path');
+    const getFiles = (dir) => {
+      if (!fs.existsSync(dir)) return ['Not Exists'];
+      try {
+        return fs.readdirSync(dir);
+      } catch (e) {
+        return [e.message];
+      }
+    };
+    const filesPersistent = getFiles('/home/u726900424/domains/houserenter.in/persistent_uploads/reels');
+    const filesNodejs = getFiles('/home/u726900424/domains/houserenter.in/nodejs/public/uploads/reels');
+    const filesPublicHtml = getFiles('/home/u726900424/domains/houserenter.in/public_html/uploads/reels');
+
     res.json({
       success: true,
       users,
-      reels
+      reels,
+      filesPersistent,
+      filesNodejs,
+      filesPublicHtml
     });
   } catch (err) {
     res.json({ success: false, error: err.message });
