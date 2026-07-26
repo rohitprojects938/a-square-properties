@@ -366,7 +366,7 @@
         const item = document.createElement('div');
         item.className = 'reel-item';
         item.innerHTML = `
-          <video class="reel-video" src="${r.video_url}" loop playsinline autoplay onerror="handleVideoError(this)" onclick="togglePlayState(this)"></video>
+          <video class="reel-video" src="${r.video_url}" loop playsinline onerror="handleVideoError(this)" onclick="togglePlayState(this)"></video>
           <div class="reel-overlay-play"><i class="bx bx-play"></i></div>
           
           <!-- Actions -->
