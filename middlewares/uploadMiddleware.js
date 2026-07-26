@@ -48,11 +48,21 @@ async function processImage(buffer, folder, prefix = 'img') {
   const destDir = path.join(basePublic, 'uploads', folder);
   const destPath = path.join(destDir, fileName);
 
-  await sharp(buffer)
-    .resize(1000, 1000, { fit: 'inside', withoutEnlargement: true }) // Premium responsive size
-    .toFormat('webp')
-    .webp({ quality: 80 }) // 80% WebP compression
-    .toFile(destPath);
+  try {
+    await sharp(buffer, { failOn: 'none' })
+      .rotate() // Auto-rotate based on EXIF orientation
+      .resize(1000, 1000, { fit: 'inside', withoutEnlargement: true })
+      .toFormat('webp')
+      .webp({ quality: 80 })
+      .toFile(destPath);
+  } catch (sharpErr) {
+    // Fallback: try without resize constraints for problematic formats
+    console.warn('Sharp primary processing failed, trying fallback:', sharpErr.message);
+    await sharp(buffer, { failOn: 'none' })
+      .toFormat('webp')
+      .webp({ quality: 75 })
+      .toFile(destPath);
+  }
 
   return `/uploads/${folder}/${fileName}`;
 }
