@@ -166,19 +166,6 @@ app.get('/auth/google', passport.authenticate('google', {
   prompt: 'select_account'
 }));
 
-app.get('/api/debug-reels', async (req, res) => {
-  try {
-    const db = require('./config/db');
-    await db.query("DELETE FROM reels WHERE id IN (105, 106)");
-    res.json({
-      success: true,
-      message: 'Reels 105 and 106 successfully deleted from database.'
-    });
-  } catch (err) {
-    res.json({ success: false, error: err.message });
-  }
-});
-
 app.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login.html' }),
   (req, res) => {
