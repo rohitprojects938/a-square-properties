@@ -441,6 +441,7 @@ table.adm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .adm-charts-grid { grid-template-columns: 1fr; }
   .adm-form-row { grid-template-columns: 1fr; }
   .adm-content { padding: 16px; }
+  table.adm-table { min-width: 850px; }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────── */
