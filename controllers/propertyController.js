@@ -7,12 +7,24 @@ const baseUploads = fs.existsSync('/home/u726900424/domains/houserenter.in')
   ? prodPersistentDir
   : path.join(__dirname, '..', 'public', 'uploads');
 
+// Safe numeric conversion helpers — never allow NaN into SQL queries
+function safeFloat(val, defaultVal = null) {
+  if (val === null || val === undefined || val === '') return defaultVal;
+  const parsed = parseFloat(val);
+  return isNaN(parsed) ? defaultVal : parsed;
+}
+
+function safeInt(val, defaultVal = 0) {
+  if (val === null || val === undefined || val === '') return defaultVal;
+  const parsed = parseInt(val, 10);
+  return isNaN(parsed) ? defaultVal : parsed;
+}
+
 // Post a new property (Multi-Step Form upload)
 async function createProperty(req, res) {
   if (!req.user) {
     return res.status(401).json({ success: false, error: 'Unauthorized.' });
   }
-
 
   try {
     const {
@@ -20,6 +32,16 @@ async function createProperty(req, res) {
       bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status,
       address, city, state, pincode, latitude, longitude
     } = req.body;
+
+    // Validate required numeric fields before SQL insert
+    const parsedPrice = safeFloat(price, null);
+    const parsedArea = safeInt(area_sqft, null);
+    if (parsedPrice === null) {
+      return res.status(400).json({ success: false, error: 'Invalid or missing value for field: price' });
+    }
+    if (parsedArea === null) {
+      return res.status(400).json({ success: false, error: 'Invalid or missing value for field: area_sqft' });
+    }
 
     // 2. Insert property details
     const [result] = await db.query(
@@ -30,11 +52,11 @@ async function createProperty(req, res) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')`,
       [
         req.user.id, title, description, category, listing_type, category_type || 'new',
-        parseFloat(price), parseInt(area_sqft), parseInt(bedrooms || 0), parseInt(bathrooms || 0),
-        facing || null, parseInt(floor_number || 0), parseInt(parking_spaces || 0), furnishing_status || 'unfurnished',
+        parsedPrice, parsedArea, safeInt(bedrooms, 0), safeInt(bathrooms, 0),
+        facing || null, safeInt(floor_number, 0), safeInt(parking_spaces, 0), furnishing_status || 'unfurnished',
         address, city, state, pincode,
-        latitude ? parseFloat(latitude) : null,
-        longitude ? parseFloat(longitude) : null
+        safeFloat(latitude, null),
+        safeFloat(longitude, null)
       ]
     );
 
@@ -116,6 +138,16 @@ async function updateProperty(req, res) {
       kept_images, image_order
     } = req.body;
 
+    // Validate required numeric fields before SQL update
+    const parsedPrice = safeFloat(price, null);
+    const parsedArea = safeInt(area_sqft, null);
+    if (parsedPrice === null) {
+      return res.status(400).json({ success: false, error: 'Invalid or missing value for field: price' });
+    }
+    if (parsedArea === null) {
+      return res.status(400).json({ success: false, error: 'Invalid or missing value for field: area_sqft' });
+    }
+
     // 2. Update text fields in properties table
     await db.query(
       `UPDATE properties SET 
@@ -127,11 +159,11 @@ async function updateProperty(req, res) {
       WHERE id = ?`,
       [
         title, description, category, listing_type, category_type || 'new',
-        parseFloat(price), parseInt(area_sqft), parseInt(bedrooms || 0), parseInt(bathrooms || 0),
-        facing || null, parseInt(floor_number || 0), parseInt(parking_spaces || 0), furnishing_status || 'unfurnished',
+        parsedPrice, parsedArea, safeInt(bedrooms, 0), safeInt(bathrooms, 0),
+        facing || null, safeInt(floor_number, 0), safeInt(parking_spaces, 0), furnishing_status || 'unfurnished',
         address, city, state, pincode,
-        latitude ? parseFloat(latitude) : null,
-        longitude ? parseFloat(longitude) : null,
+        safeFloat(latitude, null),
+        safeFloat(longitude, null),
         status || 'active',
         id
       ]
