@@ -164,12 +164,16 @@
             return;
           }
 
-          result.data.forEach(s => {
+            const safeCategory = window.SafeRender.safeText(s.category, 'service');
+            const safeContact = window.SafeRender.safeText(s.contact_number, '');
+            const safeName = window.SafeRender.safeText(s.name, 'Verified Provider');
+            const safeDesc = window.SafeRender.safeText(s.description, 'No description available.');
+
             let icon = 'bx-wrench';
-            if (s.category === 'painter') icon = 'bx-paint';
-            if (s.category === 'electrician') icon = 'bx-bolt';
-            if (s.category === 'packers') icon = 'bx-package';
-            if (s.category === 'cleaning') icon = 'bx-brush';
+            if (safeCategory === 'painter') icon = 'bx-paint';
+            if (safeCategory === 'electrician') icon = 'bx-bolt';
+            if (safeCategory === 'packers') icon = 'bx-package';
+            if (safeCategory === 'cleaning') icon = 'bx-brush';
 
             const card = document.createElement('div');
             card.className = 'service-listing-card';
@@ -178,18 +182,18 @@
                 <div style="display:flex; gap:12px;">
                   <div class="service-card-icon" style="margin-bottom:0;"><i class="bx ${icon}"></i></div>
                   <div>
-                    <h4 style="font-size:14px; font-weight:700;">${s.name}</h4>
-                    <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Category: ${s.category.toUpperCase()} • ${s.experience_years} Years Exp</p>
+                    <h4 style="font-size:14px; font-weight:700;">${safeName}</h4>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Category: ${safeCategory.toUpperCase()} • ${window.SafeRender.safeText(s.experience_years, '0')} Years Exp</p>
                   </div>
                 </div>
-                <span style="background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:11px; font-weight:700; padding:2px 6px; border-radius:6px;">${s.ratings}★ (${s.reviews_count})</span>
+                <span style="background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:11px; font-weight:700; padding:2px 6px; border-radius:6px;">${window.SafeRender.safeText(s.ratings, '5.0')}★ (${window.SafeRender.safeText(s.reviews_count, '0')})</span>
               </div>
-              <p style="font-size:12px; color:var(--text-dark); line-height:1.5;">${s.description}</p>
+              <p style="font-size:12px; color:var(--text-dark); line-height:1.5;">${safeDesc}</p>
               
               <!-- Direct Actions -->
               <div class="service-row-actions">
-                <a href="tel:${s.contact_number}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;"><i class="bx bx-phone"></i> Call Now</a>
-                <a href="https://wa.me/${s.contact_number.replace('+', '')}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;" target="_blank"><i class="bx bxl-whatsapp"></i> Chat WhatsApp</a>
+                <a href="${safeContact ? 'tel:' + safeContact : '#'}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;"><i class="bx bx-phone"></i> Call Now</a>
+                <a href="https://wa.me/${safeContact.replace('+', '')}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;" target="_blank"><i class="bx bxl-whatsapp"></i> Chat WhatsApp</a>
               </div>
             `;
             container.appendChild(card);

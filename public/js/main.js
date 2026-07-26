@@ -1,4 +1,38 @@
-/* House Rental - Shared Client Utilities & Navigation JavaScript */
+// Centralized Safe Rendering & Image/Video Helper System
+window.SafeRender = {
+  safeImageUrl(url, fallback = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80') {
+    if (!url || typeof url !== 'string' || url.trim() === '' || url.trim() === 'null') {
+      return fallback;
+    }
+    return url;
+  },
+
+  safeVideoUrl(url, fallback = '') {
+    if (!url || typeof url !== 'string' || url.trim() === '' || url.trim() === 'null') {
+      return fallback;
+    }
+    return url;
+  },
+
+  safeAvatar(user, fallbackInitialsName = 'User') {
+    if (!user) {
+      return window.AvatarSystem.getInitialsDataUri(fallbackInitialsName);
+    }
+    const name = user.name || user.creator_name || user.user_name || user.owner_name || fallbackInitialsName;
+    const photo = user.profile_photo || user.profile_picture || user.creator_pic || user.user_pic || user.owner_pic || '';
+    if (photo && typeof photo === 'string' && photo.trim() !== '' && photo.trim() !== 'null') {
+      return photo;
+    }
+    return window.AvatarSystem.getInitialsDataUri(name);
+  },
+
+  safeText(val, fallback = '') {
+    if (val === null || val === undefined || String(val).trim() === 'null' || String(val).trim() === 'undefined') {
+      return fallback;
+    }
+    return String(val);
+  }
+};
 
 // Unified Reusable Avatar & Image Fallback System
 window.AvatarSystem = {
@@ -24,11 +58,11 @@ window.AvatarSystem = {
       return `<img src="${guestUri}" alt="Guest" ${classNameAttr} ${styleAttr} />`;
     }
 
-    const photo = user.profile_photo || user.profile_picture || '';
     const initialsUri = this.getInitialsDataUri(user.name);
+    const photo = window.SafeRender.safeAvatar(user, 'User');
     
-    return `<img src="${photo || initialsUri}" ` +
-           `alt="${(user.name || 'User').replace(/"/g, '&quot;')}" ` +
+    return `<img src="${photo}" ` +
+           `alt="${window.SafeRender.safeText(user.name, 'User').replace(/"/g, '&quot;')}" ` +
            `data-fallback-initials="${initialsUri}" ` +
            `onerror="window.AvatarSystem.handleImageError(this)" ` +
            `${classNameAttr} ` +
@@ -165,15 +199,10 @@ window.renderUserUI = function(user) {
 
   if (user) {
     if (headerProfilePic) {
-      const picSrc = user.profile_photo || user.profile_picture || null;
-      if (picSrc) {
-        headerProfilePic.src = picSrc;
-        headerProfilePic.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(user.name));
-        headerProfilePic.onerror = function() { window.AvatarSystem.handleImageError(this); };
-      } else {
-        headerProfilePic.src = window.AvatarSystem.getInitialsDataUri(user.name);
-        headerProfilePic.onerror = null;
-      }
+      const picSrc = window.SafeRender.safeAvatar(user, 'User');
+      headerProfilePic.src = picSrc;
+      headerProfilePic.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(window.SafeRender.safeText(user.name, 'User')));
+      headerProfilePic.onerror = function() { window.AvatarSystem.handleImageError(this); };
       headerProfilePic.parentElement.href = '/profile.html';
     }
 

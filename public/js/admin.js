@@ -409,20 +409,27 @@ async function loadApprovalQueue() {
       return;
     }
 
-    container.innerHTML = list.map(p => `
-      <div class="adm-approval-card">
-        <img class="adm-approval-img" src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=120&q=80" alt="">
-        <div class="adm-approval-info">
-          <div class="adm-approval-title">${p.title}</div>
-          <div class="adm-approval-meta">City: ${p.city} • Category: ${p.category} • Price: ₹${formatNumber(p.price)} • Date: ${new Date(p.created_at).toLocaleDateString()}</div>
-          <div class="adm-approval-actions">
-            <a href="/post.html?edit=${p.id}" class="adm-btn adm-btn-ghost adm-btn-sm" style="text-decoration:none; display:inline-flex; align-items:center;">Edit</a>
-            <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveProperty(${p.id})">Approve</button>
-            <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectProperty(${p.id})">Reject</button>
+    container.innerHTML = list.map(p => {
+      const safeTitle = window.SafeRender.safeText(p.title, 'Untitled');
+      const safeCity = window.SafeRender.safeText(p.city, 'Unknown');
+      const safeCategory = window.SafeRender.safeText(p.category, 'Unknown');
+      const safePrice = p.price ? formatNumber(p.price) : '0';
+      const safeDate = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'Unknown';
+      return `
+        <div class="adm-approval-card">
+          <img class="adm-approval-img" src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=120&q=80" alt="">
+          <div class="adm-approval-info">
+            <div class="adm-approval-title">${safeTitle}</div>
+            <div class="adm-approval-meta">City: ${safeCity} • Category: ${safeCategory} • Price: ₹${safePrice} • Date: ${safeDate}</div>
+            <div class="adm-approval-actions">
+              <a href="/post.html?edit=${p.id}" class="adm-btn adm-btn-ghost adm-btn-sm" style="text-decoration:none; display:inline-flex; align-items:center;">Edit</a>
+              <button class="adm-btn adm-btn-success adm-btn-sm" onclick="approveProperty(${p.id})">Approve</button>
+              <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="rejectProperty(${p.id})">Reject</button>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 }
 

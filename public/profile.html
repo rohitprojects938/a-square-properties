@@ -325,17 +325,11 @@
       const user = result.user;
       document.getElementById('profile-name').innerText = user.name;
       document.getElementById('profile-role').innerText = `${user.role.toUpperCase()} Account`;
-      const picSrc = user.profile_photo || user.profile_picture || null;
       const picEl = document.getElementById('profile-pic');
       if (picEl) {
-        if (picSrc) {
-          picEl.src = picSrc;
-          picEl.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(user.name));
-          picEl.onerror = function() { window.AvatarSystem.handleImageError(this); };
-        } else {
-          picEl.src = window.AvatarSystem.getInitialsDataUri(user.name);
-          picEl.onerror = null;
-        }
+        picEl.src = window.SafeRender.safeAvatar(user, 'User');
+        picEl.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(window.SafeRender.safeText(user.name, 'User')));
+        picEl.onerror = function() { window.AvatarSystem.handleImageError(this); };
       }
 
       const badge = document.getElementById('profile-sub-badge');
@@ -601,15 +595,9 @@
 
           const headerImg = document.getElementById('header-profile-pic');
           if (headerImg) {
-            const freshPic = freshUser.profile_photo || freshUser.profile_picture;
-            if (freshPic) {
-              headerImg.src = freshPic;
-              headerImg.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(freshUser.name));
-              headerImg.onerror = function() { window.AvatarSystem.handleImageError(this); };
-            } else {
-              headerImg.src = window.AvatarSystem.getInitialsDataUri(freshUser.name);
-              headerImg.onerror = null;
-            }
+            headerImg.src = window.SafeRender.safeAvatar(freshUser, 'User');
+            headerImg.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(window.SafeRender.safeText(freshUser.name, 'User')));
+            headerImg.onerror = function() { window.AvatarSystem.handleImageError(this); };
           }
         }
       } catch (err) {

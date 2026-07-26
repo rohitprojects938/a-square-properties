@@ -370,12 +370,12 @@
           }
 
           // Set Spec items
-          document.getElementById('spec-beds').innerText = propertyDetails.bedrooms + ' BHK';
-          document.getElementById('spec-baths').innerText = propertyDetails.bathrooms;
-          document.getElementById('spec-facing').innerText = propertyDetails.facing || 'East';
-          document.getElementById('spec-floor').innerText = propertyDetails.floor_number;
-          document.getElementById('spec-parking').innerText = propertyDetails.parking_spaces;
-          document.getElementById('spec-furnish').innerText = propertyDetails.furnishing_status.toUpperCase();
+          document.getElementById('spec-beds').innerText = window.SafeRender.safeText(propertyDetails.bedrooms, '0') + ' BHK';
+          document.getElementById('spec-baths').innerText = window.SafeRender.safeText(propertyDetails.bathrooms, '0');
+          document.getElementById('spec-facing').innerText = window.SafeRender.safeText(propertyDetails.facing, 'East');
+          document.getElementById('spec-floor').innerText = window.SafeRender.safeText(propertyDetails.floor_number, '0');
+          document.getElementById('spec-parking').innerText = window.SafeRender.safeText(propertyDetails.parking_spaces, '0');
+          document.getElementById('spec-furnish').innerText = window.SafeRender.safeText(propertyDetails.furnishing_status, 'unfurnished').toUpperCase();
 
           // Set Gallery Images & Swipe Setup
           activeImageIndex = 0;
@@ -383,25 +383,26 @@
           setupSwipeListeners();
 
           // Set Owner Cards
-          document.getElementById('owner-name').innerText = propertyDetails.owner_name;
-          document.getElementById('owner-tag').innerText = `Direct ${propertyDetails.owner_role.toUpperCase()} • ${propertyDetails.owner_phone}`;
+          const ownerNameText = window.SafeRender.safeText(propertyDetails.owner_name, 'Owner');
+          const ownerRoleText = window.SafeRender.safeText(propertyDetails.owner_role, 'Agent').toUpperCase();
+          const ownerPhoneText = window.SafeRender.safeText(propertyDetails.owner_phone, '');
+          
+          document.getElementById('owner-name').innerText = ownerNameText;
+          document.getElementById('owner-tag').innerText = `Direct ${ownerRoleText} ${ownerPhoneText ? '• ' + ownerPhoneText : ''}`;
           
           const ownerAvatar = document.getElementById('owner-avatar');
           if (ownerAvatar) {
-            const ownerPic = propertyDetails.owner_pic || null;
-            if (ownerPic) {
-              ownerAvatar.src = ownerPic;
-              ownerAvatar.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(propertyDetails.owner_name));
-              ownerAvatar.onerror = function() { window.AvatarSystem.handleImageError(this); };
-            } else {
-              ownerAvatar.src = window.AvatarSystem.getInitialsDataUri(propertyDetails.owner_name);
-              ownerAvatar.onerror = null;
-            }
+            ownerAvatar.src = window.SafeRender.safeAvatar({
+              name: ownerNameText,
+              profile_photo: propertyDetails.owner_pic
+            }, 'Owner');
+            ownerAvatar.setAttribute('data-fallback-initials', window.AvatarSystem.getInitialsDataUri(ownerNameText));
+            ownerAvatar.onerror = function() { window.AvatarSystem.handleImageError(this); };
           }
 
           // Set Call / Whatsapp links
-          document.getElementById('call-action-btn').href = `tel:${propertyDetails.owner_phone}`;
-          document.getElementById('whatsapp-action-btn').href = `https://wa.me/${propertyDetails.owner_phone.replace('+', '')}?text=I am interested in your property "${propertyDetails.title}" listed on House Rental.`;
+          document.getElementById('call-action-btn').href = ownerPhoneText ? `tel:${ownerPhoneText}` : '#';
+          document.getElementById('whatsapp-action-btn').href = `https://wa.me/${ownerPhoneText.replace('+', '')}?text=I am interested in your property "${window.SafeRender.safeText(propertyDetails.title, 'Listing')}" listed on House Rental.`;
 
           // Setup Favorite icon status
           checkFavStatus();
@@ -627,7 +628,8 @@
       // Show active image
       sliderImg.style.opacity = 0;
       setTimeout(() => {
-        sliderImg.src = images[activeImageIndex].image_url;
+        const activeImgObj = images[activeImageIndex];
+        sliderImg.src = window.SafeRender.safeImageUrl(activeImgObj ? activeImgObj.image_url : null);
         sliderImg.style.opacity = 1;
       }, 150);
 
@@ -646,7 +648,8 @@
           opacity: ${index === activeImageIndex ? '1' : '0.6'};
           transition: all 0.2s;
         `;
-        thumb.innerHTML = `<img src="${img.image_url}" style="width:100%; height:100%; object-fit:cover;">`;
+        const safeUrl = window.SafeRender.safeImageUrl(img ? img.image_url : null);
+        thumb.innerHTML = `<img src="${safeUrl}" style="width:100%; height:100%; object-fit:cover;">`;
         thumb.addEventListener('click', () => {
           activeImageIndex = index;
           renderGallery();
