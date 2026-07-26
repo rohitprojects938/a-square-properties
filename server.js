@@ -112,51 +112,6 @@ subDirs.forEach(sub => {
 // Map static route to serving folder
 app.use('/uploads', express.static(persistentUploadsDir));
 
-// Temporary DB diagnostic route
-app.get('/api/test-db-status', async (req, res) => {
-  const db = require('./config/db');
-  try {
-    const isMock = db.isMock();
-    let bannerCount = -1;
-    let usersCount = -1;
-    let propertiesCount = -1;
-    let tables = [];
-    
-    let cols = [];
-    if (!isMock) {
-      const [b] = await db.query('SELECT COUNT(*) as count FROM homepage_banners');
-      bannerCount = b[0].count;
-      const [u] = await db.query('SELECT COUNT(*) as count FROM users');
-      usersCount = u[0].count;
-      const [p] = await db.query('SELECT COUNT(*) as count FROM properties');
-      propertiesCount = p[0].count;
-      const [t] = await db.query('SHOW TABLES');
-      tables = t;
-      const [c] = await db.query('DESCRIBE properties');
-      cols = c.map(col => col.Field);
-    }
-    
-    res.json({
-      success: true,
-      isMock,
-      nodeEnv: process.env.NODE_ENV,
-      dbMock: process.env.DB_MOCK,
-      dbHost: process.env.DB_HOST,
-      bannerCount,
-      usersCount,
-      propertiesCount,
-      tables,
-      propertiesColumns: cols
-    });
-  } catch (err) {
-    res.json({
-      success: false,
-      error: err.message,
-      stack: err.stack
-    });
-  }
-});
-
 // API Route bindings
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/properties', require('./routes/propertyRoutes'));
