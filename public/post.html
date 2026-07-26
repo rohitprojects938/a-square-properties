@@ -57,6 +57,17 @@
       margin-top: 12px;
       border: 1px solid var(--border-color);
     }
+    .reels-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #FF6A00;
+      border-radius: 50%;
+      animation: reelsSpin 0.8s linear infinite;
+    }
+    @keyframes reelsSpin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -461,10 +472,65 @@
       }
     }
 
-    async function handlePublishProperty() {
+    function xhrUpload(url, method, formData, onProgress, onLoad, onError) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+      
+      const token = localStorage.getItem('token');
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onProgress(percent);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        let result = {};
+        try {
+          result = JSON.parse(xhr.responseText);
+        } catch (e) {}
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          onLoad(result);
+        } else {
+          const errMsg = result.error || 'Server returned error status ' + xhr.status;
+          onError(new Error(errMsg));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        onError(new Error('Network request failed. Please check your connection.'));
+      });
+
+      xhr.send(formData);
+    }
+
+    function handlePublishProperty() {
       if (selectedImages.length === 0) {
         return alert('Please select at least 1 image to showcase your property.');
       }
+
+      // Grab the publish button
+      const publishBtn = document.querySelector('.btn-primary[onclick="handlePublishProperty()"]');
+      if (publishBtn) {
+        publishBtn.disabled = true;
+        publishBtn.innerText = editId ? 'Saving...' : 'Publishing...';
+      }
+
+      // Show progress modal
+      const progressModal = document.getElementById('post-progress-modal');
+      const progressText = document.getElementById('post-progress-text');
+      const progressBar = document.getElementById('post-progress-bar');
+      const progressPercent = document.getElementById('post-progress-percent');
+
+      progressText.innerText = 'Preparing property upload...';
+      progressBar.style.width = '0%';
+      progressPercent.innerText = '0%';
+      progressModal.style.display = 'flex';
 
       const formData = new FormData();
       formData.append('title', document.getElementById('post-title').value);
@@ -493,7 +559,13 @@
         formData.append('video', vidInput.files[0]);
       }
 
+      let url = '/api/properties';
+      let method = 'POST';
+
       if (editId) {
+        url = `/api/properties/${editId}`;
+        method = 'PUT';
+
         const keptImages = [];
         const imageOrder = [];
         let newFileIndex = 0;
@@ -511,32 +583,67 @@
 
         formData.append('kept_images', JSON.stringify(keptImages));
         formData.append('image_order', JSON.stringify(imageOrder));
-
-        try {
-          const result = await apiRequest(`/api/properties/${editId}`, 'PUT', formData, true);
-          if (result.success) {
-            alert('Property updated successfully!');
-            window.location.href = '/profile.html';
-          }
-        } catch (err) {
-          alert('Failed to update listing: ' + err.message);
-        }
       } else {
         selectedImages.forEach(img => {
           formData.append('images', img.file);
         });
-
-        try {
-          const result = await apiRequest('/api/properties', 'POST', formData, true);
-          if (result.success) {
-            alert('Property published successfully!');
-            window.location.href = '/profile.html';
-          }
-        } catch (err) {
-          alert('Failed to publish listing: ' + err.message);
-        }
       }
+
+      xhrUpload(
+        url,
+        method,
+        formData,
+        // OnProgress
+        (percent) => {
+          if (percent < 100) {
+            progressText.innerText = 'Uploading images...';
+          } else {
+            progressText.innerText = 'Processing on server...';
+          }
+          progressBar.style.width = percent + '%';
+          progressPercent.innerText = percent + '%';
+        },
+        // OnLoad / Success
+        (result) => {
+          progressText.innerText = 'Finalizing...';
+          progressBar.style.width = '100%';
+          progressPercent.innerText = '100%';
+
+          setTimeout(() => {
+            progressModal.style.display = 'none';
+            if (publishBtn) {
+              publishBtn.disabled = false;
+              publishBtn.innerText = editId ? 'Save Changes' : 'Publish Listing';
+            }
+            // Explicit Success Dialog/Alert satisfying the navigate-after-confirmation requirement
+            alert(editId ? 'Property updated successfully!' : 'Property added successfully!');
+            window.location.href = '/profile.html';
+          }, 600);
+        },
+        // OnError
+        (err) => {
+          progressModal.style.display = 'none';
+          if (publishBtn) {
+            publishBtn.disabled = false;
+            publishBtn.innerText = editId ? 'Save Changes' : 'Publish Listing';
+          }
+          // Display error and retain selected images so user can retry without loss
+          alert('Upload failed: ' + err.message);
+        }
+      );
     }
   </script>
+
+  <!-- Property Upload Progress Modal -->
+  <div id="post-progress-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:99999; display:none; flex-direction:column; align-items:center; justify-content:center; color:white; padding:24px; font-family:'Outfit', sans-serif;">
+    <div style="width:100%; max-width:320px; text-align:center; background:#1a1d27; padding:28px 24px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <div class="reels-spinner" style="margin:0 auto 20px auto; width:48px; height:48px; border-width:4px;"></div>
+      <div id="post-progress-text" style="font-size:16px; font-weight:600; margin-bottom:12px;">Preparing property upload...</div>
+      <div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden; margin-bottom:8px;">
+        <div id="post-progress-bar" style="background:linear-gradient(90deg, #FF6A00 0%, #ff9040 100%); width:0%; height:100%; transition:width 0.2s ease;"></div>
+      </div>
+      <div id="post-progress-percent" style="font-size:12px; color:#8b90a0;">0%</div>
+    </div>
+  </div>
 </body>
 </html>

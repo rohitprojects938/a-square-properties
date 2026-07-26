@@ -7,6 +7,17 @@
   <link rel="stylesheet" href="/css/style.v125.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
+    .reels-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #FF6A00;
+      border-radius: 50%;
+      animation: reelsSpin 0.8s linear infinite;
+    }
+    @keyframes reelsSpin {
+      to { transform: rotate(360deg); }
+    }
     /* Full height scrolling for Reels */
     .reels-wrapper {
       height: calc(100% - 88px); /* Full height minus fixed bottom nav */
@@ -82,8 +93,8 @@
   <div class="app-shell" style="background:#000;">
     
     <!-- Floating Upload Option button -->
-    <button id="open-reel-upload-btn" style="position:absolute; top:16px; right:16px; z-index:100; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.3); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
-      <i class="bx bx-camera-movie" style="font-size:20px;"></i>
+    <button id="open-reel-upload-btn" style="position:absolute; top:16px; right:16px; z-index:100; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;" title="Upload Reel">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </button>
 
     <!-- Reels scroll view -->
@@ -120,11 +131,15 @@
           <label class="form-label">Select Reel Video (Portrait MP4 only)</label>
           <input type="file" id="reel-video-file" class="form-input" accept="video/mp4,video/quicktime" required>
         </div>
-        <div class="form-group">
-          <label class="form-label">Caption / Description</label>
-          <textarea id="reel-caption-txt" class="form-input" rows="4" placeholder="Explore this beautiful villa! #houserenter #PremiumListing" required></textarea>
+        <!-- Video Instant Preview Container -->
+        <div class="form-group" id="reel-preview-wrapper" style="display:none; margin-bottom:16px; text-align:center; position:relative;">
+          <video id="reel-preview-video" style="max-height:220px; width:auto; border-radius:12px; background:#000; box-shadow: 0 4px 15px rgba(0,0,0,0.15);" controls muted autoplay></video>
         </div>
-        <button type="submit" class="btn-primary" style="margin-top:16px;">Publish Reel</button>
+        <div class="form-group">
+          <label class="form-label">Caption / Description (Optional)</label>
+          <textarea id="reel-caption-txt" class="form-input" rows="4" placeholder="Explore this beautiful villa! #houserenter #PremiumListing"></textarea>
+        </div>
+        <button type="submit" id="publish-reel-btn" class="btn-primary" style="margin-top:16px;">Publish Reel</button>
       </form>
     </div>
 
@@ -319,7 +334,7 @@
         const item = document.createElement('div');
         item.className = 'reel-item';
         item.innerHTML = `
-          <video class="reel-video" src="${r.video_url}" loop playsinline muted autoplay onerror="handleVideoError(this)" onclick="togglePlayState(this)"></video>
+          <video class="reel-video" src="${r.video_url}" loop playsinline autoplay onerror="handleVideoError(this)" onclick="togglePlayState(this)"></video>
           <div class="reel-overlay-play"><i class="bx bx-play"></i></div>
           
           <!-- Actions -->
@@ -359,7 +374,15 @@
       const videos = document.querySelectorAll('.reel-video');
       videos.forEach((vid, i) => {
         if (i === idx) {
-          vid.play().catch(() => {});
+          vid.muted = false; // Play unmuted by default
+          const playPromise = vid.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((error) => {
+              console.warn("Autoplay with audio was blocked, falling back to muted autoplay:", error);
+              vid.muted = true;
+              vid.play().catch(() => {});
+            });
+          }
         } else {
           vid.pause();
         }
@@ -501,30 +524,153 @@
       }
     }
 
+    // Listen to video choice for instant preview
+    document.getElementById('reel-video-file').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const wrapper = document.getElementById('reel-preview-wrapper');
+      const video = document.getElementById('reel-preview-video');
+      
+      if (file) {
+        if (file.size > 30 * 1024 * 1024) {
+          alert('Video file size exceeds 30MB limit.');
+          e.target.value = '';
+          wrapper.style.display = 'none';
+          video.src = '';
+          return;
+        }
+        if (!file.name.toLowerCase().endsWith('.mp4') && !file.name.toLowerCase().endsWith('.mov')) {
+          alert('Please select a portrait MP4 or MOV video file.');
+          e.target.value = '';
+          wrapper.style.display = 'none';
+          video.src = '';
+          return;
+        }
+        
+        const previewUrl = URL.createObjectURL(file);
+        video.src = previewUrl;
+        wrapper.style.display = 'block';
+        video.load();
+      } else {
+        wrapper.style.display = 'none';
+        video.src = '';
+      }
+    });
+
+    // Reusable upload handler using XHR to track real progress
+    function xhrUpload(url, method, formData, onProgress, onLoad, onError) {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, url, true);
+      
+      const token = localStorage.getItem('token');
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onProgress(percent);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        let result = {};
+        try {
+          result = JSON.parse(xhr.responseText);
+        } catch (e) {}
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          onLoad(result);
+        } else {
+          const errMsg = result.error || 'Server returned error status ' + xhr.status;
+          onError(new Error(errMsg));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        onError(new Error('Network request failed. Please check your connection.'));
+      });
+
+      xhr.send(formData);
+    }
+
     // Upload Reel action dispatcher
-    async function handleUploadReel(e) {
+    function handleUploadReel(e) {
       e.preventDefault();
       const videoFile = document.getElementById('reel-video-file').files[0];
       const caption = document.getElementById('reel-caption-txt').value;
+      const publishBtn = document.getElementById('publish-reel-btn');
 
-      if (videoFile && !videoFile.name.toLowerCase().endsWith('.mp4')) {
-        return alert('Only portrait MP4 videos are supported for reels.');
+      if (!videoFile) {
+        return alert('Please select a video file.');
       }
+
+      // Prevent duplicate clicks
+      publishBtn.disabled = true;
+      publishBtn.innerText = 'Publishing...';
+
+      // Setup Progress state
+      const progressModal = document.getElementById('reels-progress-modal');
+      const progressText = document.getElementById('reels-progress-text');
+      const progressBar = document.getElementById('reels-progress-bar');
+      const progressPercent = document.getElementById('reels-progress-percent');
+
+      progressText.innerText = 'Preparing upload...';
+      progressBar.style.width = '0%';
+      progressPercent.innerText = '0%';
+      progressModal.style.display = 'flex';
 
       const formData = new FormData();
       formData.append('video', videoFile);
-      formData.append('caption', caption);
+      formData.append('caption', caption || '');
 
-      try {
-        const result = await apiRequest('/api/properties/feed/reels', 'POST', formData, true);
-        if (result.success) {
-          alert('Reel uploaded successfully! Reloading feed.');
-          toggleUploadReel(false);
-          loadReelsFeed();
+      xhrUpload(
+        '/api/properties/feed/reels',
+        'POST',
+        formData,
+        // OnProgress
+        (percent) => {
+          if (percent < 100) {
+            progressText.innerText = 'Uploading reel...';
+          } else {
+            progressText.innerText = 'Processing...';
+          }
+          progressBar.style.width = percent + '%';
+          progressPercent.innerText = percent + '%';
+        },
+        // OnLoad / Success
+        (result) => {
+          progressText.innerText = 'Finalizing...';
+          progressBar.style.width = '100%';
+          progressPercent.innerText = '100%';
+          
+          setTimeout(() => {
+            progressModal.style.display = 'none';
+            alert('Reel uploaded successfully!');
+            
+            // Clean/Reset input form
+            document.getElementById('reel-video-file').value = '';
+            document.getElementById('reel-caption-txt').value = '';
+            document.getElementById('reel-preview-wrapper').style.display = 'none';
+            document.getElementById('reel-preview-video').src = '';
+            
+            publishBtn.disabled = false;
+            publishBtn.innerText = 'Publish Reel';
+            
+            toggleUploadReel(false);
+            loadReelsFeed();
+          }, 600);
+        },
+        // OnError
+        (err) => {
+          progressModal.style.display = 'none';
+          alert('Upload failed: ' + err.message);
+          
+          // Re-enable button to allow retry
+          publishBtn.disabled = false;
+          publishBtn.innerText = 'Publish Reel';
         }
-      } catch(err) {
-        alert(err.message);
-      }
+      );
     }
 
     function handleShareReel(url) {
@@ -532,5 +678,17 @@
       alert('Video reel share link copied to clipboard!');
     }
   </script>
+
+  <!-- Reels Upload Progress Modal -->
+  <div id="reels-progress-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:99999; display:none; flex-direction:column; align-items:center; justify-content:center; color:white; padding:24px; font-family:'Outfit', sans-serif;">
+    <div style="width:100%; max-width:320px; text-align:center; background:#1a1d27; padding:28px 24px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <div class="reels-spinner" style="margin:0 auto 20px auto; width:48px; height:48px; border-width:4px;"></div>
+      <div id="reels-progress-text" style="font-size:16px; font-weight:600; margin-bottom:12px;">Preparing upload...</div>
+      <div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden; margin-bottom:8px;">
+        <div id="reels-progress-bar" style="background:linear-gradient(90deg, #FF6A00 0%, #ff9040 100%); width:0%; height:100%; transition:width 0.2s ease;"></div>
+      </div>
+      <div id="reels-progress-percent" style="font-size:12px; color:#8b90a0;">0%</div>
+    </div>
+  </div>
 </body>
 </html>
