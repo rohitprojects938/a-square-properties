@@ -721,7 +721,7 @@ async function deleteProperty(req, res) {
   }
 }
 
-module.exports = {
+
 // Delete a reel (owner or admin only)
 async function deleteReel(req, res) {
   if (!req.user) {
