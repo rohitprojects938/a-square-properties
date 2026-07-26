@@ -151,6 +151,21 @@ subDirs.forEach(sub => {
 // Map static route to serving folder
 app.use('/uploads', express.static(persistentUploadsDir));
 
+app.get('/api/debug-reels', async (req, res) => {
+  const db = require('./config/db');
+  try {
+    const [users] = await db.query("SELECT id, name, email FROM users WHERE name LIKE '%Yash%' OR name LIKE '%Soni%'");
+    const [reels] = await db.query("SELECT * FROM reels");
+    res.json({
+      success: true,
+      users,
+      reels
+    });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
 // API Route bindings
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/properties', require('./routes/propertyRoutes'));
