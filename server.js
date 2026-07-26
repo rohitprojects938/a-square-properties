@@ -79,16 +79,33 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Configure persistent uploads directory serving
 const prodPersistentDir = '/home/u726900424/domains/houserenter.in/persistent_uploads';
-const persistentUploadsDir = fs.existsSync('/home/u726900424/domains/houserenter.in')
-  ? prodPersistentDir
-  : path.join(__dirname, 'public', 'uploads');
+let persistentUploadsDir = path.join(__dirname, 'public', 'uploads');
+
+if (fs.existsSync('/home/u726900424/domains/houserenter.in')) {
+  try {
+    if (!fs.existsSync(prodPersistentDir)) {
+      fs.mkdirSync(prodPersistentDir, { recursive: true });
+    }
+    const testFile = path.join(prodPersistentDir, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    persistentUploadsDir = prodPersistentDir;
+    console.log('✅ Persistent uploads directory is writeable.');
+  } catch (err) {
+    console.warn('⚠️ Persistent uploads directory write check failed, falling back to local public/uploads:', err.message);
+  }
+}
 
 // Dynamically check & initialize directories
 const subDirs = ['properties', 'reels', 'blogs', 'services', 'profile', 'banners'];
 subDirs.forEach(sub => {
-  const dirPath = path.join(persistentUploadsDir, sub);
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
+  try {
+    const dirPath = path.join(persistentUploadsDir, sub);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+  } catch (mkdirErr) {
+    console.error(`❌ Failed to create sub-directory ${sub} inside ${persistentUploadsDir}:`, mkdirErr.message);
   }
 });
 

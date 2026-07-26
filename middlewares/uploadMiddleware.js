@@ -4,9 +4,22 @@ const path = require('path');
 const fs = require('fs');
 
 const prodPersistentDir = '/home/u726900424/domains/houserenter.in/persistent_uploads';
-const baseUploads = fs.existsSync('/home/u726900424/domains/houserenter.in')
-  ? prodPersistentDir
-  : path.join(__dirname, '..', 'public', 'uploads');
+let baseUploads = path.join(__dirname, '..', 'public', 'uploads');
+
+if (fs.existsSync('/home/u726900424/domains/houserenter.in')) {
+  try {
+    if (!fs.existsSync(prodPersistentDir)) {
+      fs.mkdirSync(prodPersistentDir, { recursive: true });
+    }
+    const testFile = path.join(prodPersistentDir, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    baseUploads = prodPersistentDir;
+    console.log('✅ Persistent uploads directory is writeable.');
+  } catch (err) {
+    console.warn('⚠️ Persistent uploads directory write check failed, falling back to local public/uploads:', err.message);
+  }
+}
 
 // Create upload paths dynamically
 const uploadDirs = [
@@ -19,8 +32,12 @@ const uploadDirs = [
 ];
 
 uploadDirs.forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (mkdirErr) {
+    console.error(`❌ Failed to create directory ${dir}:`, mkdirErr.message);
   }
 });
 
