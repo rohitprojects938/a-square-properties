@@ -154,39 +154,18 @@ app.use('/uploads', express.static(persistentUploadsDir));
 app.get('/api/debug-reels', async (req, res) => {
   const db = require('./config/db');
   try {
+    // Restore the database URLs of Yash Soni's reels to point to active working video files
+    await db.query("UPDATE reels SET video_url = '/uploads/reels/vid-1784889341305-467311896.mp4' WHERE id = 105");
+    await db.query("UPDATE reels SET video_url = '/uploads/reels/vid-1784891605901-988290673.mp4' WHERE id = 106");
+
     const [users] = await db.query("SELECT id, name, email FROM users WHERE name LIKE '%Yash%' OR name LIKE '%Soni%'");
     const [reels] = await db.query("SELECT * FROM reels");
-    
-    const fs = require('fs');
-    const path = require('path');
-    const findMp4s = (dir, list = []) => {
-      if (!fs.existsSync(dir)) return list;
-      try {
-        const files = fs.readdirSync(dir);
-        for (const f of files) {
-          const fp = path.join(dir, f);
-          if (fs.lstatSync(fp).isDirectory()) {
-            findMp4s(fp, list);
-          } else if (f.endsWith('.mp4')) {
-            list.push({ name: f, path: fp });
-          }
-        }
-      } catch (e) {
-        list.push({ error: e.message });
-      }
-      return list;
-    };
-    const mp4sPersistent = findMp4s('/home/u726900424/domains/houserenter.in/persistent_uploads');
-    const mp4sNodejs = findMp4s('/home/u726900424/domains/houserenter.in/nodejs/public/uploads');
-    const mp4sPublicHtml = findMp4s('/home/u726900424/domains/houserenter.in/public_html/uploads');
 
     res.json({
       success: true,
+      message: 'Reels successfully recovered/updated to working files!',
       users,
-      reels,
-      mp4sPersistent,
-      mp4sNodejs,
-      mp4sPublicHtml
+      reels
     });
   } catch (err) {
     res.json({ success: false, error: err.message });
