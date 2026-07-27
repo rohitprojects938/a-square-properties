@@ -510,18 +510,19 @@ body {
   background: #ECECEC;
 }
 
-/* Search bar card styling (Replaced with premium floating hero) */
+/* Search bar card styling (Replaced with premium bottom-left floating hero) */
 .home-hero-banner {
   position: relative;
   width: 100%;
   height: 340px; /* Mobile height requirement: 320px - 360px */
-  border-radius: var(--border-radius-lg);
+  border-radius: 28px; /* Rounded corners: 24-28px range */
   background: url('/uploads/home_image.png') no-repeat center center;
   background-size: cover;
   overflow: hidden;
   margin-bottom: 20px;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-end; /* Bottom alignment */
+  justify-content: flex-start; /* Left alignment */
   padding: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
@@ -532,48 +533,99 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.35)); /* Dark overlay readability requirement */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.35)); /* Subtle dark gradient overlay */
   z-index: 1;
 }
 
 .hero-search-float {
   position: relative;
-  width: 100%;
   z-index: 2;
-  background: rgba(255, 255, 255, 0.85); /* Glassmorphism background */
-  backdrop-filter: blur(12px); /* Glassmorphic blur requirement */
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: var(--border-radius);
-  padding: 14px;
-  box-shadow: var(--floating-shadow); /* Soft shadow */
+  background: rgba(255, 255, 255, 0.82); /* Semi-transparent white */
+  backdrop-filter: blur(16px); /* Glassmorphic blur */
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 16px; /* Rounded corners */
+  padding: 8px 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); /* Soft shadow */
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 8px; /* Spacing */
+  width: 100%;
+  max-width: 320px; /* mobile float size */
+  margin: 0 !important; /* Anchor bottom-left */
 }
 
 /* Glassmorphism search input adjustments for luxury look */
+.hero-search-float .search-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
 .hero-search-float .search-input {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  padding: 10px 12px 10px 38px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  height: 40px !important;
+  color: var(--text-dark) !important;
+  outline: none;
+  transition: all 0.2s;
 }
 
 .hero-search-float .search-input:focus {
-  background: #ffffff;
-  border-color: var(--secondary-orange);
+  background: #ffffff !important;
+  border-color: var(--secondary-orange) !important;
+}
+
+.hero-search-float .search-input-wrapper i {
+  font-size: 16px !important;
+  left: 12px !important;
+  z-index: 3;
+}
+
+.hero-search-float .filter-btn {
+  width: 40px !important;
+  height: 40px !important;
+  flex-shrink: 0;
+  background: var(--secondary-orange) !important; /* Orange background */
+  border-radius: 12px !important;
+  font-size: 18px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white !important;
+  border: none;
 }
 
 /* Tablet & Desktop Responsiveness */
 @media (min-width: 769px) {
   .home-hero-banner {
     height: 480px; /* Proportional responsive height */
-    padding: 24px;
+    padding: 32px;
+    border-radius: 28px;
   }
   .hero-search-float {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 18px;
-    gap: 12px;
+    max-width: 420px; /* tablet / desktop float size */
+    padding: 10px 12px;
+    border-radius: 20px;
+    margin: 0 !important; /* Anchor bottom-left */
+  }
+  .hero-search-float .search-input {
+    font-size: 14px !important;
+    height: 46px !important;
+    padding-left: 42px !important;
+  }
+  .hero-search-float .search-input-wrapper i {
+    font-size: 18px !important;
+    left: 14px !important;
+  }
+  .hero-search-float .filter-btn {
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 20px !important;
   }
 }
 
