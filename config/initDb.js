@@ -76,6 +76,64 @@ async function initializeDatabase() {
     await addColumnIfNotExist('blogs', 'status', "ALTER TABLE blogs ADD COLUMN status VARCHAR(50) DEFAULT 'draft';");
     await addColumnIfNotExist('blogs', 'author', "ALTER TABLE blogs ADD COLUMN author VARCHAR(100) DEFAULT NULL;");
 
+    // Home Services WhatsApp and display order column migrations
+    await addColumnIfNotExist('home_services', 'whatsapp_number', "ALTER TABLE home_services ADD COLUMN whatsapp_number VARCHAR(50) DEFAULT '+919919014220';");
+    await addColumnIfNotExist('home_services', 'sort_order', "ALTER TABLE home_services ADD COLUMN sort_order INT DEFAULT 0;");
+    await addColumnIfNotExist('home_services', 'image_url', "ALTER TABLE home_services ADD COLUMN image_url VARCHAR(255) DEFAULT NULL;");
+
+    // Site settings loan configuration migrations
+    await addColumnIfNotExist('site_settings', 'loan_section_enabled', "ALTER TABLE site_settings ADD COLUMN loan_section_enabled TINYINT DEFAULT 1;");
+    await addColumnIfNotExist('site_settings', 'loan_apply_button_text', "ALTER TABLE site_settings ADD COLUMN loan_apply_button_text VARCHAR(100) DEFAULT 'Apply Now';");
+
+    // Create Customer Reviews table
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS customer_reviews (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+          review_text TEXT NOT NULL,
+          status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+          reply_text TEXT DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ MySQL Migration: Ensure customer_reviews table exists.');
+    } catch(err) {
+      console.error('❌ Migration failed for customer_reviews:', err.message);
+    }
+
+    // Create Loan Leads table
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS loan_leads (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          aadhaar_number VARCHAR(20) NOT NULL,
+          pan_number VARCHAR(20) NOT NULL,
+          mobile_number VARCHAR(20) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('✅ MySQL Migration: Ensure loan_leads table exists.');
+    } catch(err) {
+      console.error('❌ Migration failed for loan_leads:', err.message);
+    }
+
+    // Pre-populate initial services: Electrician Service & Building Material Service if empty
+    try {
+      const [existing] = await db.query("SELECT COUNT(*) as c FROM home_services");
+      if (existing && existing[0].c === 0) {
+        await db.query(`
+          INSERT INTO home_services (name, icon, description, whatsapp_number, sort_order) VALUES
+          ('Electrician Service', '⚡', 'Instant residential wiring, switchboard installation, and electric repairs.', '+919919014220', 1),
+          ('Building Material Service', '🏗️', 'Supply of premium cement, steel, bricks, and sand materials.', '+919919014220', 2)
+        `);
+        console.log('✅ MySQL Seeder: Injected default home services.');
+      }
+    } catch(err) {
+      console.warn('⚠️ Seeder warning for home_services:', err.message);
+    }
+
     await seedDatabaseData();
 
     // Ensure the specific Delhi farmhouse listing is deleted from the database

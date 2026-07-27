@@ -253,7 +253,7 @@ async function updateUserRole(req, res) {
 // ─── HOME SERVICES ──────────────────────────────────────────────────────────────
 async function getServices(req, res) {
   try {
-    const [rows] = await db.query('SELECT * FROM home_services ORDER BY id ASC');
+    const [rows] = await db.query('SELECT * FROM home_services ORDER BY sort_order ASC, id ASC');
     res.json({ success: true, data: rows });
   } catch (e) {
     res.json({ success: true, data: [] });
@@ -261,11 +261,13 @@ async function getServices(req, res) {
 }
 
 async function createService(req, res) {
-  const { name, icon, description, is_active } = req.body;
+  const { name, icon, description, is_active, whatsapp_number, sort_order, image_url } = req.body;
   if (!name) return res.status(400).json({ success: false, error: 'Service name required.' });
   try {
-    const [r] = await db.query('INSERT INTO home_services (name, icon, description, is_active) VALUES (?, ?, ?, ?)',
-      [name, icon || '🔧', description || '', is_active !== false ? 1 : 0]);
+    const [r] = await db.query(
+      'INSERT INTO home_services (name, icon, description, is_active, whatsapp_number, sort_order, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, icon || '🔧', description || '', is_active !== false ? 1 : 0, whatsapp_number || '+919919014220', parseInt(sort_order) || 0, image_url || null]
+    );
     res.json({ success: true, message: 'Service created.', id: r.insertId });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
@@ -274,10 +276,12 @@ async function createService(req, res) {
 
 async function updateService(req, res) {
   const { id } = req.params;
-  const { name, icon, description, is_active } = req.body;
+  const { name, icon, description, is_active, whatsapp_number, sort_order, image_url } = req.body;
   try {
-    await db.query('UPDATE home_services SET name = ?, icon = ?, description = ?, is_active = ? WHERE id = ?',
-      [name, icon, description, is_active ? 1 : 0, id]);
+    await db.query(
+      'UPDATE home_services SET name = ?, icon = ?, description = ?, is_active = ?, whatsapp_number = ?, sort_order = ?, image_url = ? WHERE id = ?',
+      [name, icon, description, is_active ? 1 : 0, whatsapp_number, parseInt(sort_order) || 0, image_url, id]
+    );
     res.json({ success: true, message: 'Service updated.' });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
@@ -289,6 +293,149 @@ async function deleteService(req, res) {
   try {
     await db.query('DELETE FROM home_services WHERE id = ?', [id]);
     res.json({ success: true, message: 'Service deleted.' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+// ─── CUSTOMER REVIEWS MODERATION ──────────────────────────────────────────────────
+async function getReviews(req, res) {
+  const page  = Math.max(1, parseInt(req.query.page)  || 1);
+  const limit = Math.min(100, parseInt(req.query.limit) || 20);
+  const offset = (page - 1) * limit;
+  const { status, search } = req.query;
+
+  let sql = 'SELECT * FROM customer_reviews';
+  let countSql = 'SELECT COUNT(*) as total FROM customer_reviews';
+  let params = [];
+
+  let whereClauses = [];
+  if (status && status !== 'all') {
+    whereClauses.push('status = ?');
+    params.push(status);
+  }
+  if (search) {
+    whereClauses.push('(name LIKE ? OR review_text LIKE ?)');
+    params.push(`%${search}%`);
+    params.push(`%${search}%`);
+  }
+
+  if (whereClauses.length > 0) {
+    sql += ' WHERE ' + whereClauses.join(' AND ');
+    countSql += ' WHERE ' + whereClauses.join(' AND ');
+  }
+
+  sql += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+  const queryParams = [...params, limit, offset];
+
+  try {
+    const [rows] = await db.query(sql, queryParams);
+    const [[counter]] = await db.query(countSql, params);
+    res.json({
+      success: true,
+      data: rows,
+      pagination: { total: counter.total, page, limit }
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function updateReviewStatus(req, res) {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!['approved', 'rejected', 'pending'].includes(status)) {
+    return res.status(400).json({ success: false, error: 'Invalid status value.' });
+  }
+  try {
+    await db.query('UPDATE customer_reviews SET status = ? WHERE id = ?', [status, id]);
+    res.json({ success: true, message: `Review status updated to ${status}.` });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function replyToReview(req, res) {
+  const { id } = req.params;
+  const { reply_text } = req.body;
+  try {
+    await db.query('UPDATE customer_reviews SET reply_text = ? WHERE id = ?', [reply_text || null, id]);
+    res.json({ success: true, message: 'Reply saved.' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function deleteReview(req, res) {
+  const { id } = req.params;
+  try {
+    await db.query('DELETE FROM customer_reviews WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Review deleted.' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+// ─── LOAN LEADS & SETTINGS ────────────────────────────────────────────────────────
+async function getLoans(req, res) {
+  const page  = Math.max(1, parseInt(req.query.page)  || 1);
+  const limit = Math.min(100, parseInt(req.query.limit) || 20);
+  const offset = (page - 1) * limit;
+  const { search } = req.query;
+
+  let sql = 'SELECT * FROM loan_leads';
+  let countSql = 'SELECT COUNT(*) as total FROM loan_leads';
+  let params = [];
+
+  if (search) {
+    sql += ' WHERE aadhaar_number LIKE ? OR pan_number LIKE ? OR mobile_number LIKE ?';
+    countSql += ' WHERE aadhaar_number LIKE ? OR pan_number LIKE ? OR mobile_number LIKE ?';
+    const s = `%${search}%`;
+    params = [s, s, s];
+  }
+
+  sql += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+  const queryParams = [...params, limit, offset];
+
+  try {
+    const [rows] = await db.query(sql, queryParams);
+    const [[counter]] = await db.query(countSql, params);
+    res.json({
+      success: true,
+      data: rows,
+      pagination: { total: counter.total, page, limit }
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function deleteLoan(req, res) {
+  const { id } = req.params;
+  try {
+    await db.query('DELETE FROM loan_leads WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Loan application deleted.' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function updateLoanSettings(req, res) {
+  const { loan_section_enabled, loan_apply_button_text } = req.body;
+  try {
+    const [existing] = await db.query('SELECT id FROM site_settings LIMIT 1');
+    if (existing.length > 0) {
+      await db.query(
+        'UPDATE site_settings SET loan_section_enabled = ?, loan_apply_button_text = ? WHERE id = ?',
+        [loan_section_enabled ? 1 : 0, loan_apply_button_text || 'Apply Now', existing[0].id]
+      );
+    } else {
+      await db.query(
+        'INSERT INTO site_settings (loan_section_enabled, loan_apply_button_text) VALUES (?, ?)',
+        [loan_section_enabled ? 1 : 0, loan_apply_button_text || 'Apply Now']
+      );
+    }
+    res.json({ success: true, message: 'Loan settings updated.' });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -497,6 +644,8 @@ module.exports = {
   getDashboardStats, getUsers, getUserById, updateUser, deleteUser, updateUserRole,
   getAdminProperties, updatePropertyStatus, deleteProperty, togglePropertyVisibility, toggleFeatured,
   getServices, createService, updateService, deleteService,
+  getReviews, updateReviewStatus, replyToReview, deleteReview,
+  getLoans, deleteLoan, updateLoanSettings,
   getPlans, createPlan, updatePlan, deletePlan,
   getPayments, getReels, updateReelStatus,
   getAnalytics, sendNotification,

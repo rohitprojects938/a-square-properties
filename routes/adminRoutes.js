@@ -32,6 +32,17 @@ router.post('/services',         admin.createService);
 router.put('/services/:id',      admin.updateService);
 router.delete('/services/:id',   admin.deleteService);
 
+// Customer Reviews
+router.get('/reviews',           admin.getReviews);
+router.put('/reviews/:id/status',admin.updateReviewStatus);
+router.post('/reviews/:id/reply',admin.replyToReview);
+router.delete('/reviews/:id',    admin.deleteReview);
+
+// Loan Leads
+router.get('/loans',             admin.getLoans);
+router.delete('/loans/:id',      admin.deleteLoan);
+router.put('/settings/loan',     admin.updateLoanSettings);
+
 // Plans & Subscriptions
 router.get('/plans',           admin.getPlans);
 router.post('/plans',          admin.createPlan);

@@ -212,6 +212,7 @@ app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
+app.use('/api/public', require('./routes/publicRoutes'));
 
 // Google Passport OAuth routes (root-level for SMM-panel redirect compliance)
 app.get('/auth/google', passport.authenticate('google', {
