@@ -54,30 +54,6 @@
           </div>
         </div>
 
-        <!-- Hero Banner Auto Slider -->
-        <div class="hero-slider" id="hero-slider">
-          <div class="slide active">
-            <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" alt="Luxury Villa">
-            <div class="slide-overlay">
-              <h3>Exclusive Premium Villas</h3>
-              <p>Handpicked collection of premium properties</p>
-            </div>
-          </div>
-          <div class="slide">
-            <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80" alt="Modern Apartment">
-            <div class="slide-overlay">
-              <h3>Modern Highrise Apartments</h3>
-              <p>Stunning skyline views with infinite amenities</p>
-            </div>
-          </div>
-          <div class="slide">
-            <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80" alt="Beautiful Farmhouse">
-            <div class="slide-overlay">
-              <h3>Cozy Farm Houses</h3>
-              <p>Escape to serenity and green escapes</p>
-            </div>
-          </div>
-        </div>
 
         <!-- Redesigned Quick Actions Section -->
         <div class="quick-actions-container">
@@ -368,16 +344,6 @@
 
   <script src="/js/main.v125.js"></script>
   <script>
-    // Initialize homepage slide show
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('#hero-slider .slide');
-    if (slides.length > 0) {
-      setInterval(() => {
-        slides[currentSlide].classList.remove('active');
-        currentSlide = (currentSlide + 1) % slides.length;
-        slides[currentSlide].classList.add('active');
-      }, 4000); // 4 seconds transition
-    }
 
     // Greet user dynamically
     const loggedUser = localStorage.getItem('user');
