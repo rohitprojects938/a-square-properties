@@ -105,6 +105,12 @@ async function loadSectionData(section) {
       case 'services':
         await loadServicesManager();
         break;
+      case 'reviews':
+        await loadReviewsManager();
+        break;
+      case 'loans':
+        await loadLoansManager();
+        break;
       case 'plans':
         await loadPlansManager();
         break;
@@ -486,7 +492,8 @@ async function loadServicesManager() {
       <div class="adm-service-card">
         <div class="adm-service-icon">${s.icon || '🔧'}</div>
         <div class="adm-service-name">${s.name}</div>
-        <div style="font-size:11px; color:var(--adm-muted); margin-bottom:8px;">${s.description || 'No description'}</div>
+        <div style="font-size:11px; color:var(--adm-muted); margin-bottom:4px;">${s.description || 'No description'}</div>
+        <div style="font-size:11px; color:var(--adm-muted); margin-bottom:8px;">WhatsApp: ${s.whatsapp_number || 'None'} • Order: ${s.sort_order || 0}</div>
         <span class="adm-badge ${s.is_active ? 'badge-green' : 'badge-red'}" style="font-size:9px;">${s.is_active ? 'Active' : 'Inactive'}</span>
         <div class="adm-service-actions">
           <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editServiceModal(${s.id})"><i data-lucide="edit-2"></i></button>
@@ -513,22 +520,26 @@ window.editServiceModal = (sid) => {
   const form = document.getElementById('service-form');
   form.setAttribute('data-id', sid);
   document.getElementById('service-modal-title').textContent = 'Edit Home Service';
-  document.getElementById('svc-name').value = s.name;
-  document.getElementById('svc-icon').value = s.icon || '🔧';
-  document.getElementById('svc-desc').value = s.description || '';
-  document.getElementById('svc-status').value = s.is_active ? '1' : '0';
+  document.getElementById('service-name').value = s.name;
+  document.getElementById('service-icon').value = s.icon || '🔧';
+  document.getElementById('service-whatsapp').value = s.whatsapp_number || '+919919014220';
+  document.getElementById('service-description').value = s.description || '';
+  document.getElementById('service-order').value = s.sort_order || 0;
+  document.getElementById('service-status').value = s.is_active ? '1' : '0';
   openModal('service-modal');
 };
 
-window.saveService = async (e) => {
+window.saveAdminService = async (e) => {
   e.preventDefault();
   const form = document.getElementById('service-form');
   const sid = form.getAttribute('data-id');
   const payload = {
-    name: document.getElementById('svc-name').value,
-    icon: document.getElementById('svc-icon').value,
-    description: document.getElementById('svc-desc').value,
-    is_active: document.getElementById('svc-status').value === '1'
+    name: document.getElementById('service-name').value,
+    icon: document.getElementById('service-icon').value,
+    whatsapp_number: document.getElementById('service-whatsapp').value,
+    description: document.getElementById('service-description').value,
+    sort_order: parseInt(document.getElementById('service-order').value) || 0,
+    is_active: document.getElementById('service-status').value === '1'
   };
 
   const url = sid ? `/api/admin/services/${sid}` : '/api/admin/services';
@@ -547,6 +558,160 @@ window.deleteService = async (sid) => {
     if (res.success) {
       showToast('Service category deleted.');
       loadServicesManager();
+    }
+  }
+};
+
+// ─── CUSTOMER REVIEWS MODERATION ─────────────────────────────────
+let reviewsList = [];
+let activeReviewReplyId = null;
+
+async function loadReviewsManager() {
+  const status = document.getElementById('review-filter-status').value;
+  const search = document.getElementById('review-search').value.trim();
+  const res = await apiRequest(`/api/admin/reviews?status=${status}&search=${encodeURIComponent(search)}`);
+  if (res.success) {
+    reviewsList = res.data;
+    const tbody = document.getElementById('reviews-manager-list');
+    if (!tbody) return;
+
+    if (reviewsList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--adm-muted);">No customer reviews found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = reviewsList.map(r => {
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      let badgeColor = 'badge-gray';
+      if (r.status === 'approved') badgeColor = 'badge-green';
+      if (r.status === 'rejected') badgeColor = 'badge-red';
+
+      return `
+        <tr>
+          <td>${r.id}</td>
+          <td><strong>${r.name}</strong></td>
+          <td><span style="color:#ffb800;">${stars}</span></td>
+          <td><div style="max-width:250px; white-space:normal; font-size:12px;">${r.review_text}</div></td>
+          <td><span class="adm-badge ${badgeColor}">${r.status}</span></td>
+          <td><div style="max-width:180px; white-space:normal; font-size:11px; color:#a0aec0;">${r.reply_text || '<em>No reply</em>'}</div></td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              ${r.status !== 'approved' ? `<button class="adm-btn adm-btn-sm" style="background:#25d366; color:white; border:none;" onclick="updateReviewStatus(${r.id}, 'approved')">Approve</button>` : ''}
+              ${r.status !== 'rejected' ? `<button class="adm-btn adm-btn-sm" style="background:#ff3b30; color:white; border:none;" onclick="updateReviewStatus(${r.id}, 'rejected')">Reject</button>` : ''}
+              <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="openReviewReplyModal(${r.id})">Reply</button>
+              <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteReview(${r.id})"><i data-lucide="trash-2"></i></button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+}
+
+window.updateReviewStatus = async (rid, newStatus) => {
+  const res = await apiRequest(`/api/admin/reviews/${rid}/status`, 'PUT', { status: newStatus });
+  if (res.success) {
+    showToast(`Review status updated to ${newStatus}.`);
+    loadReviewsManager();
+  }
+};
+
+window.openReviewReplyModal = (rid) => {
+  activeReviewReplyId = rid;
+  const r = reviewsList.find(item => item.id === rid);
+  document.getElementById('review-reply-text').value = r ? (r.reply_text || '') : '';
+  openModal('review-reply-modal');
+};
+
+window.saveAdminReviewReply = async (e) => {
+  e.preventDefault();
+  if (!activeReviewReplyId) return;
+  const reply_text = document.getElementById('review-reply-text').value.trim();
+  const res = await apiRequest(`/api/admin/reviews/${activeReviewReplyId}/reply`, 'POST', { reply_text });
+  if (res.success) {
+    showToast('Review reply posted!');
+    closeModal('review-reply-modal');
+    loadReviewsManager();
+  }
+};
+
+window.deleteReview = async (rid) => {
+  if (confirm('Delete this customer review permanently?')) {
+    const res = await apiRequest(`/api/admin/reviews/${rid}`, 'DELETE');
+    if (res.success) {
+      showToast('Review deleted successfully.');
+      loadReviewsManager();
+    }
+  }
+};
+
+// ─── LOAN LEADS MANAGER ──────────────────────────────────────────
+let loansList = [];
+
+async function loadLoansManager() {
+  // First load settings
+  await loadAdminLoanSettings();
+
+  const search = document.getElementById('loan-search').value.trim();
+  const res = await apiRequest(`/api/admin/loans?search=${encodeURIComponent(search)}`);
+  if (res.success) {
+    loansList = res.data;
+    const tbody = document.getElementById('loans-manager-list');
+    if (!tbody) return;
+
+    if (loansList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--adm-muted);">No loan applications found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = loansList.map(l => `
+      <tr>
+        <td>${l.id}</td>
+        <td><code>${l.aadhaar_number}</code></td>
+        <td><code>${l.pan_number}</code></td>
+        <td><a href="tel:${l.mobile_number}" style="color:var(--adm-primary); text-decoration:none;">${l.mobile_number}</a></td>
+        <td>${new Date(l.created_at).toLocaleString()}</td>
+        <td>
+          <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteLoanLead(${l.id})"><i data-lucide="trash-2"></i></button>
+        </td>
+      </tr>
+    `).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+  }
+}
+
+async function loadAdminLoanSettings() {
+  try {
+    const res = await apiRequest('/api/public/settings');
+    if (res.success && res.data) {
+      document.getElementById('admin-loan-enabled').checked = !!res.data.loan_section_enabled;
+      document.getElementById('admin-loan-button-text').value = res.data.loan_apply_button_text || 'Apply Now';
+    }
+  } catch(e) {
+    console.warn('Load loan settings failed:', e.message);
+  }
+}
+
+window.saveAdminLoanSettings = async (e) => {
+  e.preventDefault();
+  const loan_section_enabled = document.getElementById('admin-loan-enabled').checked;
+  const loan_apply_button_text = document.getElementById('admin-loan-button-text').value.trim();
+
+  const res = await apiRequest('/api/admin/settings/loan', 'PUT', { loan_section_enabled, loan_apply_button_text });
+  if (res.success) {
+    showToast('Loan configurations saved successfully!');
+  }
+};
+
+window.deleteLoanLead = async (lid) => {
+  if (confirm('Delete this loan application permanently?')) {
+    const res = await apiRequest(`/api/admin/loans/${lid}`, 'DELETE');
+    if (res.success) {
+      showToast('Lead deleted successfully.');
+      loadLoansManager();
     }
   }
 };

@@ -64,6 +64,14 @@
         <i class="nav-icon" data-lucide="wrench"></i>
         <span class="nav-label">Home Services</span>
       </a>
+      <a href="#" class="nav-item" data-target="reviews">
+        <i class="nav-icon" data-lucide="message-square"></i>
+        <span class="nav-label">Customer Reviews</span>
+      </a>
+      <a href="#" class="nav-item" data-target="loans">
+        <i class="nav-icon" data-lucide="banknote"></i>
+        <span class="nav-label">Loan Leads</span>
+      </a>
       <a href="#" class="nav-item" data-target="plans">
         <i class="nav-icon" data-lucide="credit-card"></i>
         <span class="nav-label">Plans & Subscriptions</span>
@@ -375,6 +383,103 @@
             <button class="adm-btn adm-btn-primary" onclick="openAddServiceModal()"><i data-lucide="plus"></i> Add Service Category</button>
           </div>
           <div class="adm-service-grid" id="services-manager-grid"></div>
+        </section>
+
+        <!-- Customer Reviews Moderation Section -->
+        <section class="adm-section" id="sec-reviews">
+          <div class="adm-section-header">
+            <div>
+              <h2>Customer Reviews Moderator</h2>
+              <p>Moderate customer reviews submitted on the homepage, approve/reject them, and write replies.</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="adm-btn adm-btn-ghost" onclick="exportTableToCSV('reviews-table-data', 'reviews.csv')"><i data-lucide="download"></i> Export CSV</button>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+            <select id="review-filter-status" class="adm-form-select" style="max-width:180px;" onchange="loadReviewsManager()">
+              <option value="all">All Reviews</option>
+              <option value="pending">Pending Approval</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <input type="text" id="review-search" class="adm-form-input" style="max-width:250px;" placeholder="Search reviews..." oninput="loadReviewsManager()">
+          </div>
+
+          <div class="adm-table-wrapper">
+            <table class="adm-table" id="reviews-table-data">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Rating</th>
+                  <th>Review Text</th>
+                  <th>Status</th>
+                  <th>Admin Reply</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reviews-manager-list">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Loan Leads & Configurations Section -->
+        <section class="adm-section" id="sec-loans">
+          <div class="adm-section-header">
+            <div>
+              <h2>Loan Section Configurations</h2>
+              <p>Enable/disable the loan promotion card and change the Apply button text.</p>
+            </div>
+          </div>
+
+          <!-- Configuration Panel Form -->
+          <form onsubmit="saveAdminLoanSettings(event)" style="background:var(--adm-bg-card, #2c3a50); padding:20px; border-radius:12px; margin-bottom:24px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--border-color);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <input type="checkbox" id="admin-loan-enabled" style="width:20px; height:20px; cursor:pointer;">
+              <label for="admin-loan-enabled" style="font-weight:700; cursor:pointer; color:var(--adm-text, #ffffff);">Enable Loan Card Section on Homepage</label>
+            </div>
+            <div class="adm-form-group" style="margin-bottom:0;">
+              <label class="adm-form-label" style="color:var(--adm-text, #ffffff);">Apply Call-to-Action Button Text</label>
+              <input type="text" id="admin-loan-button-text" class="adm-form-input" style="max-width:300px;" placeholder="e.g. Apply Now" required>
+            </div>
+            <button type="submit" class="adm-btn adm-btn-primary" style="align-self:flex-start;">Save Configuration</button>
+          </form>
+
+          <div class="adm-section-header">
+            <div>
+              <h2>Submitted Loan Lead Applications</h2>
+              <p>View, search, and download applications submitted by users.</p>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="adm-btn adm-btn-ghost" onclick="exportTableToCSV('loans-table-data', 'loan_leads.csv')"><i data-lucide="download"></i> Export CSV</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <input type="text" id="loan-search" class="adm-form-input" style="max-width:300px;" placeholder="Search by Aadhaar, PAN, or Mobile..." oninput="loadLoansManager()">
+          </div>
+
+          <div class="adm-table-wrapper">
+            <table class="adm-table" id="loans-table-data">
+              <thead>
+                <tr>
+                  <th>Lead ID</th>
+                  <th>Aadhaar Number</th>
+                  <th>PAN Number</th>
+                  <th>Mobile Number</th>
+                  <th>Submitted At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="loans-manager-list">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <!-- 10. PLANS & SUBSCRIPTIONS -->
@@ -695,6 +800,65 @@
           </div>
         </div>
         <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Banner</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Service Add/Edit Modal -->
+  <div class="adm-modal-overlay" id="service-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title" id="service-modal-title">Add Service Category</div>
+        <button class="adm-modal-close" onclick="closeModal('service-modal')">×</button>
+      </div>
+      <form id="service-form" onsubmit="saveAdminService(event)">
+        <div class="adm-form-group">
+          <label class="adm-form-label">Service Name</label>
+          <input type="text" id="service-name" class="adm-form-input" placeholder="e.g. Electrician Service" required>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Icon / Emoji</label>
+          <input type="text" id="service-icon" class="adm-form-input" placeholder="e.g. ⚡ or 🏗️" required>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">WhatsApp Business Number (with country code)</label>
+          <input type="text" id="service-whatsapp" class="adm-form-input" placeholder="e.g. +919919014220" required>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Description (Optional)</label>
+          <textarea id="service-description" class="adm-form-textarea" placeholder="Describe this service category..."></textarea>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Display Order</label>
+            <input type="number" id="service-order" class="adm-form-input" value="0">
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Status</label>
+            <select id="service-status" class="adm-form-select">
+              <option value="1">Active</option>
+              <option value="0">Disabled</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Service</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Review Reply Modal -->
+  <div class="adm-modal-overlay" id="review-reply-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title">Reply to Customer Review</div>
+        <button class="adm-modal-close" onclick="closeModal('review-reply-modal')">×</button>
+      </div>
+      <form id="review-reply-form" onsubmit="saveAdminReviewReply(event)">
+        <div class="adm-form-group">
+          <label class="adm-form-label">Write Reply Text</label>
+          <textarea id="review-reply-text" class="adm-form-textarea" style="min-height: 120px;" placeholder="Thank you for your valuable feedback..." required></textarea>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Post Reply</button>
       </form>
     </div>
   </div>
