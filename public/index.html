@@ -33,19 +33,24 @@
           <p style="font-size: 13px; color: var(--text-muted);">Find your dream home today</p>
         </div>
 
-        <!-- Search Card -->
-        <div class="search-card">
-          <div class="search-input-wrapper">
-            <i class="bx bx-search"></i>
-            <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
-          </div>
-          <div class="search-actions">
-            <button class="gps-btn" id="home-gps-btn">
-              <i class="bx bx-map-pin"></i> Nearby (Current GPS)
-            </button>
-            <button class="filter-btn" onclick="window.location.href='/search.html'">
-              <i class="bx bx-slider-alt"></i>
-            </button>
+        <!-- Search Hero Section -->
+        <div class="home-hero-banner">
+          <div class="hero-bg-overlay"></div>
+          
+          <!-- Floating Search Interface -->
+          <div class="hero-search-float">
+            <div class="search-input-wrapper">
+              <i class="bx bx-search"></i>
+              <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
+            </div>
+            <div class="search-actions">
+              <button class="gps-btn" id="home-gps-btn">
+                <i class="bx bx-map-pin"></i> Nearby (Current GPS)
+              </button>
+              <button class="filter-btn" onclick="window.location.href='/search.html'">
+                <i class="bx bx-slider-alt"></i>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -74,36 +79,34 @@
           </div>
         </div>
 
-        <!-- Property Categories scrolling pills -->
-        <h3 class="section-title">Categories</h3>
-        <div class="horizontal-scroll">
-          <div class="category-pill active" onclick="filterCategory('all', this)"><i data-lucide="building-2"></i> All</div>
-          <div class="category-pill" onclick="filterCategory('apartment', this)"><i data-lucide="building"></i> Apartment</div>
-          <div class="category-pill" onclick="filterCategory('villa', this)"><i data-lucide="home"></i> Villa</div>
-          <div class="category-pill" onclick="filterCategory('pg', this)"><i data-lucide="bed"></i> PG / Co-living</div>
-          <div class="category-pill" onclick="filterCategory('commercial', this)"><i data-lucide="briefcase"></i> Commercial</div>
-          <div class="category-pill" onclick="filterCategory('plot', this)"><i data-lucide="map"></i> Plot</div>
-          <div class="category-pill" onclick="filterCategory('farmhouse', this)"><i data-lucide="trees"></i> Farm House</div>
-        </div>
-
-        <!-- Quick Actions -->
-        <h3 class="section-title">Quick Actions</h3>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
-          <a href="/search.html?listing_type=sale" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
-            <i data-lucide="shopping-bag" style="color: var(--secondary-orange); font-size: 20px;"></i>
-            <span style="font-size: 11px; font-weight: 600;">Buy Home</span>
+        <!-- Redesigned Quick Actions Section -->
+        <div class="quick-actions-container">
+          <a href="/search.html?listing_type=rent" class="quick-action-card">
+            <div class="quick-action-icon-wrapper">
+              <i data-lucide="home"></i>
+            </div>
+            <span class="quick-action-title">Rent Home</span>
           </a>
-          <a href="/search.html?listing_type=rent" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
-            <i data-lucide="key" style="color: var(--secondary-orange); font-size: 20px;"></i>
-            <span style="font-size: 11px; font-weight: 600;">Rent Home</span>
+          
+          <a href="/search.html?listing_type=sale" class="quick-action-card">
+            <div class="quick-action-icon-wrapper">
+              <i data-lucide="shopping-cart"></i>
+            </div>
+            <span class="quick-action-title">Buy Home</span>
           </a>
-          <a href="/marketplace.html" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
-            <i data-lucide="wrench" style="color: var(--secondary-orange); font-size: 20px;"></i>
-            <span style="font-size: 11px; font-weight: 600;">Services</span>
+          
+          <a href="/marketplace.html" class="quick-action-card">
+            <div class="quick-action-icon-wrapper">
+              <i data-lucide="wrench"></i>
+            </div>
+            <span class="quick-action-title">Services</span>
           </a>
-          <a href="/blogs.html" class="bottom-sheet-option" style="flex-direction: column; padding: 12px; text-align: center; gap: 8px;">
-            <i data-lucide="book-open" style="color: var(--secondary-orange); font-size: 20px;"></i>
-            <span style="font-size: 11px; font-weight: 600;">Guides</span>
+          
+          <a href="/search.html?no_brokerage=true" class="quick-action-card">
+            <div class="quick-action-icon-wrapper">
+              <i data-lucide="percent"></i>
+            </div>
+            <span class="quick-action-title">No Brokerage</span>
           </a>
         </div>
 

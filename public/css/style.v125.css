@@ -510,17 +510,71 @@ body {
   background: #ECECEC;
 }
 
-/* Search bar card styling */
-.search-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--box-shadow);
-  border-radius: var(--border-radius);
+/* Search bar card styling (Replaced with premium floating hero) */
+.home-hero-banner {
+  position: relative;
+  width: 100%;
+  height: 340px; /* Mobile height requirement: 320px - 360px */
+  border-radius: var(--border-radius-lg);
+  background: url('/uploads/home_image.png') no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-end;
   padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.hero-bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.35)); /* Dark overlay readability requirement */
+  z-index: 1;
+}
+
+.hero-search-float {
+  position: relative;
+  width: 100%;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.85); /* Glassmorphism background */
+  backdrop-filter: blur(12px); /* Glassmorphic blur requirement */
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--border-radius);
+  padding: 14px;
+  box-shadow: var(--floating-shadow); /* Soft shadow */
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+}
+
+/* Glassmorphism search input adjustments for luxury look */
+.hero-search-float .search-input {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.hero-search-float .search-input:focus {
+  background: #ffffff;
+  border-color: var(--secondary-orange);
+}
+
+/* Tablet & Desktop Responsiveness */
+@media (min-width: 769px) {
+  .home-hero-banner {
+    height: 480px; /* Proportional responsive height */
+    padding: 24px;
+  }
+  .hero-search-float {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 18px;
+    gap: 12px;
+  }
 }
 
 .search-input-wrapper {
@@ -1785,4 +1839,85 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   background: white;
   width: 16px;
   border-radius: 3px;
+}
+
+/* Redesigned Quick Actions Grid (Premium Square Cards) */
+.quick-actions-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.quick-action-card {
+  aspect-ratio: 1 / 1; /* Force equal width and height */
+  background: var(--background-white);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: var(--border-radius); /* Rounded corners */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); /* Soft shadow */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  text-decoration: none;
+  color: var(--text-dark);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  gap: 8px;
+}
+
+.quick-action-card:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+  border-color: rgba(255, 106, 0, 0.15);
+}
+
+.quick-action-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 106, 0, 0.07); /* subtle accent circle bg */
+}
+
+.quick-action-icon-wrapper i, .quick-action-icon-wrapper svg {
+  color: var(--secondary-orange) !important;
+  width: 20px !important;
+  height: 20px !important;
+  stroke-width: 2.2px;
+}
+
+.quick-action-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Tablet & Desktop spacing for Quick Actions */
+@media (min-width: 769px) {
+  .quick-actions-container {
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto 30px;
+  }
+  .quick-action-card {
+    padding: 20px 10px;
+    border-radius: var(--border-radius-lg);
+  }
+  .quick-action-icon-wrapper {
+    width: 46px;
+    height: 46px;
+  }
+  .quick-action-icon-wrapper i, .quick-action-icon-wrapper svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .quick-action-title {
+    font-size: 12px;
+  }
 }
