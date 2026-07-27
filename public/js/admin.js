@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentSection = 'dashboard';
 let usersList = [];
 let propertiesList = [];
-let blogsList = [];
 let servicesList = [];
 let plansList = [];
 let paymentsList = [];
@@ -102,9 +101,7 @@ async function loadSectionData(section) {
       case 'banners':
         loadBannersSection();
         break;
-      case 'blogs':
-        await loadBlogsManager();
-        break;
+
       case 'services':
         await loadServicesManager();
         break;
@@ -554,88 +551,7 @@ window.deleteService = async (sid) => {
   }
 };
 
-// ─── BLOGS MANAGER ──────────────────────────────────────────────
-async function loadBlogsManager(page = 1) {
-  const res = await apiRequest(`/api/admin/blogs?page=${page}&limit=6`);
-  if (res.success) {
-    blogsList = res.data;
-    const grid = document.getElementById('blogs-manager-grid');
-    if (!grid) return;
 
-    if (blogsList.length === 0) {
-      grid.innerHTML = '<p style="color:var(--adm-muted); padding:20px;">No blogs created yet.</p>';
-      return;
-    }
-
-    grid.innerHTML = blogsList.map(b => `
-      <div class="adm-blog-card">
-        <img class="adm-blog-card-img" src="${b.featured_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=300&q=80'}" alt="">
-        <div class="adm-blog-card-body">
-          <div class="adm-blog-card-title">${b.title}</div>
-          <div class="adm-blog-card-meta">By ${b.author || 'Admin'} • <span class="adm-badge ${b.status === 'published' ? 'badge-green' : 'badge-gray'}">${b.status}</span></div>
-          <div class="adm-blog-card-actions">
-            <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editBlogModal(${b.id})">Edit</button>
-            <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteBlog(${b.id})">Delete</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
-}
-
-window.openAddBlogModal = () => {
-  const form = document.getElementById('blog-form');
-  form.reset();
-  document.getElementById('blog-modal-title').textContent = 'Write New Blog Post';
-  form.removeAttribute('data-id');
-  openModal('blog-modal');
-};
-
-window.editBlogModal = (bid) => {
-  const b = blogsList.find(item => item.id === bid);
-  if (!b) return;
-  const form = document.getElementById('blog-form');
-  form.setAttribute('data-id', bid);
-  document.getElementById('blog-modal-title').textContent = 'Edit Blog Post';
-  document.getElementById('blog-title').value = b.title;
-  document.getElementById('blog-content').value = b.content;
-  document.getElementById('blog-excerpt').value = b.excerpt || '';
-  document.getElementById('blog-image').value = b.featured_image || '';
-  document.getElementById('blog-status').value = b.status || 'draft';
-  openModal('blog-modal');
-};
-
-window.saveBlog = async (e) => {
-  e.preventDefault();
-  const form = document.getElementById('blog-form');
-  const bid = form.getAttribute('data-id');
-  const payload = {
-    title: document.getElementById('blog-title').value,
-    content: document.getElementById('blog-content').value,
-    excerpt: document.getElementById('blog-excerpt').value,
-    featured_image: document.getElementById('blog-image').value,
-    status: document.getElementById('blog-status').value
-  };
-
-  const url = bid ? `/api/admin/blogs/${bid}` : '/api/admin/blogs';
-  const method = bid ? 'PUT' : 'POST';
-  const res = await apiRequest(url, method, payload);
-  if (res.success) {
-    showToast(bid ? 'Blog post updated!' : 'Blog post published!');
-    closeModal('blog-modal');
-    loadBlogsManager();
-  }
-};
-
-window.deleteBlog = async (bid) => {
-  if (confirm('Delete this blog post permanently?')) {
-    const res = await apiRequest(`/api/admin/blogs/${bid}`, 'DELETE');
-    if (res.success) {
-      showToast('Blog post deleted.');
-      loadBlogsManager();
-    }
-  }
-};
 
 // ─── SUBSCRIPTION PLANS ─────────────────────────────────────────
 async function loadPlansManager() {

@@ -24,11 +24,7 @@ router.post('/property/status',        admin.updatePropertyStatus);
 router.post('/property/visibility',    admin.togglePropertyVisibility);
 router.post('/property/featured',      admin.toggleFeatured);
 
-// Blogs
-router.get('/blogs',           admin.getBlogs);
-router.post('/blogs',          admin.createBlog);
-router.put('/blogs/:id',       admin.updateBlog);
-router.delete('/blogs/:id',    admin.deleteBlog);
+
 
 // Home Services
 router.get('/services',          admin.getServices);

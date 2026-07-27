@@ -59,10 +59,7 @@
         <i class="nav-icon" data-lucide="image"></i>
         <span class="nav-label">Banner Manager</span>
       </a>
-      <a href="#" class="nav-item" data-target="blogs">
-        <i class="nav-icon" data-lucide="book-open"></i>
-        <span class="nav-label">Blogs</span>
-      </a>
+
       <a href="#" class="nav-item" data-target="services">
         <i class="nav-icon" data-lucide="wrench"></i>
         <span class="nav-label">Home Services</span>
@@ -366,17 +363,7 @@
           <div id="banners-manager-container"></div>
         </section>
 
-        <!-- 8. BLOG MANAGER -->
-        <section class="adm-section" id="sec-blogs">
-          <div class="adm-section-header">
-            <div>
-              <h2>Property Blog Articles</h2>
-              <p>Post homebuying advice guides, pricing updates and builder announcements.</p>
-            </div>
-            <button class="adm-btn adm-btn-primary" onclick="openAddBlogModal()"><i data-lucide="plus"></i> Write Post</button>
-          </div>
-          <div class="adm-blog-grid" id="blogs-manager-grid"></div>
-        </section>
+
 
         <!-- 9. HOME SERVICES -->
         <section class="adm-section" id="sec-services">
@@ -661,41 +648,7 @@
     </div>
   </div>
 
-  <!-- Blog post Add/Edit Modal -->
-  <div class="adm-modal-overlay" id="blog-modal">
-    <div class="adm-modal">
-      <div class="adm-modal-header">
-        <div class="adm-modal-title" id="blog-modal-title">Write New Blog Post</div>
-        <button class="adm-modal-close" onclick="closeModal('blog-modal')">×</button>
-      </div>
-      <form onsubmit="saveBlog(event)">
-        <div class="adm-form-group">
-          <label class="adm-form-label">Post Title</label>
-          <input type="text" id="blog-title" class="adm-form-input" required>
-        </div>
-        <div class="adm-form-group">
-          <label class="adm-form-label">Featured Image URL</label>
-          <input type="text" id="blog-image" class="adm-form-input">
-        </div>
-        <div class="adm-form-group">
-          <label class="adm-form-label">Excerpt Summary</label>
-          <input type="text" id="blog-excerpt" class="adm-form-input">
-        </div>
-        <div class="adm-form-group">
-          <label class="adm-form-label">Full Post Content</label>
-          <textarea id="blog-content" class="adm-form-textarea" style="min-height: 150px;" required></textarea>
-        </div>
-        <div class="adm-form-group">
-          <label class="adm-form-label">Publishing Status</label>
-          <select id="blog-status" class="adm-form-select">
-            <option value="published">Publish instantly</option>
-            <option value="draft">Save draft</option>
-          </select>
-        </div>
-        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Blog Post</button>
-      </form>
-    </div>
-  </div>
+
 
   <!-- Banner Add/Edit Modal -->
   <div class="adm-modal-overlay" id="banner-modal">
@@ -757,7 +710,7 @@
     <div class="adm-toast-msg" id="adm-toast-msg">Successfully performed.</div>
   </div>
 
-  <script src="/js/main.v125.js"></script>
+  <script src="/js/main.v127.js"></script>
   <script src="/js/admin.js"></script>
   <script>
     // Initialize Lucide Icons initially

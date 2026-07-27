@@ -19,7 +19,6 @@ async function getDashboardStats(req, res) {
     const [[todayUsers]]      = await db.query("SELECT COUNT(*) as c FROM users WHERE DATE(created_at) = CURDATE()");
     const [[todayListings]]   = await db.query("SELECT COUNT(*) as c FROM properties WHERE DATE(created_at) = CURDATE()");
     const [[reels]]           = await db.query('SELECT COUNT(*) as c FROM reels');
-    const [[blogs]]           = await db.query('SELECT COUNT(*) as c FROM blogs');
 
     const [recentUsers]      = await db.query('SELECT id, name, email, role, provider, subscription_status, created_at FROM users ORDER BY id DESC LIMIT 8');
     const [recentProperties] = await db.query("SELECT id, title, price, city, approval_status, is_featured, is_hidden, created_at FROM properties ORDER BY id DESC LIMIT 8");
@@ -47,8 +46,7 @@ async function getDashboardStats(req, res) {
         revenueMonth:      revenueMonth.s || 0,
         todayNewUsers:     todayUsers.c,
         todayListings:     todayListings.c,
-        totalReels:        reels.c,
-        totalBlogs:        blogs.c
+        totalReels:        reels.c
       },
       recentUsers,
       recentProperties,
@@ -250,57 +248,7 @@ async function updateUserRole(req, res) {
   }
 }
 
-// ─── BLOGS ─────────────────────────────────────────────────────────────────────
-async function getBlogs(req, res) {
-  const page  = Math.max(1, parseInt(req.query.page)  || 1);
-  const limit = Math.min(50, parseInt(req.query.limit) || 20);
-  const offset = (page - 1) * limit;
-  try {
-    const [rows]      = await db.query('SELECT * FROM blogs ORDER BY id DESC LIMIT ? OFFSET ?', [limit, offset]);
-    const [[counter]] = await db.query('SELECT COUNT(*) as total FROM blogs');
-    res.json({ success: true, data: rows, pagination: { total: counter.total, page, limit } });
-  } catch (e) {
-    // Blogs table may not exist yet — return empty
-    res.json({ success: true, data: [], pagination: { total: 0, page: 1, limit } });
-  }
-}
 
-async function createBlog(req, res) {
-  const { title, content, excerpt, featured_image, status, author } = req.body;
-  if (!title || !content) return res.status(400).json({ success: false, error: 'Title and content required.' });
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
-  try {
-    const [result] = await db.query(
-      'INSERT INTO blogs (title, slug, content, excerpt, featured_image, status, author, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
-      [title, slug, content, excerpt || '', featured_image || '', status || 'draft', author || req.user.name]
-    );
-    res.json({ success: true, message: 'Blog created.', id: result.insertId });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
-}
-
-async function updateBlog(req, res) {
-  const { id } = req.params;
-  const { title, content, excerpt, featured_image, status } = req.body;
-  try {
-    await db.query('UPDATE blogs SET title = ?, content = ?, excerpt = ?, featured_image = ?, status = ? WHERE id = ?',
-      [title, content, excerpt, featured_image, status, id]);
-    res.json({ success: true, message: 'Blog updated.' });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
-}
-
-async function deleteBlog(req, res) {
-  const { id } = req.params;
-  try {
-    await db.query('DELETE FROM blogs WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Blog deleted.' });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
-}
 
 // ─── HOME SERVICES ──────────────────────────────────────────────────────────────
 async function getServices(req, res) {
@@ -548,7 +496,6 @@ async function updateSettings(req, res) {
 module.exports = {
   getDashboardStats, getUsers, getUserById, updateUser, deleteUser, updateUserRole,
   getAdminProperties, updatePropertyStatus, deleteProperty, togglePropertyVisibility, toggleFeatured,
-  getBlogs, createBlog, updateBlog, deleteBlog,
   getServices, createService, updateService, deleteService,
   getPlans, createPlan, updatePlan, deletePlan,
   getPayments, getReels, updateReelStatus,

@@ -112,30 +112,13 @@
           </div>
         </div>
 
-        <!-- Luxury Collection -->
-        <div class="section-title">
-          <span>Luxury Collection</span>
-          <a href="/search.html" class="section-link">View All</a>
-        </div>
-        <div class="horizontal-scroll" id="luxury-collection-list" style="margin-bottom: 20px;">
-          <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading luxury collection...</p>
-        </div>
-
         <!-- Nearby Properties -->
         <div class="section-title">
-          <span>Nearby Properties (GPS)</span>
+          <span>Nearby Properties</span>
           <a href="/search.html?gps=1" class="section-link">View All</a>
         </div>
         <div class="horizontal-scroll" id="nearby-properties-list" style="margin-bottom: 20px;">
           <p style="font-size:12px; color:var(--text-muted); padding:16px;">Allow GPS location to see nearby listings.</p>
-        </div>
-
-        <!-- Top Cities -->
-        <div class="section-title">
-          <span>Top Cities</span>
-        </div>
-        <div class="horizontal-scroll" id="top-cities-list" style="margin-bottom: 20px; gap: 12px; padding: 4px 0;">
-          <!-- Lucknow, Delhi, Noida, Gurgaon, Jaipur, Pune, Hyderabad, Mumbai, Bangalore, Ahmedabad -->
         </div>
 
         <!-- Continue Browsing / Recently Viewed -->
@@ -144,28 +127,6 @@
         </div>
         <div class="horizontal-scroll" id="continue-browsing-list" style="margin-bottom: 20px; display:none;">
           <!-- Loaded dynamically -->
-        </div>
-
-        <!-- Popular Searches -->
-        <div class="section-title">
-          <span>Popular Searches</span>
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;" id="popular-searches-list">
-          <a href="/search.html?city=Lucknow&category=independent_house" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Houses in Lucknow</a>
-          <a href="/search.html?city=Lucknow&category=apartment" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Apartments in Lucknow</a>
-          <a href="/search.html?city=Lucknow&category=villa" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Villas in Lucknow</a>
-          <a href="/search.html?city=Lucknow&category=pg" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">PGs in Lucknow</a>
-          <a href="/search.html?city=Lucknow&category=commercial" class="category-pill" style="border: 1px solid var(--border-color); background: white; text-decoration: none;">Commercial in Lucknow</a>
-        </div>
-
-
-        <!-- Latest Blogs & Property News -->
-        <div class="section-title">
-          <span>Latest Blogs & Property News</span>
-          <a href="/blogs.html" class="section-link">Read Blogs</a>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;" id="blogs-summary-list">
-          <!-- Blog posts summary list -->
         </div>
 
         <!-- Desktop Dashboard Widgets (Row Layout at Bottom) -->
@@ -423,7 +384,7 @@
 
     // Load all homepage sections independently (each fetches its own data)
     async function loadProperties() {
-      const lists = ['trending-projects-list', 'recently-added-list', 'luxury-collection-list', 'nearby-properties-list'];
+      const lists = ['trending-projects-list', 'recently-added-list', 'nearby-properties-list'];
       lists.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = shimmerPlaceholder();
@@ -441,24 +402,17 @@
         renderPropertyList(r.data || [], 'recently-added-list', '/search.html?sort=newest');
       } catch(e) { console.warn('Recent failed:', e.message); }
 
-      // 4. Luxury Collection (price >= 1.5 Cr)
-      try {
-        const r = await fetchSection({ minPrice: 15000000, sort: 'price_high' }, 8);
-        renderPropertyList(r.data || [], 'luxury-collection-list', '/search.html?minPrice=15000000');
-      } catch(e) { console.warn('Luxury failed:', e.message); }
-
-      // 5. Nearby Properties (GPS)
+      // 4. Nearby Properties
       try {
         const r = await fetchSection({ sort: 'newest', page: 3 }, 8);
         renderPropertyList(r.data || [], 'nearby-properties-list', '/search.html');
       } catch(e) { console.warn('Nearby failed:', e.message); }
 
-      // 6. Top Cities & Recently viewed
+      // 5. Recently viewed
       try {
         const r = await fetchSection({ sort: 'newest' }, 50);
-        renderTopCities(r.data || []);
         renderContinueBrowsing(r.data || []);
-      } catch(e) { console.warn('Cities/browsing failed:', e.message); }
+      } catch(e) { console.warn('Browsing failed:', e.message); }
     }
 
     // --- Special Offers Section Loader & Carousel Slider ---
@@ -631,25 +585,7 @@
       startOfferAutoplay();
     }
 
-    function renderTopCities(allProps) {
-      const container = document.getElementById('top-cities-list');
-      if (!container) return;
-      container.innerHTML = '';
 
-      const cityList = ['Lucknow'];
-
-      cityList.forEach(city => {
-        const count = allProps.filter(p => p.city.toLowerCase() === city.toLowerCase()).length;
-        const pill = document.createElement('a');
-        pill.href = `/search.html?city=${city}`;
-        pill.className = 'category-pill';
-        pill.style.textDecoration = 'none';
-        pill.style.border = '1px solid var(--border-color)';
-        pill.style.background = '#FFFFFF';
-        pill.innerHTML = `<strong>${city}</strong> <span style="font-size:10px; color:var(--text-muted); margin-left:4px;">(${count})</span>`;
-        container.appendChild(pill);
-      });
-    }
 
     function renderContinueBrowsing(allProps) {
       const recentIds = JSON.parse(localStorage.getItem('recently_viewed_ids') || '[]');
@@ -738,36 +674,7 @@
     }
 
     // Load Blogs summary
-    async function loadBlogs() {
-      try {
-        const result = await apiRequest('/api/blogs');
-        if (result.success && result.data.length > 0) {
-          const container = document.getElementById('blogs-summary-list');
-          container.innerHTML = '';
-          result.data.slice(0, 2).forEach(b => {
-            const wrapper = document.createElement('a');
-            wrapper.href = `/blogs.html?slug=${b.slug}`;
-            wrapper.style.display = 'flex';
-            wrapper.style.gap = '12px';
-            wrapper.style.textDecoration = 'none';
-            wrapper.style.color = 'var(--text-dark)';
-            wrapper.style.background = 'var(--accent-gray)';
-            wrapper.style.padding = '10px';
-            wrapper.style.borderRadius = '12px';
-            wrapper.innerHTML = `
-              <img src="${b.image_url}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&amp;fit=crop&amp;w=600&amp;q=80';" style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover;">
-              <div style="display:flex; flex-direction:column; justify-content:center;">
-                <h4 style="font-size:13px; font-weight:700;">${b.title}</h4>
-                <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Category: ${b.category} • Author: ${b.author_name}</p>
-              </div>
-            `;
-            container.appendChild(wrapper);
-          });
-        }
-      } catch(err) {
-        console.error(err);
-      }
-    }
+
 
     // GPS Trigger Search (Safe Null Check)
     const gpsBtn = document.getElementById('home-gps-btn');
@@ -870,7 +777,6 @@
       loadProperties();
       loadSpecialOffers();
       loadServices();
-      loadBlogs();
       loadDesktopWidgets(user);
     };
   </script>
