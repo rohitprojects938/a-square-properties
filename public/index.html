@@ -43,8 +43,8 @@
               <i class="bx bx-search"></i>
               <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
             </div>
-            <button class="filter-btn" onclick="window.location.href='/search.html'">
-              <i class="bx bx-slider-alt"></i>
+            <button class="filter-btn" onclick="triggerHomeSearch()">
+              <span>Search</span>
             </button>
           </div>
         </div>
@@ -793,6 +793,15 @@
         window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
       }
     });
+
+    window.triggerHomeSearch = function() {
+      const query = document.getElementById('home-search-input').value.trim();
+      if (query) {
+        window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
+      } else {
+        window.location.href = '/search.html';
+      }
+    };
 
     // Load desktop widgets
     function loadDesktopWidgets(user) {

@@ -510,122 +510,109 @@ body {
   background: #ECECEC;
 }
 
-/* Search bar card styling (Replaced with premium bottom-left floating hero) */
+/* Redesigned Hero Banner Section (Premium Centered Floating Layout) */
 .home-hero-banner {
   position: relative;
   width: 100%;
-  height: 340px; /* Mobile height requirement: 320px - 360px */
-  border-radius: 28px; /* Rounded corners: 24-28px range */
-  background: url('/uploads/home_image.png') no-repeat center center;
-  background-size: cover;
-  overflow: hidden;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: flex-end; /* Bottom alignment */
-  justify-content: flex-start; /* Left alignment */
-  padding: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  height: 330px; /* Height around 320-360px on mobile */
+  border-radius: 24px; /* Border radius 24px */
+  background: #e6eff7 url('/uploads/home_image.png') no-repeat center center;
+  background-size: contain; /* Full width contain to prevent cropping and zooming */
+  overflow: visible; /* Let search panel overflow/float on bottom edge */
+  margin-bottom: 48px; /* Extra margin-bottom to clear floating search bar spacing */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
 }
 
 .hero-bg-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.35)); /* Subtle dark gradient overlay */
-  z-index: 1;
+  display: none; /* Removed dark overlay so banner is clean, bright and text matches reference image colors */
 }
 
 .hero-search-float {
-  position: relative;
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.82); /* Semi-transparent white */
-  backdrop-filter: blur(16px); /* Glassmorphic blur */
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 16px; /* Rounded corners */
-  padding: 8px 10px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12); /* Soft shadow */
+  position: absolute;
+  bottom: -24px; /* Float vertically centered on the bottom edge */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: #ffffff !important; /* Premium white background */
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 30px; /* Large rounded corners / pill shape */
+  padding: 6px 8px 6px 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12); /* Floating premium shadow */
   display: flex;
   align-items: center;
-  gap: 8px; /* Spacing */
-  width: 100%;
-  max-width: 320px; /* mobile float size */
-  margin: 0 !important; /* Anchor bottom-left */
+  gap: 8px;
+  width: 90%;
+  max-width: 360px; /* mobile search float width */
 }
 
-/* Glassmorphism search input adjustments for luxury look */
 .hero-search-float .search-input-wrapper {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
 }
 
 .hero-search-float .search-input {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border: 1px solid rgba(0, 0, 0, 0.04) !important;
-  padding: 10px 12px 10px 38px !important;
-  border-radius: 12px !important;
-  font-size: 13px !important;
-  height: 40px !important;
+  width: 100%;
+  border: none !important;
+  background: transparent !important;
+  padding: 8px 8px 8px 26px !important;
+  font-size: 13.5px !important;
+  height: 38px !important;
   color: var(--text-dark) !important;
   outline: none;
-  transition: all 0.2s;
-}
-
-.hero-search-float .search-input:focus {
-  background: #ffffff !important;
-  border-color: var(--secondary-orange) !important;
 }
 
 .hero-search-float .search-input-wrapper i {
-  font-size: 16px !important;
-  left: 12px !important;
-  z-index: 3;
+  position: absolute;
+  left: 2px;
+  color: var(--text-muted);
+  font-size: 18px !important;
 }
 
 .hero-search-float .filter-btn {
-  width: 40px !important;
-  height: 40px !important;
-  flex-shrink: 0;
-  background: var(--secondary-orange) !important; /* Orange background */
-  border-radius: 12px !important;
-  font-size: 18px !important;
+  height: 38px !important;
+  padding: 0 20px !important;
+  background: var(--secondary-orange) !important; /* Premium orange theme accent */
+  border-radius: 22px !important; /* Pill style search button */
+  color: white !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border: none !important;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  color: white !important;
-  border: none;
+  gap: 4px;
+  box-shadow: 0 4px 10px rgba(255, 106, 0, 0.2);
+  transition: opacity 0.2s;
+}
+
+.hero-search-float .filter-btn:active {
+  opacity: 0.9;
 }
 
 /* Tablet & Desktop Responsiveness */
 @media (min-width: 769px) {
   .home-hero-banner {
-    height: 480px; /* Proportional responsive height */
-    padding: 32px;
-    border-radius: 28px;
+    height: 480px; /* Large premium height on desktop */
+    margin-bottom: 56px;
   }
   .hero-search-float {
-    max-width: 420px; /* tablet / desktop float size */
-    padding: 10px 12px;
-    border-radius: 20px;
-    margin: 0 !important; /* Anchor bottom-left */
+    bottom: -28px;
+    max-width: 480px; /* Desktop search float width */
+    padding: 8px 10px 8px 22px;
+    border-radius: 36px;
   }
   .hero-search-float .search-input {
-    font-size: 14px !important;
-    height: 46px !important;
-    padding-left: 42px !important;
-  }
-  .hero-search-float .search-input-wrapper i {
-    font-size: 18px !important;
-    left: 14px !important;
+    font-size: 14.5px !important;
+    height: 44px !important;
   }
   .hero-search-float .filter-btn {
-    width: 46px !important;
-    height: 46px !important;
-    font-size: 20px !important;
+    height: 44px !important;
+    padding: 0 28px !important;
+    border-radius: 26px !important;
+    font-size: 14px !important;
   }
 }
 
