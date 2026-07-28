@@ -547,6 +547,14 @@ body {
   background: var(--accent-gray);
 }
 
+@media (max-width: 767px) {
+  .home-hero-container {
+    margin-left: -5px;
+    margin-right: -5px;
+    width: auto;           /* Expand width naturally to fill negative margins */
+  }
+}
+
 .home-hero-image {
   width: 100%;
   height: 100%;
