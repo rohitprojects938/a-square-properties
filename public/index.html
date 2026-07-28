@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v134.css">
+  <link rel="stylesheet" href="/css/style.v135.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -34,8 +34,21 @@
     }
     @media (max-width: 480px) {
       .popular-card {
-        flex: 0 0 calc(35% - 8px);
+        flex: 0 0 calc(30% - 8px); /* Compact width to fit 3 cards in row */
       }
+    }
+    .distance-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 8px;
+      font-weight: 700;
+      color: var(--secondary-orange);
+      background: rgba(255, 106, 0, 0.08);
+      padding: 2px 5px;
+      border-radius: 4px;
+      width: fit-content;
+      margin-top: 2px;
     }
 
     /* 5. Services Grid */
@@ -715,13 +728,34 @@
           <p>Create and share a short vertical property video</p>
         </div>
         <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
-      </a>
+    </div>
+
+    <!-- Location Permission Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="location-sheet-overlay"></div>
+    <div class="bottom-sheet" id="location-sheet">
+      <div class="bottom-sheet-handle"></div>
+      <div class="bottom-sheet-header">
+        <h2 style="font-size: 18px; font-weight: 700; margin: 0;">Find Homes Near You</h2>
+        <button class="bottom-sheet-close" id="location-sheet-close"><i class="bx bx-x"></i></button>
+      </div>
+      <div style="padding: 0px 8px 16px 8px; text-align: center; display: flex; flex-direction: column; gap: 16px; align-items: center;">
+        <div style="background: rgba(255, 106, 0, 0.06); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--secondary-orange); font-size: 32px;">
+          <i class="bx bx-map-pin"></i>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 0; padding: 0 12px;">
+          Allow your location to discover the best rental properties near your current area.
+        </p>
+        <div style="display: flex; flex-direction: column; width: 100%; gap: 8px; margin-top: 8px;">
+          <button class="btn-primary" id="btn-allow-location" style="width: 100%; height: 44px; font-weight: 700; border-radius: 12px; border: none; background: var(--secondary-orange); color: white; cursor: pointer; font-size: 14px;">Allow Location</button>
+          <button class="btn-secondary" id="btn-maybe-later" style="width: 100%; height: 44px; font-weight: 600; border-radius: 12px; border: 1px solid var(--border-color); background: transparent; color: var(--text-dark); cursor: pointer; font-size: 14px;">Maybe Later</button>
+        </div>
+      </div>
     </div>
 
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v134.js"></script>
+  <script src="/js/main.v135.js"></script>
   <script>
 
     // Greet user dynamically
@@ -806,11 +840,8 @@
 
     // Load all homepage sections independently (each fetches its own data)
     async function loadProperties() {
-      // 1. Popular Near You (page 3, newest)
-      try {
-        const r = await fetchSection({ sort: 'newest', page: 3 }, 8);
-        renderPopularNearYou(r.data || []);
-      } catch(e) { console.warn('Popular failed:', e.message); }
+      // 1. Popular Near You (Geographic Recommendations with Fallbacks)
+      await loadPopularNearYou();
 
       // 2. Recently Added (page 1, newest)
       try {
@@ -819,7 +850,57 @@
       } catch(e) { console.warn('Recent failed:', e.message); }
     }
 
-    function renderPopularNearYou(data) {
+    async function loadPopularNearYou() {
+      const container = document.getElementById('popular-near-you-list');
+      if (!container) return;
+      container.innerHTML = '<p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading popular properties near you...</p>';
+
+      const cachedLocation = localStorage.getItem('user_location');
+      if (cachedLocation) {
+        try {
+          const loc = JSON.parse(cachedLocation);
+          // Query properties nearest to location (radius 10km, sorted by distance)
+          const result = await fetchSection({ lat: loc.lat, lng: loc.lng, radius: 10, sort: 'nearest' }, 8);
+          if (result.success && result.data && result.data.length > 0) {
+            renderPopularNearYou(result.data, true);
+            return;
+          }
+        } catch (e) {
+          console.warn('Geographic property fetch failed, falling back:', e.message);
+        }
+      }
+
+      // Fallback 1: Recently Added Properties (page 1, newest)
+      try {
+        const r1 = await fetchSection({ sort: 'newest' }, 8);
+        if (r1.success && r1.data && r1.data.length > 0) {
+          renderPopularNearYou(r1.data, false);
+          return;
+        }
+      } catch (e) { console.warn('Fallback 1 failed:', e.message); }
+
+      // Fallback 2: Latest Active Listings
+      try {
+        const r2 = await fetchSection({}, 8);
+        if (r2.success && r2.data && r2.data.length > 0) {
+          renderPopularNearYou(r2.data, false);
+          return;
+        }
+      } catch (e) { console.warn('Fallback 2 failed:', e.message); }
+
+      // Fallback 3: Featured Listings
+      try {
+        const r3 = await fetchSection({ is_featured: true }, 8);
+        if (r3.success && r3.data && r3.data.length > 0) {
+          renderPopularNearYou(r3.data, false);
+          return;
+        }
+      } catch (e) { console.warn('Fallback 3 failed:', e.message); }
+
+      container.innerHTML = '<p style="font-size:12px; color:var(--text-muted); padding:16px;">No popular properties found.</p>';
+    }
+
+    function renderPopularNearYou(data, isLocationBased = false) {
       const container = document.getElementById('popular-near-you-list');
       if (!container) return;
       if (data.length === 0) {
@@ -829,6 +910,14 @@
       container.innerHTML = data.map(p => {
         const image = p.cover_image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80';
         const verifiedBadge = p.is_verified ? `<span class="badge-verified" style="position:absolute; top:6px; left:6px; background:#25d366; color:white; font-size:8px; font-weight:700; padding:2px 4px; border-radius:4px; text-transform:uppercase; z-index:1;">Verified</span>` : '';
+        
+        let locationBadgeText = '';
+        if (isLocationBased && p.distance !== undefined && p.distance !== null) {
+          locationBadgeText = `<span class="distance-badge"><i class="bx bx-navigation"></i> ${parseFloat(p.distance).toFixed(1)} km</span>`;
+        } else {
+          locationBadgeText = `<span class="distance-badge"><i class="bx bx-map-pin"></i> ${p.city || 'Nearby'}</span>`;
+        }
+
         return `
           <div class="popular-card" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer; position:relative;">
             <div style="position:relative; width:100%; aspect-ratio:1/1; background:#f5f6f8; overflow:hidden;">
@@ -836,9 +925,12 @@
               ${verifiedBadge}
               <span style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.7); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px;">₹${formatPrice(p.price)}</span>
             </div>
-            <div style="padding:6px; display:flex; flex-direction:column; gap:2px; flex:1; justify-content:space-between;">
-              <div style="font-size:10px; font-weight:700; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${p.title}</div>
-              <div style="font-size:9px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;"><i class="bx bx-map" style="font-size:9px;"></i> ${p.city}</div>
+            <div style="padding:6px; display:flex; flex-direction:column; gap:4px; flex:1; justify-content:space-between;">
+              <div>
+                <div style="font-size:10px; font-weight:700; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${p.title}</div>
+                <div style="font-size:9px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; margin-top:2px;"><i class="bx bx-map" style="font-size:9px;"></i> ${p.address || p.city}</div>
+              </div>
+              ${locationBadgeText}
             </div>
           </div>
         `;
@@ -1456,6 +1548,72 @@
       loadLoanSettings();
       setupInfiniteScroll();
       loadDesktopWidgets(user);
+
+      // Delayed Location Permission Sheet Trigger (25 seconds after app startup)
+      setTimeout(() => {
+        const cachedLocation = localStorage.getItem('user_location');
+        if (cachedLocation) return; // Already allowed
+
+        const dismissedUntil = localStorage.getItem('location_dismissed_until');
+        if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) return; // Postponed recently
+
+        const sheet = document.getElementById('location-sheet');
+        const overlay = document.getElementById('location-sheet-overlay');
+        if (sheet && overlay) {
+          sheet.classList.add('active');
+          overlay.classList.add('active');
+        }
+      }, 25000);
+
+      // Bind Location Sheet Event Listeners
+      const btnAllowLocation = document.getElementById('btn-allow-location');
+      const btnMaybeLater = document.getElementById('btn-maybe-later');
+      const locationSheetClose = document.getElementById('location-sheet-close');
+      const locationSheetOverlay = document.getElementById('location-sheet-overlay');
+
+      function closeLocationSheet() {
+        const sheet = document.getElementById('location-sheet');
+        const overlay = document.getElementById('location-sheet-overlay');
+        if (sheet && overlay) {
+          sheet.classList.remove('active');
+          overlay.classList.remove('active');
+        }
+      }
+
+      function dismissLocationSheetFlow() {
+        closeLocationSheet();
+        // Maybe Later dismisses for 3 days to avoid repeatedly annoying the user
+        localStorage.setItem('location_dismissed_until', (Date.now() + 3 * 24 * 60 * 60 * 1000).toString());
+      }
+
+      if (btnAllowLocation) {
+        btnAllowLocation.addEventListener('click', () => {
+          closeLocationSheet();
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const locData = {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                  timestamp: Date.now()
+                };
+                localStorage.setItem('user_location', JSON.stringify(locData));
+                // Immediately reload the Popular Near You list with location filters
+                loadPopularNearYou();
+              },
+              (error) => {
+                console.warn('Geolocation access failed:', error.message);
+              }
+            );
+          } else {
+            console.warn('Geolocation not supported by browser.');
+          }
+        });
+      }
+
+      if (btnMaybeLater) btnMaybeLater.addEventListener('click', dismissLocationSheetFlow);
+      if (locationSheetClose) locationSheetClose.addEventListener('click', dismissLocationSheetFlow);
+      if (locationSheetOverlay) locationSheetOverlay.addEventListener('click', dismissLocationSheetFlow);
     };
   </script>
 </body>
