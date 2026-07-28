@@ -512,14 +512,14 @@ body {
 
 /* Hero Section – Greeting above image */
 .hero-above-greeting {
-  margin-bottom: 8px; /* tight gap between greeting and image */
+  margin-bottom: 6px;
 }
 
 .hero-above-greeting-text {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-dark);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 
 /* Hero Image Banner */
@@ -532,10 +532,11 @@ body {
   position: relative;
   width: calc(100% + 32px);
   margin-left: -16px;
-  height: 220px;
+  height: 155px;        /* Mobile-first: compact */
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   background: #111;
+  border-radius: 0;
 }
 
 .home-hero-banner .hero-image {
@@ -639,7 +640,7 @@ body {
 
 /* Tablet (481-768px) */
 @media (min-width: 481px) and (max-width: 768px) {
-  .home-hero-banner  { height: 260px; }
+  .home-hero-banner  { height: 200px; }
   .hero-search-float { width: 48%; left: 16px; bottom: 16px; }
   .hero-search-float .search-input  { font-size: 13px !important; height: 34px !important; }
   .hero-search-float .filter-btn    { height: 34px !important; padding: 0 16px !important; font-size: 12px !important; }
@@ -653,8 +654,8 @@ body {
   .home-hero-banner {
     width: calc(100% + 64px);
     margin-left: -32px;
-    height: 380px;
-    margin-bottom: 28px;
+    height: 320px;
+    margin-bottom: 24px;
   }
 
   .hero-search-float {
