@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Services Marketplace - House Rental</title>
-  <link rel="stylesheet" href="/css/style.v143.css">
+  <link rel="stylesheet" href="/css/style.v144.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     .service-listing-card {
@@ -47,8 +47,8 @@
       width: 100%;
       max-height: 85vh;
       border-radius: 20px 20px 0 0;
-      padding: 20px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       animation: slideUp 0.3s ease-out;
       box-shadow: 0 -8px 24px rgba(0,0,0,0.1);
     }
@@ -58,6 +58,42 @@
         border-radius: 16px;
         max-height: 80vh;
         animation: scaleIn 0.25s ease-out;
+      }
+    }
+    .service-modal-header {
+      padding: 16px 20px 12px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 20px 20px 0 0;
+    }
+    @media (min-width: 768px) {
+      .service-modal-header {
+        border-radius: 16px 16px 0 0;
+      }
+    }
+    .service-modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+      max-height: calc(85vh - 140px);
+      box-sizing: border-box;
+    }
+    @media (min-width: 768px) {
+      .service-modal-body {
+        max-height: calc(80vh - 140px);
+      }
+    }
+    .service-modal-footer {
+      padding: 12px 20px calc(16px + env(safe-area-inset-bottom)) 20px;
+      border-top: 1px solid var(--border-color);
+      background: #ffffff;
+    }
+    @media (min-width: 768px) {
+      .service-modal-footer {
+        border-radius: 0 0 16px 16px;
       }
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -228,104 +264,113 @@
     <!-- Add Service Modal -->
     <div class="service-modal-overlay" id="service-modal-overlay" onclick="if(event.target === this) closeAddServiceModal();">
       <div class="service-modal">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:16px;">
-          <h2 style="font-size:16px; font-weight:800; margin:0; color:var(--text-dark);">Post Your Service</h2>
-          <button onclick="closeAddServiceModal()" style="border:none; background:none; font-size:20px; color:var(--text-muted); cursor:pointer;"><i class="bx bx-x"></i></button>
-        </div>
-
-        <form id="post-service-form" onsubmit="submitUserNewService(event)" style="display:flex; flex-direction:column; gap:2px;">
-          <!-- Title -->
-          <div class="service-form-group">
-            <label>Service Title *</label>
-            <input type="text" id="svc-post-title" placeholder="e.g. Professional Home Painter" required>
-            <div class="service-form-error" id="svc-post-title-err"></div>
+        <form id="post-service-form" onsubmit="submitUserNewService(event)" style="display:flex; flex-direction:column; height:100%; width:100%; margin:0;">
+          
+          <!-- Header -->
+          <div class="service-modal-header">
+            <h2 style="font-size:16px; font-weight:800; margin:0; color:var(--text-dark);">Post Your Service</h2>
+            <button type="button" onclick="closeAddServiceModal()" style="border:none; background:none; font-size:20px; color:var(--text-muted); cursor:pointer; display:flex; align-items:center;"><i class="bx bx-x"></i></button>
           </div>
 
-          <!-- Category -->
-          <div class="service-form-group">
-            <label>Service Category *</label>
-            <select id="svc-post-category" required>
-              <option value="">Select Category</option>
-              <option value="painter">Painter</option>
-              <option value="electrician">Electrician</option>
-              <option value="plumber">Plumber</option>
-              <option value="packers">Packers & Movers</option>
-              <option value="cleaning">Deep Cleaner</option>
-              <option value="gardening">Gardener</option>
-              <option value="contractor">Contractor / Builder</option>
-              <option value="vastu">Vastu Consultant</option>
-              <option value="architecture">Architect</option>
-              <option value="interior">Interior Designer</option>
-            </select>
-            <div class="service-form-error" id="svc-post-category-err"></div>
+          <!-- Scrollable Body -->
+          <div class="service-modal-body">
+            <!-- Title -->
+            <div class="service-form-group">
+              <label>Service Title *</label>
+              <input type="text" id="svc-post-title" placeholder="e.g. Professional Home Painter" required>
+              <div class="service-form-error" id="svc-post-title-err"></div>
+            </div>
+
+            <!-- Category -->
+            <div class="service-form-group">
+              <label>Service Category *</label>
+              <select id="svc-post-category" required>
+                <option value="">Select Category</option>
+                <option value="painter">Painter</option>
+                <option value="electrician">Electrician</option>
+                <option value="plumber">Plumber</option>
+                <option value="packers">Packers & Movers</option>
+                <option value="cleaning">Deep Cleaner</option>
+                <option value="gardening">Gardener</option>
+                <option value="contractor">Contractor / Builder</option>
+                <option value="vastu">Vastu Consultant</option>
+                <option value="architecture">Architect</option>
+                <option value="interior">Interior Designer</option>
+              </select>
+              <div class="service-form-error" id="svc-post-category-err"></div>
+            </div>
+
+            <!-- Description -->
+            <div class="service-form-group">
+              <label>Service Description *</label>
+              <textarea id="svc-post-description" rows="3" placeholder="Describe the services you offer..." required></textarea>
+              <div class="service-form-error" id="svc-post-description-err"></div>
+            </div>
+
+            <!-- Mobile -->
+            <div class="service-form-group">
+              <label>Mobile Number (Indian 10-digit) *</label>
+              <input type="tel" id="svc-post-mobile" placeholder="e.g. 9919014220" maxlength="10" required oninput="syncWhatsappDefault(this.value)">
+              <div class="service-form-error" id="svc-post-mobile-err"></div>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="service-form-group">
+              <label>WhatsApp Number</label>
+              <input type="tel" id="svc-post-whatsapp" placeholder="e.g. 9919014220" maxlength="10">
+              <div class="service-form-error" id="svc-post-whatsapp-err"></div>
+            </div>
+
+            <!-- City -->
+            <div class="service-form-group">
+              <label>Service Area / City *</label>
+              <input type="text" id="svc-post-city" placeholder="e.g. Lucknow" required>
+              <div class="service-form-error" id="svc-post-city-err"></div>
+            </div>
+
+            <!-- Address -->
+            <div class="service-form-group">
+              <label>Address (Optional)</label>
+              <input type="text" id="svc-post-address" placeholder="e.g. Aliganj, Lucknow">
+            </div>
+
+            <!-- Experience -->
+            <div class="service-form-group">
+              <label>Experience (Optional)</label>
+              <input type="text" id="svc-post-experience" placeholder="e.g. 5 Years">
+            </div>
+
+            <!-- Price -->
+            <div class="service-form-group">
+              <label>Starting Price (Optional, ₹)</label>
+              <input type="number" id="svc-post-price" placeholder="e.g. 499">
+            </div>
+
+            <!-- Image -->
+            <div class="service-form-group">
+              <label>Service Image / Logo URL (Optional)</label>
+              <input type="url" id="svc-post-image" placeholder="e.g. https://images.unsplash.com/photo-...">
+            </div>
+
+            <!-- Available Days -->
+            <div class="service-form-group">
+              <label>Available Days (Optional)</label>
+              <input type="text" id="svc-post-days" placeholder="e.g. Mon - Sat, 9 AM - 7 PM">
+            </div>
           </div>
 
-          <!-- Description -->
-          <div class="service-form-group">
-            <label>Service Description *</label>
-            <textarea id="svc-post-description" rows="3" placeholder="Describe the services you offer..." required></textarea>
-            <div class="service-form-error" id="svc-post-description-err"></div>
+          <!-- Fixed Footer -->
+          <div class="service-modal-footer">
+            <button type="submit" class="btn-primary" id="svc-post-submit-btn" style="padding:12px; border-radius:12px; font-weight:700; border:none; color:white; cursor:pointer; width:100%;">Submit Service</button>
           </div>
-
-          <!-- Mobile -->
-          <div class="service-form-group">
-            <label>Mobile Number (Indian 10-digit) *</label>
-            <input type="tel" id="svc-post-mobile" placeholder="e.g. 9919014220" maxlength="10" required oninput="syncWhatsappDefault(this.value)">
-            <div class="service-form-error" id="svc-post-mobile-err"></div>
-          </div>
-
-          <!-- WhatsApp -->
-          <div class="service-form-group">
-            <label>WhatsApp Number</label>
-            <input type="tel" id="svc-post-whatsapp" placeholder="e.g. 9919014220" maxlength="10">
-            <div class="service-form-error" id="svc-post-whatsapp-err"></div>
-          </div>
-
-          <!-- City -->
-          <div class="service-form-group">
-            <label>Service Area / City *</label>
-            <input type="text" id="svc-post-city" placeholder="e.g. Lucknow" required>
-            <div class="service-form-error" id="svc-post-city-err"></div>
-          </div>
-
-          <!-- Address -->
-          <div class="service-form-group">
-            <label>Address (Optional)</label>
-            <input type="text" id="svc-post-address" placeholder="e.g. Aliganj, Lucknow">
-          </div>
-
-          <!-- Experience -->
-          <div class="service-form-group">
-            <label>Experience (Optional)</label>
-            <input type="text" id="svc-post-experience" placeholder="e.g. 5 Years">
-          </div>
-
-          <!-- Price -->
-          <div class="service-form-group">
-            <label>Starting Price (Optional, ₹)</label>
-            <input type="number" id="svc-post-price" placeholder="e.g. 499">
-          </div>
-
-          <!-- Image -->
-          <div class="service-form-group">
-            <label>Service Image / Logo URL (Optional)</label>
-            <input type="url" id="svc-post-image" placeholder="e.g. https://images.unsplash.com/photo-...">
-          </div>
-
-          <!-- Available Days -->
-          <div class="service-form-group">
-            <label>Available Days (Optional)</label>
-            <input type="text" id="svc-post-days" placeholder="e.g. Mon - Sat, 9 AM - 7 PM">
-          </div>
-
-          <button type="submit" class="btn-primary" id="svc-post-submit-btn" style="padding:12px; border-radius:12px; font-weight:700; border:none; color:white; cursor:pointer; width:100%; margin-top:8px;">Submit Service</button>
+          
         </form>
       </div>
     </div>
 
   </div>
 
-  <script src="/js/main.v143.js"></script>
+  <script src="/js/main.v144.js"></script>
   <script>
     let currentCategory = 'all';
     let currentSearchQuery = '';
