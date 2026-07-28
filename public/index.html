@@ -268,7 +268,7 @@
       display: none;
     }
     .review-card-premium {
-      flex: 0 0 85%;
+      flex: 0 0 75%;
       scroll-snap-align: start;
       background: #ffffff;
       border-radius: 16px;
@@ -391,6 +391,75 @@
       display: none;
       border: 1.5px solid var(--secondary-orange);
     }
+
+    /* Modal styles for Reviews Form Popup */
+    .service-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 999999 !important;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    @media (min-width: 768px) {
+      .service-modal-overlay {
+        align-items: center;
+      }
+    }
+    .service-modal-overlay.active {
+      display: flex;
+    }
+    .service-modal {
+      background: #ffffff;
+      width: 100%;
+      max-height: 85vh;
+      border-radius: 20px 20px 0 0;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.3s ease-out;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.1);
+    }
+    @media (min-width: 768px) {
+      .service-modal {
+        width: 480px;
+        border-radius: 16px;
+        max-height: 80vh;
+        animation: scaleIn 0.25s ease-out;
+      }
+    }
+    .service-modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 20px 20px 0 0;
+    }
+    @media (min-width: 768px) {
+      .service-modal-header {
+        border-radius: 16px 16px 0 0;
+      }
+    }
+    .service-modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+      max-height: calc(85vh - 140px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .service-modal-body {
+        max-height: calc(80vh - 140px);
+      }
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .loan-section-card {
       background: linear-gradient(135deg, #0e1e38 0%, #050b18 100%);
       border-radius: 20px;
@@ -800,65 +869,29 @@
         </div>
 
         <!-- 6. Customer Reviews -->
-        <div class="reviews-section">
-          <div class="reviews-badge-quote">
-            <i class="bx bxs-quote-left"></i>
-          </div>
-          
-          <div class="section-title" style="margin-bottom: 4px; padding: 0;">
-            <span>Customer Reviews</span>
-          </div>
-          <p style="font-size: 12.5px; color: var(--text-muted); margin: 0 0 16px 0; font-family:'Outfit', sans-serif;">See what our users say about Houserenter.in</p>
-
-          <!-- Statistics Panel -->
-          <div class="reviews-stats-summary">
-            <div class="reviews-stats-left">
-              <div class="reviews-stats-avg" id="rev-stats-avg-val">
-                ⭐ <span id="rev-avg-number">0.0</span> Average Rating
-              </div>
-              <div class="reviews-stats-count" id="rev-stats-count-val">
-                Based on <span id="rev-total-number">0</span> Reviews
+        <div class="reviews-section" style="padding: 16px 20px 20px 20px;">
+          <!-- Header with stats and floating Post button -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <div style="display:flex; flex-direction:column; gap:2px;">
+              <span style="font-size:15px; font-weight:800; color:var(--text-dark); font-family:'Outfit',sans-serif;">Customer Reviews</span>
+              <div style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--text-muted);">
+                <span style="color:#ffa500; font-weight:700; display:flex; align-items:center; gap:2px;">⭐ <span id="rev-avg-number">0.0</span></span>
+                <span style="color:#cbd5e1;">•</span>
+                <span><span id="rev-total-number">0</span> Reviews</span>
               </div>
             </div>
+            <!-- Floating post review action -->
+            <button onclick="openReviewModal()" style="display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,106,0,0.08); color:var(--secondary-orange); cursor:pointer; font-size:18px; transition:transform 0.2s;" title="Post Review" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+              <i class="bx bx-plus"></i>
+            </button>
           </div>
 
           <!-- Horizontal Carousel Slider -->
-          <div class="reviews-carousel-outer">
+          <div class="reviews-carousel-outer" style="margin-bottom:0;">
             <div class="reviews-carousel-track" id="reviews-carousel-container">
               <p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading reviews...</p>
             </div>
           </div>
-
-          <!-- Share Your Experience Form -->
-          <form class="review-form-premium" id="submit-review-form" onsubmit="submitCustomerReview(event)">
-            <div class="review-form-title-premium">Share Your Experience</div>
-            <div class="review-form-row" style="display: flex; gap: 10px; flex-wrap: wrap;">
-              <input type="text" id="rev-name" placeholder="Your Name" required style="flex: 1; min-width: 120px; padding: 10px; border-radius: 8px; border: 1.5px solid #f0eae1; outline: none; font-size: 13px;">
-              <input type="text" id="rev-city" placeholder="City (e.g. Lucknow)" required style="flex: 1; min-width: 120px; padding: 10px; border-radius: 8px; border: 1.5px solid #f0eae1; outline: none; font-size: 13px;">
-            </div>
-            <div class="review-form-row">
-              <select id="rev-rating" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1.5px solid #f0eae1; outline: none; font-size: 13px; background: white;">
-                <option value="" disabled selected>Select Rating</option>
-                <option value="5">5 Stars</option>
-                <option value="4">4 Stars</option>
-                <option value="3">3 Stars</option>
-                <option value="2">2 Stars</option>
-                <option value="1">1 Star</option>
-              </select>
-            </div>
-            <textarea id="rev-text" placeholder="Write your review here..." required style="width: 100%; min-height: 80px; padding: 10px; border-radius: 8px; border: 1.5px solid #f0eae1; outline: none; font-size: 13px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
-            
-            <!-- Upload Profile Photo Container -->
-            <div class="review-upload-btn-wrap">
-              <label for="rev-photo" class="review-upload-label">
-                <i class="bx bx-camera" style="font-size: 16px;"></i> Upload Profile Photo
-              </label>
-              <input type="file" id="rev-photo" accept="image/*" style="display: none;" onchange="handleReviewPhotoChange(event)">
-              <img id="rev-photo-preview" class="review-upload-preview" src="">
-            </div>
-            
-            <button type="submit" class="btn-submit-review" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--secondary-orange); color: white; font-weight: 700; font-size: 13px; cursor: pointer; transition: opacity 0.2s;">Submit Review</button>
-          </form>
         </div>
 
         <!-- 7. Loan Section -->
@@ -1123,6 +1156,54 @@
         <div style="display: flex; flex-direction: column; width: 100%; gap: 8px; margin-top: 8px;">
           <button class="btn-primary" id="btn-allow-location" style="width: 100%; height: 44px; font-weight: 700; border-radius: 12px; border: none; background: var(--secondary-orange); color: white; cursor: pointer; font-size: 14px;">Allow Location</button>
           <button class="btn-secondary" id="btn-maybe-later" style="width: 100%; height: 44px; font-weight: 600; border-radius: 12px; border: 1px solid var(--border-color); background: transparent; color: var(--text-dark); cursor: pointer; font-size: 14px;">Maybe Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Submission Modal -->
+    <div class="service-modal-overlay" id="review-form-modal-overlay" onclick="if(event.target === this) closeReviewModal();" style="z-index: 13000;">
+      <div class="service-modal" style="max-width: 440px; border-radius: 20px 20px 0 0; overflow: hidden; height: auto; max-height: 85vh;">
+        <div class="service-modal-header" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+          <h4 style="font-size: 15px; font-weight: 800; color: var(--text-dark); margin: 0;">Share Your Experience</h4>
+          <button onclick="closeReviewModal()" style="background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 4px;"><i class="bx bx-x"></i></button>
+        </div>
+        <div class="service-modal-body" style="padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+          <form id="submit-review-form" onsubmit="submitCustomerReview(event)" style="display: flex; flex-direction: column; gap: 14px; width: 100%;">
+            <div>
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-dark); display: block; margin-bottom: 6px;">Your Name *</label>
+              <input type="text" id="rev-name" placeholder="e.g. Rahul Sharma" required style="width: 100%; padding: 11px 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; outline: none; font-size: 13px; font-family: inherit; box-sizing: border-box; background: white;">
+            </div>
+            <div>
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-dark); display: block; margin-bottom: 6px;">City *</label>
+              <input type="text" id="rev-city" placeholder="e.g. Lucknow" required style="width: 100%; padding: 11px 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; outline: none; font-size: 13px; font-family: inherit; box-sizing: border-box; background: white;">
+            </div>
+            <div>
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-dark); display: block; margin-bottom: 6px;">Rating *</label>
+              <select id="rev-rating" required style="width: 100%; padding: 11px 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; outline: none; font-size: 13px; font-family: inherit; background: white; box-sizing: border-box;">
+                <option value="" disabled selected>Select Rating</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-dark); display: block; margin-bottom: 6px;">Review *</label>
+              <textarea id="rev-text" placeholder="Write your review here..." required style="width: 100%; min-height: 80px; padding: 11px 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; outline: none; font-size: 13px; font-family: inherit; resize: vertical; box-sizing: border-box; background: white;"></textarea>
+            </div>
+            <div>
+              <label style="font-size: 11.5px; font-weight: 700; color: var(--text-dark); display: block; margin-bottom: 6px;">Profile Photo (Optional)</label>
+              <div class="review-upload-btn-wrap" style="display: flex; align-items: center; gap: 12px; margin-top: 4px;">
+                <label for="rev-photo" class="review-upload-label" style="display: flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s;">
+                  <i class="bx bx-camera" style="font-size: 16px;"></i> Choose Photo
+                </label>
+                <input type="file" id="rev-photo" accept="image/*" style="display: none;" onchange="handleReviewPhotoChange(event)">
+                <img id="rev-photo-preview" class="review-upload-preview" src="" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: none; border: 1.5px solid var(--secondary-orange);">
+              </div>
+            </div>
+            <button type="submit" class="btn-submit-review" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--secondary-orange); color: white; font-weight: 700; font-size: 13.5px; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">Submit Review</button>
+          </form>
         </div>
       </div>
     </div>
@@ -2119,6 +2200,23 @@
       }
     };
 
+    window.openReviewModal = function() {
+      const overlay = document.getElementById('review-form-modal-overlay');
+      if (overlay) {
+        overlay.classList.add('active');
+        // Prevent body scroll behind modal
+        document.body.style.overflow = 'hidden';
+      }
+    };
+
+    window.closeReviewModal = function() {
+      const overlay = document.getElementById('review-form-modal-overlay');
+      if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    };
+
     async function loadCustomerReviews() {
       try {
         const res = await apiRequest('/api/public/reviews');
@@ -2325,6 +2423,7 @@
         
         if (response.ok && res.success) {
           alert('Thank you! Your review has been published.');
+          closeReviewModal();
           
           // Insert the new review at the beginning of list memory
           if (res.data) {
