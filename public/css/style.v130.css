@@ -547,6 +547,15 @@ body {
   background: var(--accent-gray);
 }
 
+.home-hero-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;     /* Keep whole image visible without crop/stretch */
+  border-radius: var(--border-radius);
+  pointer-events: none;
+}
+
 @media (max-width: 767px) {
   .home-hero-container {
     margin-left: -5px;
@@ -556,15 +565,6 @@ body {
   .home-hero-image {
     object-fit: cover;     /* Eliminate side white spaces on mobile */
   }
-}
-
-.home-hero-image {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;     /* Keep whole image visible without crop/stretch */
-  border-radius: var(--border-radius);
-  pointer-events: none;
 }
 
 @media (min-width: 768px) {
