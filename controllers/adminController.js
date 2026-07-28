@@ -252,21 +252,87 @@ async function updateUserRole(req, res) {
 
 // ─── HOME SERVICES ──────────────────────────────────────────────────────────────
 async function getServices(req, res) {
+  const page   = Math.max(1, parseInt(req.query.page)  || 1);
+  const limit  = Math.min(100, parseInt(req.query.limit) || 20);
+  const offset = (page - 1) * limit;
+  const { search, status, category } = req.query;
+
+  let where = [];
+  let params = [];
+
+  if (search) {
+    const s = `%${search}%`;
+    where.push('(hs.name LIKE ? OR hs.provider_name LIKE ? OR hs.mobile_number LIKE ? OR hs.city LIKE ? OR hs.description LIKE ?)');
+    params.push(s, s, s, s, s);
+  }
+
+  if (status) {
+    where.push('hs.status = ?');
+    params.push(status);
+  }
+
+  if (category) {
+    where.push('hs.category = ?');
+    params.push(category);
+  }
+
+  const whereClause = where.length ? ' WHERE ' + where.join(' AND ') : '';
+  const sql      = `SELECT hs.*, u.name as user_name FROM home_services hs LEFT JOIN users u ON hs.user_id = u.id${whereClause} ORDER BY hs.sort_order ASC, hs.id DESC LIMIT ? OFFSET ?`;
+  const countSql = `SELECT COUNT(*) as total FROM home_services hs${whereClause}`;
+
   try {
-    const [rows] = await db.query('SELECT * FROM home_services ORDER BY sort_order ASC, id ASC');
-    res.json({ success: true, data: rows });
+    const [rows]      = await db.query(sql, [...params, limit, offset]);
+    const [[counter]] = await db.query(countSql, params);
+    res.json({ success: true, data: rows, pagination: { total: counter.total, page, limit } });
   } catch (e) {
-    res.json({ success: true, data: [] });
+    res.status(500).json({ success: false, error: e.message });
   }
 }
 
 async function createService(req, res) {
-  const { name, icon, description, is_active, whatsapp_number, sort_order, image_url } = req.body;
-  if (!name) return res.status(400).json({ success: false, error: 'Service name required.' });
+  const { 
+    provider_name, 
+    name, 
+    category, 
+    description, 
+    mobile_number, 
+    whatsapp_number, 
+    city, 
+    address, 
+    experience, 
+    starting_price, 
+    image_url, 
+    available_days, 
+    status, 
+    sort_order 
+  } = req.body;
+
+  if (!name) return res.status(400).json({ success: false, error: 'Service Title required.' });
+  if (!category) return res.status(400).json({ success: false, error: 'Category required.' });
+  if (!mobile_number) return res.status(400).json({ success: false, error: 'Mobile Number required.' });
+  if (!city) return res.status(400).json({ success: false, error: 'City required.' });
+
   try {
     const [r] = await db.query(
-      'INSERT INTO home_services (name, icon, description, is_active, whatsapp_number, sort_order, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, icon || '🔧', description || '', is_active !== false ? 1 : 0, whatsapp_number || '+919919014220', parseInt(sort_order) || 0, image_url || null]
+      `INSERT INTO home_services 
+      (provider_name, name, category, description, mobile_number, whatsapp_number, city, address, experience, starting_price, image_url, available_days, status, sort_order) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        provider_name || 'Admin Added', 
+        name, 
+        category, 
+        description || '', 
+        mobile_number, 
+        whatsapp_number || mobile_number, 
+        city, 
+        address || null, 
+        experience || null, 
+        starting_price ? parseFloat(starting_price) : null, 
+        image_url || null, 
+        available_days || null, 
+        status || 'approved', 
+        parseInt(sort_order) || 0
+      ]
     );
     res.json({ success: true, message: 'Service created.', id: r.insertId });
   } catch (e) {
@@ -276,13 +342,74 @@ async function createService(req, res) {
 
 async function updateService(req, res) {
   const { id } = req.params;
-  const { name, icon, description, is_active, whatsapp_number, sort_order, image_url } = req.body;
+  const { 
+    provider_name, 
+    name, 
+    category, 
+    description, 
+    mobile_number, 
+    whatsapp_number, 
+    city, 
+    address, 
+    experience, 
+    starting_price, 
+    image_url, 
+    available_days, 
+    status, 
+    sort_order 
+  } = req.body;
+
   try {
     await db.query(
-      'UPDATE home_services SET name = ?, icon = ?, description = ?, is_active = ?, whatsapp_number = ?, sort_order = ?, image_url = ? WHERE id = ?',
-      [name, icon, description, is_active ? 1 : 0, whatsapp_number, parseInt(sort_order) || 0, image_url, id]
+      `UPDATE home_services SET 
+        provider_name = ?, 
+        name = ?, 
+        category = ?, 
+        description = ?, 
+        mobile_number = ?, 
+        whatsapp_number = ?, 
+        city = ?, 
+        address = ?, 
+        experience = ?, 
+        starting_price = ?, 
+        image_url = ?, 
+        available_days = ?, 
+        status = ?, 
+        sort_order = ? 
+      WHERE id = ?`,
+      [
+        provider_name, 
+        name, 
+        category, 
+        description, 
+        mobile_number, 
+        whatsapp_number, 
+        city, 
+        address, 
+        experience, 
+        starting_price ? parseFloat(starting_price) : null, 
+        image_url, 
+        available_days, 
+        status, 
+        parseInt(sort_order) || 0, 
+        id
+      ]
     );
     res.json({ success: true, message: 'Service updated.' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function updateServiceStatus(req, res) {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!['pending', 'approved', 'rejected', 'suspended'].includes(status)) {
+    return res.status(400).json({ success: false, error: 'Invalid status value.' });
+  }
+  try {
+    await db.query('UPDATE home_services SET status = ? WHERE id = ?', [status, id]);
+    res.json({ success: true, message: `Service ${status} successfully.` });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -742,7 +869,7 @@ async function updateSettings(req, res) {
 module.exports = {
   getDashboardStats, getUsers, getUserById, updateUser, deleteUser, updateUserRole,
   getAdminProperties, updatePropertyStatus, deleteProperty, togglePropertyVisibility, toggleFeatured,
-  getServices, createService, updateService, deleteService,
+  getServices, createService, updateService, updateServiceStatus, deleteService,
   getReviews, updateReviewStatus, replyToReview, deleteReview,
   getLoans, updateLoanStatus, exportLoansXlsx, deleteLoan, updateLoanSettings,
   getPlans, createPlan, updatePlan, deletePlan,

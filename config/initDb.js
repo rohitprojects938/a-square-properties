@@ -88,6 +88,16 @@ async function initializeDatabase() {
     await addColumnIfNotExist('home_services', 'whatsapp_number', "ALTER TABLE home_services ADD COLUMN whatsapp_number VARCHAR(50) DEFAULT '+919919014220';");
     await addColumnIfNotExist('home_services', 'sort_order', "ALTER TABLE home_services ADD COLUMN sort_order INT DEFAULT 0;");
     await addColumnIfNotExist('home_services', 'image_url', "ALTER TABLE home_services ADD COLUMN image_url VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'user_id', "ALTER TABLE home_services ADD COLUMN user_id INT DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'provider_name', "ALTER TABLE home_services ADD COLUMN provider_name VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'category', "ALTER TABLE home_services ADD COLUMN category VARCHAR(100) DEFAULT 'other';");
+    await addColumnIfNotExist('home_services', 'mobile_number', "ALTER TABLE home_services ADD COLUMN mobile_number VARCHAR(20) DEFAULT '+919919014220';");
+    await addColumnIfNotExist('home_services', 'city', "ALTER TABLE home_services ADD COLUMN city VARCHAR(100) DEFAULT 'Lucknow';");
+    await addColumnIfNotExist('home_services', 'address', "ALTER TABLE home_services ADD COLUMN address TEXT DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'experience', "ALTER TABLE home_services ADD COLUMN experience VARCHAR(100) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'starting_price', "ALTER TABLE home_services ADD COLUMN starting_price DECIMAL(10, 2) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'available_days', "ALTER TABLE home_services ADD COLUMN available_days VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'status', "ALTER TABLE home_services ADD COLUMN status ENUM('pending', 'approved', 'rejected', 'suspended') DEFAULT 'approved';");
 
     // Site settings loan configuration migrations
     await addColumnIfNotExist('site_settings', 'loan_section_enabled', "ALTER TABLE site_settings ADD COLUMN loan_section_enabled TINYINT DEFAULT 1;");
@@ -138,9 +148,9 @@ async function initializeDatabase() {
       const [existing] = await db.query("SELECT COUNT(*) as c FROM home_services");
       if (existing && existing[0].c === 0) {
         await db.query(`
-          INSERT INTO home_services (name, icon, description, whatsapp_number, sort_order) VALUES
-          ('Electrician Service', '⚡', 'Instant residential wiring, switchboard installation, and electric repairs.', '+919919014220', 1),
-          ('Building Material Service', '🏗️', 'Supply of premium cement, steel, bricks, and sand materials.', '+919919014220', 2)
+          INSERT INTO home_services (name, category, description, mobile_number, whatsapp_number, city, status, experience, sort_order) VALUES
+          ('Suresh Wireman', 'electrician', 'Instant residential wiring, switchboard installation, and electric repairs.', '+919919014220', '+919919014220', 'Lucknow', 'approved', '5 Years', 1),
+          ('Builders Supply Co.', 'contractor', 'Supply of premium cement, steel, bricks, and sand materials.', '+919919014220', '+919919014220', 'Lucknow', 'approved', '10 Years', 2)
         `);
         console.log('✅ MySQL Seeder: Injected default home services.');
       }

@@ -30,6 +30,7 @@ router.post('/property/featured',      admin.toggleFeatured);
 router.get('/services',          admin.getServices);
 router.post('/services',         admin.createService);
 router.put('/services/:id',      admin.updateService);
+router.put('/services/:id/status', admin.updateServiceStatus);
 router.delete('/services/:id',   admin.deleteService);
 
 // Customer Reviews

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Services Marketplace - House Rental</title>
-  <link rel="stylesheet" href="/css/style.v142.css">
+  <link rel="stylesheet" href="/css/style.v143.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     .service-listing-card {
@@ -23,6 +23,86 @@
       gap: 12px;
       margin-top: 4px;
     }
+    /* Modal Styles */
+    .service-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    @media (min-width: 768px) {
+      .service-modal-overlay {
+        align-items: center;
+      }
+    }
+    .service-modal-overlay.active {
+      display: flex;
+    }
+    .service-modal {
+      background: #ffffff;
+      width: 100%;
+      max-height: 85vh;
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease-out;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.1);
+    }
+    @media (min-width: 768px) {
+      .service-modal {
+        width: 480px;
+        border-radius: 16px;
+        max-height: 80vh;
+        animation: scaleIn 0.25s ease-out;
+      }
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .service-form-group {
+      margin-bottom: 14px;
+    }
+    .service-form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 5px;
+    }
+    .service-form-group input, 
+    .service-form-group select, 
+    .service-form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      box-sizing: border-box;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .service-form-group input:focus, 
+    .service-form-group select:focus, 
+    .service-form-group textarea:focus {
+      border-color: var(--secondary-orange);
+    }
+    .service-form-group input.field-error {
+      border-color: #e53e3e !important;
+    }
+    .service-form-error {
+      font-size: 11px;
+      color: #e53e3e;
+      margin-top: 3px;
+      display: none;
+    }
+    .service-form-error.show {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -32,21 +112,31 @@
     <header class="app-header">
       <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
       <div class="logo" style="font-size:18px;">Home Services</div>
-      <div style="width:38px;"></div>
+      <button class="header-icon" onclick="openAddServiceModal()" style="border:none; background:none; font-size: 22px; color: var(--secondary-orange); margin-right: 8px; cursor:pointer; display:flex; align-items:center;" title="Add Your Service">
+        <i class="bx bx-plus-circle"></i>
+      </button>
     </header>
 
     <div class="app-content">
       
       <!-- Left Column (Services List) -->
-      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:12px;">
+        <!-- Search bar -->
+        <div style="position: relative; margin-bottom: 4px;">
+          <i class="bx bx-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px;"></i>
+          <input type="text" id="service-search-input" placeholder="Search by name, category, city, provider..." oninput="triggerSearch()" style="width: 100%; padding: 10px 12px 10px 36px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; outline: none; transition: border-color 0.2s; box-sizing: border-box;">
+        </div>
+
         <!-- Category scrolling pills -->
-        <div class="horizontal-scroll" style="margin-bottom: 8px; padding-bottom: 4px;">
+        <div class="horizontal-scroll" style="margin-bottom: 4px; padding-bottom: 4px;">
           <div class="category-pill active" onclick="loadServicesFiltered('all', this)">All</div>
           <div class="category-pill" onclick="loadServicesFiltered('painter', this)">Painters</div>
           <div class="category-pill" onclick="loadServicesFiltered('electrician', this)">Electricians</div>
           <div class="category-pill" onclick="loadServicesFiltered('packers', this)">Packers & Movers</div>
           <div class="category-pill" onclick="loadServicesFiltered('cleaning', this)">Deep Cleaners</div>
           <div class="category-pill" onclick="loadServicesFiltered('gardening', this)">Gardeners</div>
+          <div class="category-pill" onclick="loadServicesFiltered('plumber', this)">Plumbers</div>
+          <div class="category-pill" onclick="loadServicesFiltered('contractor', this)">Contractors</div>
         </div>
 
         <!-- Services Directory Container -->
@@ -135,73 +225,359 @@
       </a>
     </div>
 
+    <!-- Add Service Modal -->
+    <div class="service-modal-overlay" id="service-modal-overlay" onclick="if(event.target === this) closeAddServiceModal();">
+      <div class="service-modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:12px; margin-bottom:16px;">
+          <h2 style="font-size:16px; font-weight:800; margin:0; color:var(--text-dark);">Post Your Service</h2>
+          <button onclick="closeAddServiceModal()" style="border:none; background:none; font-size:20px; color:var(--text-muted); cursor:pointer;"><i class="bx bx-x"></i></button>
+        </div>
+
+        <form id="post-service-form" onsubmit="submitUserNewService(event)" style="display:flex; flex-direction:column; gap:2px;">
+          <!-- Title -->
+          <div class="service-form-group">
+            <label>Service Title *</label>
+            <input type="text" id="svc-post-title" placeholder="e.g. Professional Home Painter" required>
+            <div class="service-form-error" id="svc-post-title-err"></div>
+          </div>
+
+          <!-- Category -->
+          <div class="service-form-group">
+            <label>Service Category *</label>
+            <select id="svc-post-category" required>
+              <option value="">Select Category</option>
+              <option value="painter">Painter</option>
+              <option value="electrician">Electrician</option>
+              <option value="plumber">Plumber</option>
+              <option value="packers">Packers & Movers</option>
+              <option value="cleaning">Deep Cleaner</option>
+              <option value="gardening">Gardener</option>
+              <option value="contractor">Contractor / Builder</option>
+              <option value="vastu">Vastu Consultant</option>
+              <option value="architecture">Architect</option>
+              <option value="interior">Interior Designer</option>
+            </select>
+            <div class="service-form-error" id="svc-post-category-err"></div>
+          </div>
+
+          <!-- Description -->
+          <div class="service-form-group">
+            <label>Service Description *</label>
+            <textarea id="svc-post-description" rows="3" placeholder="Describe the services you offer..." required></textarea>
+            <div class="service-form-error" id="svc-post-description-err"></div>
+          </div>
+
+          <!-- Mobile -->
+          <div class="service-form-group">
+            <label>Mobile Number (Indian 10-digit) *</label>
+            <input type="tel" id="svc-post-mobile" placeholder="e.g. 9919014220" maxlength="10" required oninput="syncWhatsappDefault(this.value)">
+            <div class="service-form-error" id="svc-post-mobile-err"></div>
+          </div>
+
+          <!-- WhatsApp -->
+          <div class="service-form-group">
+            <label>WhatsApp Number</label>
+            <input type="tel" id="svc-post-whatsapp" placeholder="e.g. 9919014220" maxlength="10">
+            <div class="service-form-error" id="svc-post-whatsapp-err"></div>
+          </div>
+
+          <!-- City -->
+          <div class="service-form-group">
+            <label>Service Area / City *</label>
+            <input type="text" id="svc-post-city" placeholder="e.g. Lucknow" required>
+            <div class="service-form-error" id="svc-post-city-err"></div>
+          </div>
+
+          <!-- Address -->
+          <div class="service-form-group">
+            <label>Address (Optional)</label>
+            <input type="text" id="svc-post-address" placeholder="e.g. Aliganj, Lucknow">
+          </div>
+
+          <!-- Experience -->
+          <div class="service-form-group">
+            <label>Experience (Optional)</label>
+            <input type="text" id="svc-post-experience" placeholder="e.g. 5 Years">
+          </div>
+
+          <!-- Price -->
+          <div class="service-form-group">
+            <label>Starting Price (Optional, ₹)</label>
+            <input type="number" id="svc-post-price" placeholder="e.g. 499">
+          </div>
+
+          <!-- Image -->
+          <div class="service-form-group">
+            <label>Service Image / Logo URL (Optional)</label>
+            <input type="url" id="svc-post-image" placeholder="e.g. https://images.unsplash.com/photo-...">
+          </div>
+
+          <!-- Available Days -->
+          <div class="service-form-group">
+            <label>Available Days (Optional)</label>
+            <input type="text" id="svc-post-days" placeholder="e.g. Mon - Sat, 9 AM - 7 PM">
+          </div>
+
+          <button type="submit" class="btn-primary" id="svc-post-submit-btn" style="padding:12px; border-radius:12px; font-weight:700; border:none; color:white; cursor:pointer; width:100%; margin-top:8px;">Submit Service</button>
+        </form>
+      </div>
+    </div>
+
   </div>
 
-  <script src="/js/main.v142.js"></script>
+  <script src="/js/main.v143.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    let currentCategory = 'all';
+    let currentSearchQuery = '';
+    let searchDebounceTimer = null;
+    let isWhatsappManuallyEdited = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Initial Load of services
       loadServicesFiltered('all');
+
+      // 2. Auto-fill logic check: Get current user details if available
+      try {
+        const user = await window.getAuth();
+        if (user && user.phone) {
+          const mobileField = document.getElementById('svc-post-mobile');
+          if (mobileField) {
+            mobileField.value = user.phone;
+            syncWhatsappDefault(user.phone);
+          }
+        }
+      } catch (err) {
+        console.warn('Authentication load skipped: ', err.message);
+      }
+
+      // 3. Handle action parameter ?action=add to open modal automatically
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('action') === 'add') {
+        openAddServiceModal();
+      }
     });
 
-    // Load directory from API
+    // Handle trigger search with simple input debouncing
+    function triggerSearch() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        currentSearchQuery = document.getElementById('service-search-input').value.trim();
+        loadServicesFiltered(currentCategory);
+      }, 300);
+    }
+
+    // Modal Control: Open
+    function openAddServiceModal() {
+      document.getElementById('service-modal-overlay').classList.add('active');
+    }
+
+    // Modal Control: Close
+    function closeAddServiceModal() {
+      document.getElementById('service-modal-overlay').classList.remove('active');
+      document.getElementById('post-service-form').reset();
+      clearFormErrors();
+    }
+
+    // Clear validation error highlights
+    function clearFormErrors() {
+      document.querySelectorAll('.service-form-error').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('show');
+      });
+      document.querySelectorAll('#post-service-form input, #post-service-form select, #post-service-form textarea').forEach(el => {
+        el.classList.remove('field-error');
+      });
+    }
+
+    // Auto-fill WhatsApp number with Mobile Number unless edited by user
+    function syncWhatsappDefault(val) {
+      const whatsappField = document.getElementById('svc-post-whatsapp');
+      if (whatsappField && !isWhatsappManuallyEdited) {
+        whatsappField.value = val;
+      }
+    }
+
+    // Check if user manually changed WhatsApp
+    document.getElementById('svc-post-whatsapp').addEventListener('input', () => {
+      isWhatsappManuallyEdited = true;
+    });
+
+    // Load marketplace services from API
     async function loadServicesFiltered(cat, pill = null) {
       if (pill) {
         document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
       }
+      currentCategory = cat;
 
       const container = document.getElementById('services-results-list');
       container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:32px;">Loading providers...</p>';
 
-      const url = cat === 'all' ? '/api/services' : `/api/services?category=${cat}`;
+      let url = `/api/services?category=${cat}`;
+      if (currentSearchQuery) {
+        url += `&search=${encodeURIComponent(currentSearchQuery)}`;
+      }
 
       try {
         const result = await apiRequest(url);
         if (result.success) {
           container.innerHTML = '';
           if (result.data.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:32px;">No service providers listed in this category.</p>';
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:32px;">No approved service providers found matching your criteria.</p>';
             return;
           }
 
           result.data.forEach(s => {
-            const safeCategory = window.SafeRender.safeText(s.category, 'service');
-            const safeContact = window.SafeRender.safeText(s.contact_number, '');
-            const safeName = window.SafeRender.safeText(s.name, 'Verified Provider');
-            const safeDesc = window.SafeRender.safeText(s.description, 'No description available.');
+            const name = window.SafeRender.safeText(s.name, 'Service Provider');
+            const provider = window.SafeRender.safeText(s.provider_name || s.user_name, 'Verified Provider');
+            const category = window.SafeRender.safeText(s.category, 'service');
+            const desc = window.SafeRender.safeText(s.description, 'No description available.');
+            const city = window.SafeRender.safeText(s.city, 'Lucknow');
+            const exp = s.experience ? window.SafeRender.safeText(s.experience, '') : '';
+            const price = s.starting_price ? `Starting Price: ₹${s.starting_price}` : '';
+            const image = s.image_url ? window.SafeRender.safeImageUrl(s.image_url) : '';
 
-            let icon = 'bx-wrench';
-            if (safeCategory === 'painter') icon = 'bx-paint';
-            if (safeCategory === 'electrician') icon = 'bx-bolt';
-            if (safeCategory === 'packers') icon = 'bx-package';
-            if (safeCategory === 'cleaning') icon = 'bx-brush';
+            // Clean numbers to prevent format breaks
+            const phoneVal = (s.mobile_number || '').replace(/[^0-9+]/g, '');
+            const waVal = (s.whatsapp_number || s.mobile_number || '').replace(/[^0-9+]/g, '');
+
+            const waText = encodeURIComponent(`Hi,\nI found your service on HouseRenter.in.\nI am interested in your service.\nPlease share more details.`);
+            const whatsappUrl = `https://wa.me/${waVal.replace('+', '')}?text=${waText}`;
+
+            let iconHtml = '';
+            if (image) {
+              iconHtml = `<img src="${image}" alt="${name}" style="width:48px; height:48px; border-radius:12px; object-fit:cover; border: 1px solid var(--border-color);">`;
+            } else {
+              let icon = 'bx-wrench';
+              if (category === 'painter') icon = 'bx-paint';
+              else if (category === 'electrician') icon = 'bx-bolt';
+              else if (category === 'plumber') icon = 'bx-water';
+              else if (category === 'packers') icon = 'bx-package';
+              else if (category === 'cleaning') icon = 'bx-brush';
+              else if (category === 'gardening') icon = 'bx-spa';
+              else if (category === 'contractor') icon = 'bx-buildings';
+              iconHtml = `<div class="service-card-icon" style="margin-bottom:0; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:22px;"><i class="bx ${icon}"></i></div>`;
+            }
 
             const card = document.createElement('div');
             card.className = 'service-listing-card';
             card.innerHTML = `
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div style="display:flex; gap:12px;">
-                  <div class="service-card-icon" style="margin-bottom:0;"><i class="bx ${icon}"></i></div>
+                <div style="display:flex; gap:12px; align-items:center;">
+                  ${iconHtml}
                   <div>
-                    <h4 style="font-size:14px; font-weight:700;">${safeName}</h4>
-                    <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Category: ${safeCategory.toUpperCase()} • ${window.SafeRender.safeText(s.experience_years, '0')} Years Exp</p>
+                    <h4 style="font-size:14px; font-weight:800; color:var(--text-dark); margin:0;">${name}</h4>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">By: ${provider} • ${city}</p>
                   </div>
                 </div>
-                <span style="background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:11px; font-weight:700; padding:2px 6px; border-radius:6px;">${window.SafeRender.safeText(s.ratings, '5.0')}★ (${window.SafeRender.safeText(s.reviews_count, '0')})</span>
+                <span style="background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; text-transform:uppercase;">${category}</span>
               </div>
-              <p style="font-size:12px; color:var(--text-dark); line-height:1.5;">${safeDesc}</p>
+              <p style="font-size:12px; color:var(--text-dark); line-height:1.5; margin:0;">${desc}</p>
               
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted); border-top:1px solid #f1f5f9; padding-top:8px;">
+                <span>${exp ? `Experience: ${exp}` : ''}</span>
+                <span style="font-weight:700; color:var(--text-dark);">${price}</span>
+              </div>
+
               <!-- Direct Actions -->
               <div class="service-row-actions">
-                <a href="${safeContact ? 'tel:' + safeContact : '#'}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;"><i class="bx bx-phone"></i> Call Now</a>
-                <a href="https://wa.me/${safeContact.replace('+', '')}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px;" target="_blank"><i class="bx bxl-whatsapp"></i> Chat WhatsApp</a>
+                <a href="${phoneVal ? 'tel:' + phoneVal : '#'}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px; border-radius:8px;"><i class="bx bx-phone"></i> Call</a>
+                <a href="${whatsappUrl}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px; border-radius:8px;" target="_blank"><i class="bx bxl-whatsapp"></i> WhatsApp</a>
               </div>
             `;
             container.appendChild(card);
           });
         }
       } catch (err) {
-        container.innerHTML = `<p style="color:var(--primary-red); text-align:center;">Error: ${err.message}</p>`;
+        container.innerHTML = `<p style="color:var(--primary-red); text-align:center; padding:16px;">Error: ${err.message}</p>`;
+      }
+    }
+
+    // Submit user form
+    async function submitUserNewService(e) {
+      e.preventDefault();
+      clearFormErrors();
+
+      const title = document.getElementById('svc-post-title').value.trim();
+      const category = document.getElementById('svc-post-category').value;
+      const description = document.getElementById('svc-post-description').value.trim();
+      const mobile = document.getElementById('svc-post-mobile').value.trim();
+      const whatsapp = document.getElementById('svc-post-whatsapp').value.trim() || mobile;
+      const city = document.getElementById('svc-post-city').value.trim();
+      const address = document.getElementById('svc-post-address').value.trim();
+      const experience = document.getElementById('svc-post-experience').value.trim();
+      const price = document.getElementById('svc-post-price').value.trim();
+      const image = document.getElementById('svc-post-image').value.trim();
+      const days = document.getElementById('svc-post-days').value.trim();
+
+      // Client validation
+      let hasError = false;
+
+      if (!title) {
+        showFieldError('svc-post-title', 'Service Title is required.');
+        hasError = true;
+      }
+      if (!category) {
+        showFieldError('svc-post-category', 'Please select a Category.');
+        hasError = true;
+      }
+      if (!description) {
+        showFieldError('svc-post-description', 'Service Description is required.');
+        hasError = true;
+      }
+      if (!/^[6-9]\d{9}$/.test(mobile)) {
+        showFieldError('svc-post-mobile', 'Valid 10-digit Indian mobile number required.');
+        hasError = true;
+      }
+      if (!city) {
+        showFieldError('svc-post-city', 'Service Area / City is required.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const submitBtn = document.getElementById('svc-post-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const payload = {
+          name: title,
+          category,
+          description,
+          mobile_number: mobile,
+          whatsapp_number: whatsapp,
+          city,
+          address,
+          experience,
+          starting_price: price,
+          image_url: image,
+          available_days: days
+        };
+
+        const res = await apiRequest('/api/services', 'POST', payload);
+        if (res.success) {
+          alert(res.message || 'Service submitted successfully! Pending admin approval.');
+          closeAddServiceModal();
+          // Reload approved listings
+          loadServicesFiltered(currentCategory);
+        }
+      } catch (err) {
+        alert(err.message || 'Submission failed. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Service';
+      }
+    }
+
+    function showFieldError(fieldId, errorText) {
+      const input = document.getElementById(fieldId);
+      const errDiv = document.getElementById(`${fieldId}-err`);
+      if (input) input.classList.add('field-error');
+      if (errDiv) {
+        errDiv.textContent = errorText;
+        errDiv.classList.add('show');
+      }
     }
 
     async function handleAssistSubmit(e) {

@@ -127,8 +127,8 @@ const mockDb = {
   reel_likes: [],
   reel_comments: [],
   services: [
-    { id: 1, name: 'Raj Paint Services', category: 'painter', contact_number: '+919876543210', experience_years: 8, ratings: 4.8, reviews_count: 120, description: 'Premium wall painting, texture finish, and waterproofing services.', image_url: '/uploads/services/paint.webp' },
-    { id: 2, name: 'Suresh Wireman', category: 'electrician', contact_number: '+919876543211', experience_years: 5, ratings: 4.6, reviews_count: 85, description: 'Residential wiring, switchboard installation, and electric repairs.', image_url: '/uploads/services/electric.webp' }
+    { id: 1, name: 'Raj Paint Services', category: 'painter', contact_number: '+919876543210', mobile_number: '+919876543210', whatsapp_number: '+919876543210', experience: '8 Years', ratings: 4.8, reviews_count: 120, description: 'Premium wall painting, texture finish, and waterproofing services.', image_url: '/uploads/services/paint.webp', city: 'Lucknow', status: 'approved', provider_name: 'Raj Kumar', created_at: new Date() },
+    { id: 2, name: 'Suresh Wireman', category: 'electrician', contact_number: '+919876543211', mobile_number: '+919876543211', whatsapp_number: '+919876543211', experience: '5 Years', ratings: 4.6, reviews_count: 85, description: 'Residential wiring, switchboard installation, and electric repairs.', image_url: '/uploads/services/electric.webp', city: 'Lucknow', status: 'approved', provider_name: 'Suresh Soni', created_at: new Date() }
   ],
   blogs: [
     { id: 1, title: 'Real Estate Trends in India (2026)', slug: 'real-estate-trends-2026', content: 'Real estate in India is scaling higher. With digital processes and smart home requirements, buyers are shifting towards luxury yet affordable properties.', category: 'Market Trends', author_name: 'Manoj Soni', image_url: '/uploads/blogs/trends.webp', views_count: 104, created_at: new Date() }
@@ -713,14 +713,7 @@ async function executeMock(sql, params = []) {
     }
   }
 
-  // 8. SERVICES
-  if (normalizedSql.includes('services') && !normalizedSql.includes('home_services')) {
-    if (normalizedSql.includes('category = ?')) {
-      const cat = params[0];
-      return [mockDb.services.filter(s => s.category === cat)];
-    }
-    return [mockDb.services];
-  }
+  // 8. SERVICES (Consolidated in the main services block below)
 
   // 9. BLOGS
   if (normalizedSql.includes('blogs')) {
@@ -936,17 +929,37 @@ async function executeMock(sql, params = []) {
   }
 
   // B. SERVICES CRUD
-  if (normalizedSql.includes('home_services') || normalizedSql.includes('from home_services')) {
+  if (normalizedSql.includes('home_services') || normalizedSql.includes('from home_services') || (normalizedSql.includes('services') && !normalizedSql.includes('reels'))) {
     if (normalizedSql.startsWith('select')) {
+      // Return filtered services if category is specified in parameters
+      if (normalizedSql.includes('category = ?')) {
+        const cat = params[0];
+        return [mockDb.services.filter(s => s.category === cat)];
+      }
       return [mockDb.services];
     }
     if (normalizedSql.startsWith('insert')) {
+      // Parameter ordering based on adminController createService or user apply route
+      // For general parameters support:
       const newSvc = {
         id: mockDb.services.length + 1,
-        name: params[0],
-        icon: params[1] || '🔧',
-        description: params[2] || '',
-        is_active: params[3] || 1
+        user_id: params[0] || null,
+        provider_name: params[1] || 'Guest',
+        name: params[2] || '',
+        category: params[3] || 'other',
+        description: params[4] || '',
+        mobile_number: params[5] || '',
+        whatsapp_number: params[6] || params[5] || '',
+        city: params[7] || 'Lucknow',
+        address: params[8] || null,
+        experience: params[9] || null,
+        starting_price: params[10] || null,
+        image_url: params[11] || null,
+        available_days: params[12] || null,
+        status: params[13] || 'pending',
+        sort_order: params[14] || 0,
+        contact_number: params[5] || '', // back compat
+        created_at: new Date()
       };
       mockDb.services.push(newSvc);
       return [{ insertId: newSvc.id }];
@@ -955,10 +968,25 @@ async function executeMock(sql, params = []) {
       const sid = parseInt(params[params.length - 1]);
       const svc = mockDb.services.find(s => s.id === sid);
       if (svc) {
-        svc.name = params[0];
-        svc.icon = params[1];
-        svc.description = params[2];
-        svc.is_active = params[3];
+        if (normalizedSql.includes('status = ?') && params.length === 2) {
+          svc.status = params[0];
+        } else {
+          svc.provider_name = params[1] || svc.provider_name;
+          svc.name = params[2] || svc.name;
+          svc.category = params[3] || svc.category;
+          svc.description = params[4] || svc.description;
+          svc.mobile_number = params[5] || svc.mobile_number;
+          svc.whatsapp_number = params[6] || svc.whatsapp_number;
+          svc.city = params[7] || svc.city;
+          svc.address = params[8] || svc.address;
+          svc.experience = params[9] || svc.experience;
+          svc.starting_price = params[10] || svc.starting_price;
+          svc.image_url = params[11] || svc.image_url;
+          svc.available_days = params[12] || svc.available_days;
+          svc.status = params[13] || svc.status;
+          svc.sort_order = params[14] || svc.sort_order;
+          svc.contact_number = svc.mobile_number;
+        }
       }
       return [{ affectedRows: svc ? 1 : 0 }];
     }

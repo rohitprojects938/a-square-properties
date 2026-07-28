@@ -377,12 +377,72 @@
         <section class="adm-section" id="sec-services">
           <div class="adm-section-header">
             <div>
-              <h2>Verified Home Services</h2>
-              <p>Manage painters, cleaning services, interior designers and carpenters list.</p>
+              <h2>Home Services Marketplace</h2>
+              <p>Moderate user submissions, search, filter, approve, reject, or manually create new services.</p>
             </div>
-            <button class="adm-btn adm-btn-primary" onclick="openAddServiceModal()"><i data-lucide="plus"></i> Add Service Category</button>
+            <button class="adm-btn adm-btn-primary" onclick="openAddServiceModal()"><i data-lucide="plus"></i> Add New Service</button>
           </div>
-          <div class="adm-service-grid" id="services-manager-grid"></div>
+
+          <!-- Filters & Search -->
+          <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; align-items:center;">
+            <input type="text" id="adm-service-search" class="adm-form-input" style="max-width:240px;" placeholder="Search name, provider, city..." oninput="loadServicesManager()">
+            
+            <select id="adm-service-filter-status" class="adm-form-select" style="max-width:160px;" onchange="loadServicesManager()">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending Approval</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="suspended">Suspended</option>
+            </select>
+
+            <select id="adm-service-filter-category" class="adm-form-select" style="max-width:160px;" onchange="loadServicesManager()">
+              <option value="">All Categories</option>
+              <option value="painter">Painter</option>
+              <option value="electrician">Electrician</option>
+              <option value="plumber">Plumber</option>
+              <option value="packers">Packers & Movers</option>
+              <option value="cleaning">Deep Cleaner</option>
+              <option value="gardening">Gardener</option>
+              <option value="contractor">Contractor / Builder</option>
+              <option value="vastu">Vastu Consultant</option>
+              <option value="architecture">Architect</option>
+              <option value="interior">Interior Designer</option>
+            </select>
+          </div>
+
+          <!-- Services Table -->
+          <div class="adm-table-container">
+            <table class="adm-table" id="services-table-data">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Service Title</th>
+                  <th>Provider</th>
+                  <th>Category</th>
+                  <th>City</th>
+                  <th>Mobile</th>
+                  <th>WhatsApp</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="services-manager-table-body">
+                <tr>
+                  <td colspan="10" style="text-align:center; padding:24px; color:var(--adm-muted);">Loading services...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;" id="adm-service-pagination">
+            <span style="font-size:12px; color:var(--adm-muted);" id="adm-service-pagination-text">Showing 0 services</span>
+            <div style="display:flex; gap:8px;">
+              <button class="adm-btn adm-btn-ghost adm-btn-sm" id="adm-service-prev-btn" onclick="prevServicePage()"><i data-lucide="chevron-left"></i> Previous</button>
+              <button class="adm-btn adm-btn-ghost adm-btn-sm" id="adm-service-next-btn" onclick="nextServicePage()">Next <i data-lucide="chevron-right"></i></button>
+            </div>
+          </div>
         </section>
 
         <!-- Customer Reviews Moderation Section -->
@@ -835,20 +895,67 @@
       </div>
       <form id="service-form" onsubmit="saveAdminService(event)">
         <div class="adm-form-group">
-          <label class="adm-form-label">Service Name</label>
-          <input type="text" id="service-name" class="adm-form-input" placeholder="e.g. Electrician Service" required>
+          <label class="adm-form-label">Service Title (Name) *</label>
+          <input type="text" id="service-name" class="adm-form-input" placeholder="e.g. Premium Home Painters" required>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Provider Name *</label>
+            <input type="text" id="service-provider" class="adm-form-input" placeholder="e.g. Ramesh Kumar" required>
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Category *</label>
+            <select id="service-category" class="adm-form-select" required>
+              <option value="painter">Painter</option>
+              <option value="electrician">Electrician</option>
+              <option value="plumber">Plumber</option>
+              <option value="packers">Packers & Movers</option>
+              <option value="cleaning">Deep Cleaner</option>
+              <option value="gardening">Gardener</option>
+              <option value="contractor">Contractor / Builder</option>
+              <option value="vastu">Vastu Consultant</option>
+              <option value="architecture">Architect</option>
+              <option value="interior">Interior Designer</option>
+            </select>
+          </div>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Mobile Number *</label>
+            <input type="text" id="service-mobile" class="adm-form-input" placeholder="e.g. +919919014220" required>
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">WhatsApp Number</label>
+            <input type="text" id="service-whatsapp" class="adm-form-input" placeholder="e.g. +919919014220">
+          </div>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">City *</label>
+            <input type="text" id="service-city" class="adm-form-input" placeholder="e.g. Lucknow" required>
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Address (Optional)</label>
+            <input type="text" id="service-address" class="adm-form-input" placeholder="e.g. Hazratganj">
+          </div>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Experience (Optional)</label>
+            <input type="text" id="service-experience" class="adm-form-input" placeholder="e.g. 5 Years">
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Starting Price (Optional, ₹)</label>
+            <input type="number" id="service-price" class="adm-form-input" placeholder="e.g. 999">
+          </div>
         </div>
         <div class="adm-form-group">
-          <label class="adm-form-label">Icon / Emoji</label>
-          <input type="text" id="service-icon" class="adm-form-input" placeholder="e.g. ⚡ or 🏗️" required>
+          <label class="adm-form-label">Service Image / Logo URL (Optional)</label>
+          <input type="url" id="service-image" class="adm-form-input" placeholder="e.g. https://images.unsplash.com/...">
         </div>
         <div class="adm-form-group">
-          <label class="adm-form-label">WhatsApp Business Number (with country code)</label>
-          <input type="text" id="service-whatsapp" class="adm-form-input" placeholder="e.g. +919919014220" required>
-        </div>
-        <div class="adm-form-group">
-          <label class="adm-form-label">Description (Optional)</label>
-          <textarea id="service-description" class="adm-form-textarea" placeholder="Describe this service category..."></textarea>
+          <label class="adm-form-label">Available Days / Time (Optional)</label>
+          <input type="text" id="service-days" class="adm-form-input" placeholder="e.g. Mon - Sat, 9 AM - 6 PM">
         </div>
         <div class="adm-form-row">
           <div class="adm-form-group">
@@ -858,8 +965,10 @@
           <div class="adm-form-group">
             <label class="adm-form-label">Status</label>
             <select id="service-status" class="adm-form-select">
-              <option value="1">Active</option>
-              <option value="0">Disabled</option>
+              <option value="pending">Pending Approval</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="suspended">Suspended</option>
             </select>
           </div>
         </div>
@@ -896,8 +1005,8 @@
     <div class="adm-toast-msg" id="adm-toast-msg">Successfully performed.</div>
   </div>
 
-  <script src="/js/main.v127.js"></script>
-  <script src="/js/admin.v142.js"></script>
+  <script src="/js/main.v143.js"></script>
+  <script src="/js/admin.v143.js"></script>
   <script>
     // Initialize Lucide Icons initially
     lucide.createIcons();

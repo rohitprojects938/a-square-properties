@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v142.css">
+  <link rel="stylesheet" href="/css/style.v143.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -657,6 +657,12 @@
         </div>
 
         <!-- 5. Services (Direct service cards, no heading) -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; margin-top:8px;">
+          <span style="font-size:15px; font-weight:800; color:var(--text-dark); font-family:'Outfit',sans-serif;">Home Services</span>
+          <a href="/marketplace.html?action=add" style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:var(--secondary-orange); text-decoration:none; font-family:'Outfit',sans-serif; padding:6px 10px; border-radius:8px; background:rgba(255,106,0,0.08); transition:opacity 0.2s;">
+            <i class="bx bx-plus" style="font-size:14px; font-weight:bold;"></i> Add Your Service
+          </a>
+        </div>
         <div class="services-grid" id="services-grid-container" style="margin-bottom: 20px;">
           <!-- Loaded dynamically -->
         </div>
@@ -955,7 +961,7 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v142.js"></script>
+  <script src="/js/main.v143.js"></script>
   <script>
 
     // Greet user dynamically
@@ -1558,7 +1564,18 @@ I am interested in your service.
 Please share more details.`;
             const msg = encodeURIComponent(messageText);
             const whatsappUrl = `https://wa.me/${cleanNumber}?text=${msg}`;
-            const icon = s.icon || '🔧';
+            let icon = s.icon;
+            if (!icon) {
+              const cat = (s.category || '').toLowerCase();
+              if (cat === 'electrician') icon = '⚡';
+              else if (cat === 'painter') icon = '🎨';
+              else if (cat === 'plumber') icon = '🪠';
+              else if (cat === 'cleaning') icon = '🧹';
+              else if (cat === 'gardening') icon = '🌱';
+              else if (cat === 'packers' || cat === 'movers') icon = '📦';
+              else if (cat === 'contractor') icon = '🏗️';
+              else icon = '🔧';
+            }
             return `
               <a href="${whatsappUrl}" target="_blank" class="service-card-new">
                 <div class="service-card-icon-new">${icon}</div>

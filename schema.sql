@@ -324,12 +324,24 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
 -- 22. Home Services Table (Unified list)
 CREATE TABLE IF NOT EXISTS home_services (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT DEFAULT NULL,
+    provider_name VARCHAR(255) DEFAULT NULL,
     name VARCHAR(255) NOT NULL,
-    icon VARCHAR(50) DEFAULT '🔧',
-    description TEXT,
-    is_active TINYINT DEFAULT 1,
+    category VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    mobile_number VARCHAR(20) NOT NULL,
+    whatsapp_number VARCHAR(20) DEFAULT NULL,
+    city VARCHAR(100) NOT NULL,
+    address TEXT DEFAULT NULL,
+    experience VARCHAR(100) DEFAULT NULL,
+    starting_price DECIMAL(10, 2) DEFAULT NULL,
+    image_url VARCHAR(255) DEFAULT NULL,
+    available_days VARCHAR(255) DEFAULT NULL,
+    status ENUM('pending', 'approved', 'rejected', 'suspended') DEFAULT 'pending',
+    sort_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- 23. Audit Logs Table
