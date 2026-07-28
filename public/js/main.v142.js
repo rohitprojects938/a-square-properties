@@ -223,9 +223,17 @@ function injectStandardFooter() {
     footer.style.color = 'var(--text-muted)';
     footer.style.fontFamily = "'Outfit', sans-serif";
 
+    const isAbout = currentPath.includes('about');
+    const line1 = isAbout 
+      ? 'Houserenter.in – Your Trusted Partner for Renting, Buying & Selling Properties.'
+      : 'Copyright © Houserenter.in 2026';
+    const line2 = isAbout
+      ? 'WebApp built by ~ '
+      : 'WebApp Built by ~ ';
+
     footer.innerHTML = `
-      <div style="font-size: 12px; margin-bottom: 4px;">Copyright © Houserenter.in 2026</div>
-      <div style="font-size: 11px;">WebApp Built by ~ <a href="https://roitsa.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary-red); text-decoration: none; font-weight: 700; transition: opacity 0.2s;">roitsa.in</a></div>
+      <div style="font-size: 12px; margin-bottom: 4px;">${line1}</div>
+      <div style="font-size: 11px;">${line2}<a href="https://roitsa.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary-red); text-decoration: none; font-weight: 700; transition: opacity 0.2s;">roitsa.in</a></div>
     `;
     container.appendChild(footer);
   }
