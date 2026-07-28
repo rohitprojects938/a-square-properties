@@ -939,6 +939,7 @@
           <p>Create and share a short vertical property video</p>
         </div>
         <i class="bx bx-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </a>
     </div>
 
     <!-- Location Permission Bottom Sheet -->
@@ -1066,20 +1067,36 @@
       if (!container) return;
       container.innerHTML = '<p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading popular properties near you...</p>';
 
-      const cachedLocation = localStorage.getItem('user_location');
-      if (cachedLocation) {
-        try {
-          const loc = JSON.parse(cachedLocation);
-          // Query properties nearest to location (radius 10km, sorted by distance)
-          const result = await fetchSection({ lat: loc.lat, lng: loc.lng, radius: 10, sort: 'nearest' }, 8);
-          if (result.success && result.data && result.data.length > 0) {
-            renderPopularNearYou(result.data, true);
-            return;
+      const permission = localStorage.getItem('location_permission');
+      if (permission === 'granted') {
+        const cachedLocation = localStorage.getItem('user_location');
+        if (cachedLocation) {
+          try {
+            const loc = JSON.parse(cachedLocation);
+            // Query properties nearest to location (radius 10km, sorted by distance)
+            const result = await fetchSection({ lat: loc.lat, lng: loc.lng, radius: 10, sort: 'nearest' }, 8);
+            if (result.success && result.data && result.data.length > 0) {
+              renderPopularNearYou(result.data, true);
+              return;
+            } else {
+              container.innerHTML = '<p style="font-size:12px; color:var(--text-muted); padding:16px;">No nearby properties found.</p>';
+              setTimeout(async () => {
+                await loadPopularNearYouFallback();
+              }, 2000);
+              return;
+            }
+          } catch (e) {
+            console.warn('Geographic property fetch failed, falling back:', e.message);
           }
-        } catch (e) {
-          console.warn('Geographic property fetch failed, falling back:', e.message);
         }
       }
+
+      await loadPopularNearYouFallback();
+    }
+
+    async function loadPopularNearYouFallback() {
+      const container = document.getElementById('popular-near-you-list');
+      if (!container) return;
 
       // Fallback 1: Recently Added Properties (page 1, newest)
       try {
@@ -1868,21 +1885,23 @@ Please share more details.`;
       setupInfiniteScroll();
       loadDesktopWidgets(user);
 
-      // Delayed Location Permission Sheet Trigger (25 seconds after app startup)
-      setTimeout(() => {
-        const cachedLocation = localStorage.getItem('user_location');
-        if (cachedLocation) return; // Already allowed
+      // Check if user has already made a decision (either granted or denied)
+      const locationPermission = localStorage.getItem('location_permission');
+      
+      // If no decision has been made yet, schedule the location popup
+      if (!locationPermission) {
+        setTimeout(() => {
+          // Double check in case they granted it in the meantime manually
+          if (localStorage.getItem('location_permission')) return;
 
-        const dismissedUntil = localStorage.getItem('location_dismissed_until');
-        if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) return; // Postponed recently
-
-        const sheet = document.getElementById('location-sheet');
-        const overlay = document.getElementById('location-sheet-overlay');
-        if (sheet && overlay) {
-          sheet.classList.add('active');
-          overlay.classList.add('active');
-        }
-      }, 25000);
+          const sheet = document.getElementById('location-sheet');
+          const overlay = document.getElementById('location-sheet-overlay');
+          if (sheet && overlay) {
+            sheet.classList.add('active');
+            overlay.classList.add('active');
+          }
+        }, 25000);
+      }
 
       // Bind Location Sheet Event Listeners
       const btnAllowLocation = document.getElementById('btn-allow-location');
@@ -1899,15 +1918,24 @@ Please share more details.`;
         }
       }
 
-      function dismissLocationSheetFlow() {
+      function handleDenyLocation(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         closeLocationSheet();
-        // Maybe Later dismisses for 3 days to avoid repeatedly annoying the user
-        localStorage.setItem('location_dismissed_until', (Date.now() + 3 * 24 * 60 * 60 * 1000).toString());
+        localStorage.setItem('location_permission', 'denied');
+        // Fall back to Latest Properties immediately
+        loadPopularNearYouFallback();
       }
 
       if (btnAllowLocation) {
-        btnAllowLocation.addEventListener('click', () => {
+        btnAllowLocation.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           closeLocationSheet();
+          localStorage.setItem('location_permission', 'granted');
+          
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
               (position) => {
@@ -1922,17 +1950,29 @@ Please share more details.`;
               },
               (error) => {
                 console.warn('Geolocation access failed:', error.message);
+                loadPopularNearYouFallback();
               }
             );
           } else {
             console.warn('Geolocation not supported by browser.');
+            loadPopularNearYouFallback();
           }
         });
       }
 
-      if (btnMaybeLater) btnMaybeLater.addEventListener('click', dismissLocationSheetFlow);
-      if (locationSheetClose) locationSheetClose.addEventListener('click', dismissLocationSheetFlow);
-      if (locationSheetOverlay) locationSheetOverlay.addEventListener('click', dismissLocationSheetFlow);
+      if (btnMaybeLater) btnMaybeLater.addEventListener('click', handleDenyLocation);
+      if (locationSheetClose) locationSheetClose.addEventListener('click', handleDenyLocation);
+      if (locationSheetOverlay) locationSheetOverlay.addEventListener('click', handleDenyLocation);
+
+      // Expose manual location trigger function for Changing Location from settings/menus if needed
+      window.triggerLocationPermissionPrompt = function() {
+        const sheet = document.getElementById('location-sheet');
+        const overlay = document.getElementById('location-sheet-overlay');
+        if (sheet && overlay) {
+          sheet.classList.add('active');
+          overlay.classList.add('active');
+        }
+      };
     };
   </script>
 </body>
