@@ -518,188 +518,63 @@ body {
 }
 
 /* ================================================
-   HERO SECTION — True Full-Width Architecture
-   
-   DOM structure (inside app-content, which has padding:0):
-     .home-hero-section          — wrapper, full width, flex column
-       .hero-greeting-bar        — greeting text with horizontal padding
-       .home-hero-banner         — image container, relative, fixed height
-         .hero-bg-img            — absolute fill image, object-fit:cover
-         .hero-bottom-gradient   — subtle bottom gradient overlay
-         .hero-search-bar        — absolute bottom-left search pill
-           .hero-search-inner    — icon + input flex row
-             .hero-search-icon   — bx bx-search icon
-             .hero-search-input  — text input (isolated class, no globals)
-           .hero-search-btn      — orange search button
+   HERO SECTION — Converted to Banner Card Layout
+   Matches the structure and card style of the Offers banner.
    ================================================ */
 
-/* Outer wrapper — occupies full width of app-content (padding:0) */
 .home-hero-section {
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-bottom: 16px;
 }
 
-/* Greeting bar — sits above image with its own horizontal padding */
 .hero-greeting-bar {
-  padding: 12px 16px 8px;
+  padding: 12px 16px 8px 16px;
 }
+
 .hero-greeting-text {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-dark);
   letter-spacing: -0.2px;
   display: block;
 }
 
-/* Banner — relative container, full width naturally */
-.home-hero-banner {
-  position: relative;
+.home-hero-container {
   width: 100%;
-  height: 230px;           /* Mobile: comfortable, not cramped */
+  position: relative;
   overflow: hidden;
-  background: #1c2032;     /* fallback while image loads */
-  flex-shrink: 0;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  background: var(--accent-gray);
 }
 
-/* Hero image — absolute fill, no zoom animation (clean, natural) */
-.home-hero-banner .hero-bg-img {
-  position: absolute;
-  inset: 0;                /* top:0; right:0; bottom:0; left:0 */
+.home-hero-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
+  height: auto;
   display: block;
-  z-index: 0;
-}
-
-/* Subtle bottom gradient — only for search bar contrast */
-.home-hero-banner .hero-bottom-gradient {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 55%;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0, 0, 0, 0.38) 100%
-  );
-  z-index: 1;
+  border-radius: var(--border-radius);
   pointer-events: none;
 }
 
-/* Search bar — bottom-left, floating glass pill */
-.hero-search-bar {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  z-index: 2;
-  width: min(420px, 85%);   /* responsive, never fixed % */
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 32px;
-  padding: 6px 6px 6px 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20);
-  box-sizing: border-box;
-  transition: box-shadow 0.2s ease;
-}
-.hero-search-bar:focus-within {
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
-}
-
-/* Search icon + input wrapper */
-.hero-search-inner {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-/* Search icon */
-.hero-search-icon {
-  position: absolute;
-  left: 0;
-  font-size: 16px;
-  color: #666;
-  pointer-events: none;
-  z-index: 1;
-  line-height: 1;
-}
-
-/* Input — uses unique class hero-search-input, zero conflict with global .search-input */
-.hero-search-input {
-  width: 100%;
-  height: 34px;
-  padding: 0 6px 0 24px;
-  font-size: 13px;
-  font-family: inherit;
-  color: #111;
-  background: transparent;
-  border: none;
-  outline: none;
-  border-radius: 0;
-  box-shadow: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  -webkit-appearance: none;
-  appearance: none;
-}
-.hero-search-input::placeholder {
-  color: #999;
-  font-size: 12.5px;
-}
-
-/* Orange search button */
-.hero-search-btn {
-  flex-shrink: 0;
-  height: 34px;
-  padding: 0 16px;
-  background: var(--secondary-orange);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: inherit;
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.30);
-  transition: background 0.18s ease;
-  line-height: 34px;
-}
-.hero-search-btn:hover  { background: #ff7f1a; }
-.hero-search-btn:active { transform: scale(0.96); }
-
-/* =====================
-   TABLET  (768px+)
-   ===================== */
 @media (min-width: 768px) {
-  .hero-greeting-bar    { padding: 16px 24px 10px; }
-  .hero-greeting-text   { font-size: 18px; }
-  .home-hero-banner     { height: 300px; }
-  .hero-search-bar      { left: 24px; bottom: 20px; gap: 8px; padding: 7px 7px 7px 18px; }
-  .hero-search-input    { height: 36px; font-size: 13.5px; padding: 0 6px 0 26px; }
-  .hero-search-icon     { font-size: 18px; }
-  .hero-search-btn      { height: 36px; line-height: 36px; padding: 0 20px; font-size: 13.5px; }
+  .hero-greeting-bar {
+    padding: 16px 24px 8px 24px;
+  }
+  .hero-greeting-text {
+    font-size: 20px;
+  }
 }
 
-/* =====================
-   DESKTOP (1024px+)
-   ===================== */
 @media (min-width: 1024px) {
-  .hero-greeting-bar    { padding: 20px 32px 12px; }
-  .hero-greeting-text   { font-size: 20px; }
-  .home-hero-banner     { height: 420px; }
-  .hero-search-bar      { left: 32px; bottom: 28px; border-radius: 36px; gap: 10px; padding: 8px 8px 8px 20px; }
-  .hero-search-input    { height: 40px; font-size: 14px; padding: 0 8px 0 28px; }
-  .hero-search-icon     { font-size: 20px; }
-  .hero-search-btn      { height: 40px; line-height: 40px; padding: 0 28px; font-size: 14px; border-radius: 28px; }
+  .hero-greeting-bar {
+    padding: 20px 32px 8px 32px;
+  }
+  .hero-greeting-text {
+    font-size: 22px;
+  }
 }
 
 /* Homepage content column — below the hero, carries the page padding */

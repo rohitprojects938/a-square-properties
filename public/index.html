@@ -389,25 +389,8 @@
           <span id="greeting-text" class="hero-greeting-text">Hello, Guest!</span>
         </div>
         <!-- Hero Banner -->
-        <div class="home-hero-banner">
-          <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="hero-bg-img">
-          <div class="hero-bottom-gradient"></div>
-          <!-- Floating Search -->
-          <div class="hero-search-bar" id="hero-search-bar">
-            <div class="hero-search-inner">
-              <i class="bx bx-search hero-search-icon"></i>
-              <input
-                type="text"
-                id="home-search-input"
-                class="hero-search-input"
-                placeholder="Search by city, area, pincode..."
-                autocomplete="off"
-              >
-            </div>
-            <button class="hero-search-btn" id="hero-search-btn">
-              Search
-            </button>
-          </div>
+        <div class="home-hero-container">
+          <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="home-hero-image">
         </div>
       </div>
 
@@ -1134,27 +1117,26 @@
     }
 
     // Enter Search trigger
-    document.getElementById('home-search-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const query = e.target.value;
-        window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
-      }
-    });
+    // Enter Search trigger
+    const homeSearchInput = document.getElementById('home-search-input');
+    if (homeSearchInput) {
+      homeSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const query = e.target.value;
+          window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
+        }
+      });
+    }
 
     window.triggerHomeSearch = function() {
-      const query = document.getElementById('home-search-input').value.trim();
+      const input = document.getElementById('home-search-input');
+      const query = input ? input.value.trim() : '';
       if (query) {
         window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
       } else {
         window.location.href = '/search.html';
       }
     };
-
-    // Hero search button click — no inline onclick needed
-    const heroSearchBtn = document.getElementById('hero-search-btn');
-    if (heroSearchBtn) {
-      heroSearchBtn.addEventListener('click', window.triggerHomeSearch);
-    }
 
     // Load desktop widgets
     function loadDesktopWidgets(user) {
