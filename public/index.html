@@ -383,27 +383,25 @@
     <div class="app-content full-width" id="app-content-area">
       
       <!-- Left Column (Main Homepage Content) -->
-      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:0;">
+        <!-- Greeting Above Hero -->
+        <div class="hero-above-greeting">
+          <div id="greeting-text" class="hero-above-greeting-text">Hello, Guest!</div>
+        </div>
+
         <!-- Search Hero Section -->
         <div class="home-hero-banner">
           <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="hero-image">
           <div class="hero-gradient-overlay"></div>
-          <div class="hero-content">
-            <div class="hero-text-block">
-              <div id="greeting-text" class="hero-greeting">Hello, Guest!</div>
-              <h1 class="hero-heading">Premium Real Estate</h1>
+          <!-- Floating Search Interface (inside image, bottom-left) -->
+          <div class="hero-search-float">
+            <div class="search-input-wrapper">
+              <i class="bx bx-search"></i>
+              <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
             </div>
-            
-            <!-- Floating Search Interface -->
-            <div class="hero-search-float">
-              <div class="search-input-wrapper">
-                <i class="bx bx-search"></i>
-                <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
-              </div>
-              <button class="filter-btn" onclick="triggerHomeSearch()">
-                <span>Search</span>
-              </button>
-            </div>
+            <button class="filter-btn" onclick="triggerHomeSearch()">
+              <span>Search</span>
+            </button>
           </div>
         </div>
 
