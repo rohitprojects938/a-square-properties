@@ -714,7 +714,42 @@ function injectDesktopLayout(user) {
 }
 
 // Service Worker PWA registration with cache Version Cleanups
-function registerServiceWorker() {
+async function registerServiceWorker() {
+  const CURRENT_VERSION = 'v143';
+  const savedVersion = localStorage.getItem('app_cache_version');
+
+  if (savedVersion !== CURRENT_VERSION) {
+    localStorage.setItem('app_cache_version', CURRENT_VERSION);
+    
+    // Clear CacheStorage
+    if ('caches' in window) {
+      try {
+        const cacheKeys = await window.caches.keys();
+        await Promise.all(cacheKeys.map(key => window.caches.delete(key)));
+        console.log('🧹 Cleared CacheStorage on version update.');
+      } catch (e) {
+        console.warn('CacheStorage clearing error: ', e.message);
+      }
+    }
+
+    // Unregister service workers
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let reg of registrations) {
+          await reg.unregister();
+        }
+        console.log('🧹 Unregistered old service workers.');
+      } catch (e) {
+        console.warn('Service Worker unregistration error: ', e.message);
+      }
+    }
+
+    // Force reload bypassing HTTP cache
+    window.location.reload();
+    return;
+  }
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
