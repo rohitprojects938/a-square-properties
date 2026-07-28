@@ -553,6 +553,9 @@ body {
     margin-right: -5px;
     width: auto;           /* Expand width naturally to fill negative margins */
   }
+  .home-hero-image {
+    object-fit: cover;     /* Eliminate side white spaces on mobile */
+  }
 }
 
 .home-hero-image {
