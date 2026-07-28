@@ -65,12 +65,7 @@ body {
   padding-bottom: 106px; /* Space for fixed bottom navigation */
 }
 
-/* Homepage-only: hero needs edge-to-edge, so remove padding.
-   Applied only on index.html via .home-app-content modifier. */
-.home-app-content {
-  padding: 0;
-  padding-bottom: 106px;
-}
+
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .app-content::-webkit-scrollbar,
@@ -530,7 +525,7 @@ body {
 }
 
 .hero-greeting-bar {
-  padding: 12px 16px 8px 16px;
+  padding: 0 0 8px 0;      /* Align perfectly with padded container content */
 }
 
 .hero-greeting-text {
@@ -563,7 +558,7 @@ body {
 
 @media (min-width: 768px) {
   .hero-greeting-bar {
-    padding: 16px 24px 8px 24px;
+    padding: 0 0 8px 0;
   }
   .hero-greeting-text {
     font-size: 20px;
@@ -575,7 +570,7 @@ body {
 
 @media (min-width: 1024px) {
   .hero-greeting-bar {
-    padding: 20px 32px 8px 32px;
+    padding: 0 0 8px 0;
   }
   .hero-greeting-text {
     font-size: 22px;
@@ -585,14 +580,7 @@ body {
   }
 }
 
-/* Homepage content column — below the hero, carries the page padding */
-.home-content-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  padding-bottom: 0;
-}
+
 
 .search-input-wrapper {
   position: relative;
