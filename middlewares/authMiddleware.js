@@ -5,7 +5,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_token_key_for_house_renter';
 
 // Canonical admin email whitelist — single source of truth
-const ADMIN_EMAILS = ['crimesamachar1@gmail.com', 'rohitcreation12345@gmail.com'];
+const ADMIN_EMAILS = ['crimesamachar1@gmail.com', 'rohitcreation12345@gmail.com', 'manoj@houserenter.in'];
 
 function parseCookies(req) {
   const cookies = {};

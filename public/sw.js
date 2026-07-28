@@ -1,4 +1,4 @@
-const CACHE_NAME = 'houserenter-pwa-cache-v146';
+const CACHE_NAME = 'houserenter-pwa-cache-v147';
 const ASSETS = [
   '/',
   '/index.html',

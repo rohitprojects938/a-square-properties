@@ -527,6 +527,11 @@
     .apply-btn-submit:active {
       transform: scale(0.98);
     }
+    @media (max-width: 768px) {
+      .home-footer {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -816,7 +821,7 @@
         </div>
 
         <!-- Minimal Footer -->
-        <footer style="text-align: center; padding: 24px 16px; margin-top: 24px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-family: 'Outfit', sans-serif;">
+        <footer class="home-footer" style="text-align: center; padding: 24px 16px; margin-top: 24px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-family: 'Outfit', sans-serif;">
           <div style="font-size: 12px; margin-bottom: 4px;">Copyright © Houserenter.in 2026</div>
           <div style="font-size: 11px;">WebApp Built by ~ <a href="https://roitsa.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary-red); text-decoration: none; font-weight: 700; transition: opacity 0.2s;">roitsa.in</a></div>
         </footer>
@@ -1795,7 +1800,14 @@ Please share more details.`;
           renderFeedListings(properties);
           if (properties.length < feedLimit) {
              feedHasMore = false;
-             if (sentinel) sentinel.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">You have reached the end.</p>';
+             if (sentinel) {
+               if (window.innerWidth < 769) {
+                 sentinel.style.display = 'none';
+                 sentinel.innerHTML = '';
+               } else {
+                 sentinel.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">You have reached the end.</p>';
+               }
+             }
           } else {
              feedPage++;
           }

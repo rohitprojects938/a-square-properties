@@ -378,19 +378,19 @@ async function updateService(req, res) {
         sort_order = ? 
       WHERE id = ?`,
       [
-        provider_name, 
+        provider_name || null, 
         name, 
         category, 
-        description, 
+        description || '', 
         mobile_number, 
-        whatsapp_number, 
+        whatsapp_number || mobile_number || null, 
         city, 
-        address, 
-        experience, 
+        address || null, 
+        experience || null, 
         starting_price ? parseFloat(starting_price) : null, 
-        image_url, 
-        available_days, 
-        status, 
+        image_url || null, 
+        available_days || null, 
+        status || 'approved', 
         parseInt(sort_order) || 0, 
         id
       ]

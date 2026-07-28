@@ -15,7 +15,7 @@ let isMock = false;
 // Mock database storage for seamless fallback
 const mockDb = {
   users: [
-    { id: 1, supabase_uid: 'mock-admin-uid', name: 'Manoj Soni', email: 'manoj@houserenter.in', phone: '+919919014220', password_hash: '$2a$10$75Jb04oB8nE7v5wKzUv3g.5N9CenpWv1K/TzR8C/wE3/T/y62tGOm', role: 'admin', subscription_status: 'active', profile_photo: null, provider: 'email' }
+    { id: 1, supabase_uid: 'mock-admin-uid', name: 'Manoj Soni', email: 'manoj@houserenter.in', phone: '+919919014220', password_hash: '$2a$10$Vo4e4rCVfkkpsm1z58Ta.u9RhFcjnEOuL/qi3KIJrslm.4svnl5aW', role: 'admin', subscription_status: 'active', profile_photo: null, provider: 'email' }
   ],
   otps: [],
   properties: [
@@ -931,36 +931,128 @@ async function executeMock(sql, params = []) {
   // B. SERVICES CRUD
   if (normalizedSql.includes('home_services') || normalizedSql.includes('from home_services') || (normalizedSql.includes('services') && !normalizedSql.includes('reels'))) {
     if (normalizedSql.startsWith('select')) {
-      // Return filtered services if category is specified in parameters
-      if (normalizedSql.includes('category = ?')) {
-        const cat = params[0];
-        return [mockDb.services.filter(s => s.category === cat)];
+      let list = mockDb.services;
+
+      // Check if public getServices (filtered by status = 'approved')
+      if (normalizedSql.includes("status = 'approved'")) {
+        list = list.filter(s => s.status === 'approved');
+        
+        // Parse parameters for public getServices:
+        // 1. category = ? (first param if present)
+        // 2. search (next 4 params if present)
+        let paramIdx = 0;
+        if (normalizedSql.includes("category = ?")) {
+          const cat = params[paramIdx++];
+          if (cat && cat !== 'all') {
+            list = list.filter(s => s.category === cat);
+          }
+        }
+        if (normalizedSql.includes("name like ? or description like ?")) {
+          const sVal = (params[paramIdx] || '').replace(/%/g, '').toLowerCase();
+          list = list.filter(s => 
+            (s.name||'').toLowerCase().includes(sVal) ||
+            (s.description||'').toLowerCase().includes(sVal) ||
+            (s.provider_name||'').toLowerCase().includes(sVal) ||
+            (s.city||'').toLowerCase().includes(sVal)
+          );
+        }
+      } else {
+        // Admin getServices query (no status = 'approved' literal)
+        // Parse parameters in adminController order:
+        // 1. search (first 5 params if present)
+        // 2. status = ? (next param if present)
+        // 3. category = ? (next param if present)
+        let paramIdx = 0;
+        if (normalizedSql.includes("hs.name like ?")) {
+          const sVal = (params[paramIdx] || '').replace(/%/g, '').toLowerCase();
+          list = list.filter(s => 
+            (s.name||'').toLowerCase().includes(sVal) ||
+            (s.provider_name||'').toLowerCase().includes(sVal) ||
+            (s.mobile_number||'').toLowerCase().includes(sVal) ||
+            (s.city||'').toLowerCase().includes(sVal) ||
+            (s.description||'').toLowerCase().includes(sVal)
+          );
+          paramIdx += 5;
+        }
+        if (normalizedSql.includes("hs.status = ?")) {
+          const statusVal = params[paramIdx++];
+          if (statusVal) {
+            list = list.filter(s => s.status === statusVal);
+          }
+        }
+        if (normalizedSql.includes("hs.category = ?")) {
+          const catVal = params[paramIdx++];
+          if (catVal) {
+            list = list.filter(s => s.category === catVal);
+          }
+        }
       }
-      return [mockDb.services];
+
+      // Check for COUNT query
+      if (normalizedSql.includes('count(')) {
+        return [[{ total: list.length }]];
+      }
+
+      // Sorting
+      list = [...list]; // clone before sort to avoid in-place issues
+      list.sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0) || b.id - a.id);
+
+      // Pagination: LIMIT ? OFFSET ?
+      if (normalizedSql.includes('limit ?')) {
+        const limitVal  = parseInt(params[params.length - 2]) || parseInt(params[params.length - 1]) || 20;
+        const offsetVal = normalizedSql.includes('limit ? offset ?') ? (parseInt(params[params.length - 1]) || 0) : 0;
+        return [list.slice(offsetVal, offsetVal + limitVal)];
+      }
+
+      return [list];
     }
     if (normalizedSql.startsWith('insert')) {
-      // Parameter ordering based on adminController createService or user apply route
-      // For general parameters support:
-      const newSvc = {
-        id: mockDb.services.length + 1,
-        user_id: params[0] || null,
-        provider_name: params[1] || 'Guest',
-        name: params[2] || '',
-        category: params[3] || 'other',
-        description: params[4] || '',
-        mobile_number: params[5] || '',
-        whatsapp_number: params[6] || params[5] || '',
-        city: params[7] || 'Lucknow',
-        address: params[8] || null,
-        experience: params[9] || null,
-        starting_price: params[10] || null,
-        image_url: params[11] || null,
-        available_days: params[12] || null,
-        status: params[13] || 'pending',
-        sort_order: params[14] || 0,
-        contact_number: params[5] || '', // back compat
-        created_at: new Date()
-      };
+      let newSvc = {};
+      if (normalizedSql.includes('(user_id,')) {
+        // User marketplace submission
+        newSvc = {
+          id: mockDb.services.length + 1,
+          user_id: params[0] || null,
+          provider_name: params[1] || 'Guest Provider',
+          name: params[2] || '',
+          category: params[3] || 'other',
+          description: params[4] || '',
+          mobile_number: params[5] || '',
+          whatsapp_number: params[6] || params[5] || '',
+          city: params[7] || 'Lucknow',
+          address: params[8] || null,
+          experience: params[9] || null,
+          starting_price: params[10] || null,
+          image_url: params[11] || null,
+          available_days: params[12] || null,
+          status: 'pending',
+          sort_order: 0,
+          contact_number: params[5] || '',
+          created_at: new Date()
+        };
+      } else {
+        // Admin dashboard manual service creation
+        newSvc = {
+          id: mockDb.services.length + 1,
+          user_id: null,
+          provider_name: params[0] || 'Admin Added',
+          name: params[1] || '',
+          category: params[2] || 'other',
+          description: params[3] || '',
+          mobile_number: params[4] || '',
+          whatsapp_number: params[5] || params[4] || '',
+          city: params[6] || 'Lucknow',
+          address: params[7] || null,
+          experience: params[8] || null,
+          starting_price: params[9] || null,
+          image_url: params[10] || null,
+          available_days: params[11] || null,
+          status: params[12] || 'approved',
+          sort_order: params[13] || 0,
+          contact_number: params[4] || '',
+          created_at: new Date()
+        };
+      }
       mockDb.services.push(newSvc);
       return [{ insertId: newSvc.id }];
     }
@@ -971,20 +1063,20 @@ async function executeMock(sql, params = []) {
         if (normalizedSql.includes('status = ?') && params.length === 2) {
           svc.status = params[0];
         } else {
-          svc.provider_name = params[1] || svc.provider_name;
-          svc.name = params[2] || svc.name;
-          svc.category = params[3] || svc.category;
-          svc.description = params[4] || svc.description;
-          svc.mobile_number = params[5] || svc.mobile_number;
-          svc.whatsapp_number = params[6] || svc.whatsapp_number;
-          svc.city = params[7] || svc.city;
-          svc.address = params[8] || svc.address;
-          svc.experience = params[9] || svc.experience;
-          svc.starting_price = params[10] || svc.starting_price;
-          svc.image_url = params[11] || svc.image_url;
-          svc.available_days = params[12] || svc.available_days;
-          svc.status = params[13] || svc.status;
-          svc.sort_order = params[14] || svc.sort_order;
+          svc.provider_name = params[0];
+          svc.name = params[1] || svc.name;
+          svc.category = params[2] || svc.category;
+          svc.description = params[3] || '';
+          svc.mobile_number = params[4] || svc.mobile_number;
+          svc.whatsapp_number = params[5] || params[4];
+          svc.city = params[6] || svc.city;
+          svc.address = params[7];
+          svc.experience = params[8];
+          svc.starting_price = params[9];
+          svc.image_url = params[10];
+          svc.available_days = params[11];
+          svc.status = params[12] || svc.status;
+          svc.sort_order = params[13] || 0;
           svc.contact_number = svc.mobile_number;
         }
       }
