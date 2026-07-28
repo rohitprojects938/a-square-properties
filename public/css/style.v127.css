@@ -61,7 +61,7 @@ body {
 .app-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 0;
   padding-bottom: 106px; /* Space for fixed bottom navigation */
 }
 
@@ -511,217 +511,188 @@ body {
 }
 
 /* ================================================
-   HERO SECTION — clean rebuild
-   Architecture:
-     .hero-above-greeting  (outside banner, above)
-     .home-hero-banner     (position: relative, fixed height)
-       ├── .hero-image     (absolute fill, object-fit: cover)
-       ├── .hero-gradient-overlay  (absolute bottom gradient)
-       └── .hero-search-float      (absolute, bottom-left, z-index: 3)
+   HERO SECTION — True Full-Width Architecture
+   
+   DOM structure (inside app-content, which has padding:0):
+     .home-hero-section          — wrapper, full width, flex column
+       .hero-greeting-bar        — greeting text with horizontal padding
+       .home-hero-banner         — image container, relative, fixed height
+         .hero-bg-img            — absolute fill image, object-fit:cover
+         .hero-bottom-gradient   — subtle bottom gradient overlay
+         .hero-search-bar        — absolute bottom-left search pill
+           .hero-search-inner    — icon + input flex row
+             .hero-search-icon   — bx bx-search icon
+             .hero-search-input  — text input (isolated class, no globals)
+           .hero-search-btn      — orange search button
    ================================================ */
 
-/* — Greeting above image — */
-.hero-above-greeting {
-  margin-bottom: 8px;
+/* Outer wrapper — occupies full width of app-content (padding:0) */
+.home-hero-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
-.hero-above-greeting-text {
+
+/* Greeting bar — sits above image with its own horizontal padding */
+.hero-greeting-bar {
+  padding: 12px 16px 8px;
+}
+.hero-greeting-text {
   font-size: 15px;
   font-weight: 700;
   color: var(--text-dark);
   letter-spacing: -0.2px;
+  display: block;
 }
 
-/* — Subtle zoom animation — */
-@keyframes heroImageZoom {
-  from { transform: scale(1.03); }
-  to   { transform: scale(1); }
-}
-
-/* — Banner container — */
+/* Banner — relative container, full width naturally */
 .home-hero-banner {
-  position: relative;           /* stacking context for children */
-  width: calc(100% + 32px);    /* bleed past app-content 16px padding */
-  margin-left: -16px;
-  height: 190px;               /* mobile-first compact height */
-  background: #1a1a2e;
-  margin-bottom: 16px;
-  /* NO overflow:hidden here — applied to image instead via clip */
-  overflow: hidden;            /* still needed to clip image */
+  position: relative;
+  width: 100%;
+  height: 230px;           /* Mobile: comfortable, not cramped */
+  overflow: hidden;
+  background: #1c2032;     /* fallback while image loads */
+  flex-shrink: 0;
 }
 
-/* — Hero image fills the banner — */
-.home-hero-banner .hero-image {
+/* Hero image — absolute fill, no zoom animation (clean, natural) */
+.home-hero-banner .hero-bg-img {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;                /* top:0; right:0; bottom:0; left:0 */
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 40%;  /* slightly above center to show room interiors */
+  object-position: center center;
   display: block;
-  animation: heroImageZoom 12s ease-out forwards;
   z-index: 0;
 }
 
-/* — Bottom gradient for search bar readability only — */
-.home-hero-banner .hero-gradient-overlay {
+/* Subtle bottom gradient — only for search bar contrast */
+.home-hero-banner .hero-bottom-gradient {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 50%;                  /* only bottom half */
-  background: linear-gradient(to bottom,
+  height: 55%;
+  background: linear-gradient(
+    to bottom,
     transparent 0%,
-    rgba(0, 0, 0, 0.42) 100%
+    rgba(0, 0, 0, 0.38) 100%
   );
   z-index: 1;
   pointer-events: none;
 }
 
-/* — Floating search bar — bottom-left, always visible — */
-.hero-search-float {
-  position: absolute !important;
-  left: 14px !important;
-  bottom: 14px !important;
-  z-index: 3 !important;        /* above image(0) and overlay(1) */
-  width: 52%;
-  display: flex !important;
-  align-items: center !important;
+/* Search bar — bottom-left, floating glass pill */
+.hero-search-bar {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2;
+  width: min(420px, 85%);   /* responsive, never fixed % */
+  display: flex;
+  align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.97) !important;
-  border: none !important;
-  border-radius: 30px !important;
-  padding: 5px 5px 5px 12px !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22) !important;
-  box-sizing: border-box !important;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 32px;
+  padding: 6px 6px 6px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.20);
+  box-sizing: border-box;
   transition: box-shadow 0.2s ease;
 }
-
-.hero-search-float:focus-within {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.30) !important;
+.hero-search-bar:focus-within {
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
 }
 
-/* Search icon wrapper — scoped to hero only */
-.hero-search-float .search-input-wrapper {
-  position: relative !important;
-  flex: 1 !important;
-  display: flex !important;
-  align-items: center !important;
-  min-width: 0 !important;
+/* Search icon + input wrapper */
+.hero-search-inner {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 /* Search icon */
-.hero-search-float .search-input-wrapper .bx-search {
-  position: absolute !important;
-  left: 2px !important;
-  font-size: 15px !important;
-  color: #666 !important;
+.hero-search-icon {
+  position: absolute;
+  left: 0;
+  font-size: 16px;
+  color: #666;
   pointer-events: none;
   z-index: 1;
+  line-height: 1;
 }
 
-/* Search input — high-specificity to defeat global .search-input rule */
-.home-hero-banner .hero-search-float input.search-input {
-  width: 100% !important;
-  height: 28px !important;
-  padding: 0 4px 0 22px !important;
-  font-size: 11.5px !important;
-  border: none !important;
-  outline: none !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  color: #111 !important;
+/* Input — uses unique class hero-search-input, zero conflict with global .search-input */
+.hero-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 6px 0 24px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #111;
+  background: transparent;
+  border: none;
+  outline: none;
+  border-radius: 0;
+  box-shadow: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.hero-search-input::placeholder {
+  color: #999;
+  font-size: 12.5px;
 }
 
-/* Search button */
-.hero-search-float .filter-btn {
-  flex-shrink: 0 !important;
-  height: 28px !important;
-  padding: 0 12px !important;
-  background: var(--secondary-orange) !important;
-  border: none !important;
-  border-radius: 20px !important;
-  color: #fff !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* Orange search button */
+.hero-search-btn {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 16px;
+  background: var(--secondary-orange);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(255, 106, 0, 0.30);
-  transition: background 0.2s ease;
+  transition: background 0.18s ease;
+  line-height: 34px;
 }
-.hero-search-float .filter-btn:hover  { background: #ff7f1a !important; }
-.hero-search-float .filter-btn:active { transform: scale(0.96); }
+.hero-search-btn:hover  { background: #ff7f1a; }
+.hero-search-btn:active { transform: scale(0.96); }
 
 /* =====================
-   TABLET  (481–768px)
+   TABLET  (768px+)
    ===================== */
-@media (min-width: 481px) and (max-width: 768px) {
-  .home-hero-banner {
-    height: 240px;
-  }
-  .hero-search-float {
-    width: 46% !important;
-    left: 18px !important;
-    bottom: 18px !important;
-    padding: 6px 6px 6px 14px !important;
-    gap: 8px;
-  }
-  .home-hero-banner .hero-search-float input.search-input {
-    height: 32px !important;
-    font-size: 12.5px !important;
-  }
-  .hero-search-float .filter-btn {
-    height: 32px !important;
-    padding: 0 14px !important;
-    font-size: 12px !important;
-  }
+@media (min-width: 768px) {
+  .hero-greeting-bar    { padding: 16px 24px 10px; }
+  .hero-greeting-text   { font-size: 18px; }
+  .home-hero-banner     { height: 300px; }
+  .hero-search-bar      { left: 24px; bottom: 20px; gap: 8px; padding: 7px 7px 7px 18px; }
+  .hero-search-input    { height: 36px; font-size: 13.5px; padding: 0 6px 0 26px; }
+  .hero-search-icon     { font-size: 18px; }
+  .hero-search-btn      { height: 36px; line-height: 36px; padding: 0 20px; font-size: 13.5px; }
 }
 
 /* =====================
-   DESKTOP (769px+)
+   DESKTOP (1024px+)
    ===================== */
-@media (min-width: 769px) {
-  .hero-above-greeting-text { font-size: 20px; }
-
-  .home-hero-banner {
-    width: calc(100% + 64px);
-    margin-left: -32px;
-    height: 360px;
-    margin-bottom: 24px;
-  }
-
-  .hero-search-float {
-    width: 40% !important;
-    left: 24px !important;
-    bottom: 24px !important;
-    padding: 7px 7px 7px 18px !important;
-    border-radius: 36px !important;
-    gap: 10px;
-  }
-
-  .home-hero-banner .hero-search-float input.search-input {
-    height: 36px !important;
-    font-size: 13.5px !important;
-    padding: 0 6px 0 26px !important;
-  }
-
-  .hero-search-float .search-input-wrapper .bx-search {
-    font-size: 18px !important;
-  }
-
-  .hero-search-float .filter-btn {
-    height: 36px !important;
-    padding: 0 20px !important;
-    border-radius: 24px !important;
-    font-size: 13px !important;
-  }
+@media (min-width: 1024px) {
+  .hero-greeting-bar    { padding: 20px 32px 12px; }
+  .hero-greeting-text   { font-size: 20px; }
+  .home-hero-banner     { height: 420px; }
+  .hero-search-bar      { left: 32px; bottom: 28px; border-radius: 36px; gap: 10px; padding: 8px 8px 8px 20px; }
+  .hero-search-input    { height: 40px; font-size: 14px; padding: 0 8px 0 28px; }
+  .hero-search-icon     { font-size: 20px; }
+  .hero-search-btn      { height: 40px; line-height: 40px; padding: 0 28px; font-size: 14px; border-radius: 28px; }
 }
 
 .search-input-wrapper {

@@ -379,31 +379,41 @@
       </a>
     </header>
 
-    <!-- App Content Scroll Area -->
+    <!-- App Content Scroll Area (no padding - hero needs to be edge-to-edge) -->
     <div class="app-content full-width" id="app-content-area">
-      
-      <!-- Left Column (Main Homepage Content) -->
-      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:0;">
-        <!-- Greeting Above Hero -->
-        <div class="hero-above-greeting">
-          <div id="greeting-text" class="hero-above-greeting-text">Hello, Guest!</div>
-        </div>
 
-        <!-- Search Hero Section -->
+      <!-- Hero Section (True Full Width - no padding applied here) -->
+      <div class="home-hero-section">
+        <!-- Greeting bar above image -->
+        <div class="hero-greeting-bar">
+          <span id="greeting-text" class="hero-greeting-text">Hello, Guest!</span>
+        </div>
+        <!-- Hero Banner -->
         <div class="home-hero-banner">
-          <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="hero-image">
-          <div class="hero-gradient-overlay"></div>
-          <!-- Floating Search Interface (inside image, bottom-left) -->
-          <div class="hero-search-float">
-            <div class="search-input-wrapper">
-              <i class="bx bx-search"></i>
-              <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
+          <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="hero-bg-img">
+          <div class="hero-bottom-gradient"></div>
+          <!-- Floating Search -->
+          <div class="hero-search-bar" id="hero-search-bar">
+            <div class="hero-search-inner">
+              <i class="bx bx-search hero-search-icon"></i>
+              <input
+                type="text"
+                id="home-search-input"
+                class="hero-search-input"
+                placeholder="Search by city, area, pincode..."
+                autocomplete="off"
+                onkeydown="if(event.key==='Enter') triggerHomeSearch()"
+              >
             </div>
-            <button class="filter-btn" onclick="triggerHomeSearch()">
-              <span>Search</span>
+            <button class="hero-search-btn" onclick="triggerHomeSearch()">
+              Search
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Padded content column -->
+      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px; padding: 16px; padding-bottom: 0;">
 
         <!-- Redesigned Quick Actions Section -->
         <div class="quick-actions-container">
