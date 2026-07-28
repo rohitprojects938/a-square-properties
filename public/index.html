@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v139.css">
+  <link rel="stylesheet" href="/css/style.v140.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -284,19 +284,54 @@
       width: 100%;
     }
     .loan-left {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      mask-image: linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 15%, #000 85%, transparent 100%);
+      z-index: 1;
+      margin-right: 12px;
+    }
+    .bank-marquee-container {
+      width: 100%;
+      overflow: hidden;
+    }
+    .bank-marquee {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      width: max-content;
+      animation: marquee-reverse 15s linear infinite;
+    }
+    @keyframes marquee-reverse {
+      0% { transform: translateX(-50%); }
+      100% { transform: translateX(0%); }
+    }
+    .bank-logo {
+      height: 18px;
+      filter: brightness(0) invert(1) opacity(0.7);
+      object-fit: contain;
+    }
+    .loan-right {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      align-items: flex-end;
+      text-align: right;
+      gap: 2px;
       z-index: 2;
+      flex-shrink: 0;
     }
     .loan-rate-title {
-      font-size: 12px;
+      font-size: 9.5px;
       color: #a0aec0;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
     .loan-rate {
-      font-size: 40px;
+      font-size: 34px;
       font-weight: 800;
       color: #38bdf8;
       line-height: 1;
@@ -305,46 +340,18 @@
       background: #38bdf8;
       color: #0e1e38;
       font-weight: 700;
-      font-size: 13px;
-      padding: 10px 20px;
+      font-size: 11px;
+      padding: 6px 14px;
       border-radius: 20px;
       border: none;
       cursor: pointer;
       transition: transform 0.2s ease, background 0.2s ease;
       display: inline-block;
-      margin-top: 8px;
+      margin-top: 4px;
       text-align: center;
     }
     .loan-apply-btn:active {
       transform: scale(0.95);
-    }
-    .loan-right {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      mask-image: linear-gradient(to right, transparent 0%, #000 20%, #000 80%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 20%, #000 80%, transparent 100%);
-      z-index: 1;
-    }
-    .bank-marquee {
-      display: flex;
-      align-items: center;
-      gap: 30px;
-      width: max-content;
-      animation: marquee 15s linear infinite;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-50%); }
-    }
-    .bank-logo {
-      height: 20px;
-      filter: brightness(0) invert(1) opacity(0.7);
-      object-fit: contain;
     }
     .loan-lead-form {
       background: #ffffff;
@@ -621,22 +628,28 @@
           <div class="loan-section-card">
             <div class="loan-card-top">
               <div class="loan-left">
+                <div class="bank-marquee-container">
+                  <div class="bank-marquee">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/SBI_Logo.svg" alt="SBI">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/d/d4/HDFC_Bank_Logo.svg" alt="HDFC">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/12/ICICI_Bank_Logo.svg" alt="ICICI">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Axis_Bank_logo.svg" alt="Axis">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/5/52/Kotak_Mahindra_Bank_logo.svg" alt="Kotak">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/9/90/IDFC_First_Bank_logo.svg" alt="IDFC First">
+                    <!-- Duplicate set for marquee loop -->
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/SBI_Logo.svg" alt="SBI">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/d/d4/HDFC_Bank_Logo.svg" alt="HDFC">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/12/ICICI_Bank_Logo.svg" alt="ICICI">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Axis_Bank_logo.svg" alt="Axis">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/5/52/Kotak_Mahindra_Bank_logo.svg" alt="Kotak">
+                    <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/9/90/IDFC_First_Bank_logo.svg" alt="IDFC First">
+                  </div>
+                </div>
+              </div>
+              <div class="loan-right">
                 <div class="loan-rate-title">Loan Starting From</div>
                 <div class="loan-rate">6.1%</div>
                 <button class="loan-apply-btn" id="loan-apply-trigger-btn" onclick="toggleLoanForm()">Apply Now</button>
-              </div>
-              <div class="loan-right">
-                <div class="bank-marquee">
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/SBI_Logo.svg" alt="SBI">
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/12/ICICI_Bank_Logo.svg" alt="ICICI">
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/d/d4/HDFC_Bank_Logo.svg" alt="HDFC">
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Axis_Bank_logo.svg" alt="Axis">
-                  <!-- Duplicate set for marquee loop -->
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/SBI_Logo.svg" alt="SBI">
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/12/ICICI_Bank_Logo.svg" alt="ICICI">
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/d/d4/HDFC_Bank_Logo.svg" alt="HDFC">
-                  <img class="bank-logo" src="https://upload.wikimedia.org/wikipedia/commons/1/1a/Axis_Bank_logo.svg" alt="Axis">
-                </div>
               </div>
             </div>
           </div>
@@ -860,7 +873,7 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v139.js"></script>
+  <script src="/js/main.v140.js"></script>
   <script>
 
     // Greet user dynamically
