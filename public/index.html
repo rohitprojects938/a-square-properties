@@ -384,53 +384,51 @@
       
       <!-- Left Column (Main Homepage Content) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
-        <!-- Greeting Banner -->
-        <div style="margin-bottom: 8px;">
-          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-dark);" id="greeting-text">Hello, Guest!</h2>
-          <p style="font-size: 13px; color: var(--text-muted);">Find your dream home today</p>
-        </div>
-
         <!-- Search Hero Section -->
         <div class="home-hero-banner">
-          <div class="hero-bg-overlay"></div>
-          
-          <!-- Floating Search Interface -->
-          <div class="hero-search-float">
-            <div class="search-input-wrapper">
-              <i class="bx bx-search"></i>
-              <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
+          <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="hero-image">
+          <div class="hero-gradient-overlay"></div>
+          <div class="hero-content">
+            <h2 id="greeting-text" class="hero-title">Hello, Guest!</h2>
+            <p class="hero-subtitle">Find your dream home today</p>
+            
+            <!-- Floating Search Interface -->
+            <div class="hero-search-float">
+              <div class="search-input-wrapper">
+                <i class="bx bx-search"></i>
+                <input type="text" class="search-input" id="home-search-input" placeholder="Search by city, area, pincode...">
+              </div>
+              <button class="filter-btn" onclick="triggerHomeSearch()">
+                <span>Search</span>
+              </button>
             </div>
-            <button class="filter-btn" onclick="triggerHomeSearch()">
-              <span>Search</span>
-            </button>
           </div>
         </div>
 
-
         <!-- Redesigned Quick Actions Section -->
         <div class="quick-actions-container">
-          <a href="/search.html?listing_type=rent" class="quick-action-card">
+          <a href="/search.html?listing_type=rent" class="quick-action-card action-rent">
             <div class="quick-action-icon-wrapper">
               <i data-lucide="home"></i>
             </div>
             <span class="quick-action-title">Rent Home</span>
           </a>
           
-          <a href="/search.html?listing_type=sale" class="quick-action-card">
+          <a href="/search.html?listing_type=sale" class="quick-action-card action-buy">
             <div class="quick-action-icon-wrapper">
               <i data-lucide="shopping-cart"></i>
             </div>
             <span class="quick-action-title">Buy Home</span>
           </a>
           
-          <a href="/marketplace.html" class="quick-action-card">
+          <a href="/marketplace.html" class="quick-action-card action-services">
             <div class="quick-action-icon-wrapper">
               <i data-lucide="wrench"></i>
             </div>
             <span class="quick-action-title">Services</span>
           </a>
           
-          <a href="/search.html?no_brokerage=true" class="quick-action-card">
+          <a href="/search.html?no_brokerage=true" class="quick-action-card action-nobrokerage">
             <div class="quick-action-icon-wrapper">
               <i data-lucide="percent"></i>
             </div>

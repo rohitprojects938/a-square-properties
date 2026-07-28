@@ -510,39 +510,95 @@ body {
   background: #ECECEC;
 }
 
-/* Redesigned Hero Banner Section (Premium Centered Floating Layout) */
-.home-hero-banner {
-  position: relative;
-  width: 100%;
-  height: 330px; /* Height around 320-360px on mobile */
-  border-radius: 24px; /* Border radius 24px */
-  background: #e6eff7 url('/uploads/home_image.png') no-repeat center center;
-  background-size: contain; /* Full width contain to prevent cropping and zooming */
-  overflow: visible; /* Let search panel overflow/float on bottom edge */
-  margin-bottom: 48px; /* Extra margin-bottom to clear floating search bar spacing */
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+/* Redesigned Hero Banner Section (Modern Premium Full-Width Layout) */
+@keyframes heroImageZoom {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.03);
+  }
 }
 
-.hero-bg-overlay {
-  display: none; /* Removed dark overlay so banner is clean, bright and text matches reference image colors */
+.home-hero-banner {
+  position: relative;
+  width: calc(100% + 32px);
+  margin-left: -16px;
+  height: 260px; /* Mobile height 240-300px */
+  overflow: hidden;
+  margin-bottom: 24px;
+  background: #000000;
+  box-shadow: none;
+}
+
+.home-hero-banner .hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  animation: heroImageZoom 8s ease-out forwards;
+}
+
+.home-hero-banner .hero-gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.7) 100%);
+  z-index: 1;
+}
+
+.home-hero-banner .hero-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 16px 16px 16px; /* spacing inside the hero container */
+  box-sizing: border-box;
+}
+
+.home-hero-banner .hero-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  letter-spacing: -0.3px;
+}
+
+.home-hero-banner .hero-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 .hero-search-float {
-  position: absolute;
-  bottom: -24px; /* Float vertically centered on the bottom edge */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  background: #ffffff !important; /* Premium white background */
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 30px; /* Large rounded corners / pill shape */
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 32px;
   padding: 6px 8px 6px 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12); /* Floating premium shadow */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 90%;
-  max-width: 360px; /* mobile search float width */
+  width: 100%;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.hero-search-float:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.24);
+  background: #ffffff !important;
 }
 
 .hero-search-float .search-input-wrapper {
@@ -559,22 +615,22 @@ body {
   padding: 8px 8px 8px 26px !important;
   font-size: 13.5px !important;
   height: 38px !important;
-  color: var(--text-dark) !important;
+  color: #111111 !important;
   outline: none;
 }
 
 .hero-search-float .search-input-wrapper i {
   position: absolute;
   left: 2px;
-  color: var(--text-muted);
+  color: #555555;
   font-size: 18px !important;
 }
 
 .hero-search-float .filter-btn {
   height: 38px !important;
   padding: 0 20px !important;
-  background: var(--secondary-orange) !important; /* Premium orange theme accent */
-  border-radius: 22px !important; /* Pill style search button */
+  background: var(--secondary-orange) !important;
+  border-radius: 22px !important;
   color: white !important;
   font-size: 13px !important;
   font-weight: 700 !important;
@@ -584,30 +640,53 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  box-shadow: 0 4px 10px rgba(255, 106, 0, 0.2);
-  transition: opacity 0.2s;
+  box-shadow: 0 4px 10px rgba(255, 106, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.hero-search-float .filter-btn:hover {
+  background: #ff7f1a !important;
+  transform: scale(1.02);
 }
 
 .hero-search-float .filter-btn:active {
-  opacity: 0.9;
+  transform: scale(0.97);
 }
 
 /* Tablet & Desktop Responsiveness */
 @media (min-width: 769px) {
   .home-hero-banner {
-    height: 480px; /* Large premium height on desktop */
-    margin-bottom: 56px;
+    width: calc(100% + 64px);
+    margin-left: -32px;
+    height: 450px; /* Desktop height 420-500px */
+    margin-bottom: 32px;
   }
+  
+  .home-hero-banner .hero-content {
+    padding: 40px 32px 32px 32px;
+  }
+  
+  .home-hero-banner .hero-title {
+    font-size: 36px;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  
+  .home-hero-banner .hero-subtitle {
+    font-size: 16px;
+  }
+  
   .hero-search-float {
-    bottom: -28px;
-    max-width: 480px; /* Desktop search float width */
+    width: 460px; /* Desktop search float width */
     padding: 8px 10px 8px 22px;
     border-radius: 36px;
   }
+  
   .hero-search-float .search-input {
     font-size: 14.5px !important;
     height: 44px !important;
   }
+  
   .hero-search-float .filter-btn {
     height: 44px !important;
     padding: 0 28px !important;
@@ -1830,7 +1909,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .quick-actions-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 8px; /* Reduced from 12px to prevent overflow */
   margin-bottom: 24px;
   width: 100%;
 }
@@ -1840,47 +1919,109 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   background: var(--background-white);
   border: 1px solid rgba(0, 0, 0, 0.04);
   border-radius: var(--border-radius); /* Rounded corners */
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03); /* Soft shadow */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02); /* Soft shadow */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px 6px;
+  padding: 8px 4px; /* Reduced from 12px 6px */
   text-decoration: none;
   color: var(--text-dark);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
-  gap: 8px;
+  gap: 6px; /* Reduced gap between elements */
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
 }
 
 .quick-action-card:active {
   transform: scale(0.95);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
-  border-color: rgba(255, 106, 0, 0.15);
 }
 
 .quick-action-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 34px; /* Slightly reduced on mobile to prevent overflow */
+  height: 34px;
   border-radius: 50%;
-  background: rgba(255, 106, 0, 0.07); /* subtle accent circle bg */
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s ease, background 0.25s ease;
 }
 
 .quick-action-icon-wrapper i, .quick-action-icon-wrapper svg {
-  color: var(--secondary-orange) !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 18px !important; /* Reduced from 20px on mobile */
+  height: 18px !important;
   stroke-width: 2.2px;
+  transition: transform 0.25s ease;
+}
+
+.quick-action-card:active .quick-action-icon-wrapper {
+  transform: scale(0.92) !important;
 }
 
 .quick-action-title {
-  font-size: 11px;
+  font-size: 10px; /* Reduced from 11px on mobile */
   font-weight: 600;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal; /* Allow word wrapping to prevent truncation or horizontal scroll */
+  line-height: 1.2;
+}
+
+/* Action Card Colors & Animations */
+.quick-action-card.action-rent .quick-action-icon-wrapper {
+  background: rgba(0, 122, 255, 0.06);
+}
+.quick-action-card.action-rent .quick-action-icon-wrapper i,
+.quick-action-card.action-rent .quick-action-icon-wrapper svg {
+  color: #007AFF !important;
+}
+.quick-action-card.action-rent:hover .quick-action-icon-wrapper {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+  background: rgba(0, 122, 255, 0.12);
+}
+
+.quick-action-card.action-buy .quick-action-icon-wrapper {
+  background: rgba(255, 106, 0, 0.06);
+}
+.quick-action-card.action-buy .quick-action-icon-wrapper i,
+.quick-action-card.action-buy .quick-action-icon-wrapper svg {
+  color: #FF6A00 !important;
+}
+.quick-action-card.action-buy:hover .quick-action-icon-wrapper {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(255, 106, 0, 0.2);
+  background: rgba(255, 106, 0, 0.12);
+}
+
+.quick-action-card.action-services .quick-action-icon-wrapper {
+  background: rgba(52, 199, 89, 0.06);
+}
+.quick-action-card.action-services .quick-action-icon-wrapper i,
+.quick-action-card.action-services .quick-action-icon-wrapper svg {
+  color: #34C759 !important;
+}
+.quick-action-card.action-services:hover .quick-action-icon-wrapper {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.2);
+  background: rgba(52, 199, 89, 0.12);
+}
+
+.quick-action-card.action-nobrokerage .quick-action-icon-wrapper {
+  background: rgba(175, 82, 222, 0.06);
+}
+.quick-action-card.action-nobrokerage .quick-action-icon-wrapper i,
+.quick-action-card.action-nobrokerage .quick-action-icon-wrapper svg {
+  color: #AF52DE !important;
+}
+.quick-action-card.action-nobrokerage:hover .quick-action-icon-wrapper {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(175, 82, 222, 0.2);
+  background: rgba(175, 82, 222, 0.12);
 }
 
 /* Tablet & Desktop spacing for Quick Actions */
@@ -1893,6 +2034,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .quick-action-card {
     padding: 20px 10px;
     border-radius: var(--border-radius-lg);
+    gap: 10px;
   }
   .quick-action-icon-wrapper {
     width: 46px;
