@@ -293,26 +293,24 @@ app.use((err, req, res, next) => {
 // Initialize database schema and then start server listener
 async function startServer() {
   try {
-    console.log('⏳ Bootstrapping database and running migrations...');
-    await initializeDatabase();
-    
+    if (process.env.NODE_ENV !== 'development') {
+      console.log('⏳ Bootstrapping database and running migrations...');
+      await initializeDatabase();
+    } else {
+      console.log('⚡ Development mode - Database skipped');
+    }
+
     const HOST = '0.0.0.0';
+
     app.listen(PORT, HOST, () => {
       const localIP = getLocalIP();
-      console.log('');
-      console.log('🚀 House Rental Server is running!');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`  📍 Local:    http://localhost:${PORT}`);
-      console.log(`  🌐 Network:  http://${localIP}:${PORT}`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('  Open the Network URL on any device on the');
-      console.log('  same Wi-Fi to access the app remotely.');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('');
+
+      console.log(`Local: http://localhost:${PORT}`);
+      console.log(`Network: http://${localIP}:${PORT}`);
     });
+
   } catch (err) {
-    console.error('❌ CRITICAL ERROR: Database initialization failed. Server shutting down.');
-    console.error(err.stack || err.message || err);
+    console.error(err);
     process.exit(1);
   }
 }
