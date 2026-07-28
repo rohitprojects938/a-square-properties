@@ -1864,7 +1864,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* Redesigned Quick Actions Grid (Premium Square Cards) */
 .quick-actions-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px; /* Reduced from 12px to prevent overflow */
   margin-bottom: 24px;
   width: 100%;
