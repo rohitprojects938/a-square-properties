@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const propertyController = require('../controllers/propertyController');
 const { authenticateJWT, requireAuth } = require('../middlewares/authMiddleware');
-const { propertyRules, enquiryRules, checkValidation } = require('../middlewares/validationMiddleware');
+const { propertyRules, checkValidation } = require('../middlewares/validationMiddleware');
 const { upload } = require('../middlewares/uploadMiddleware');
 
 // Property routes
@@ -14,9 +14,8 @@ router.delete('/:id', authenticateJWT, requireAuth, propertyController.deletePro
 router.patch('/:id/status', authenticateJWT, requireAuth, propertyController.updatePropertyStatus);
 router.post('/:id/save', authenticateJWT, requireAuth, propertyController.toggleSaveProperty);
 
-// Visit, Inquiry and review routes
+// Visit and review routes
 router.post('/action/visit', authenticateJWT, requireAuth, propertyController.scheduleVisit);
-router.post('/action/enquiry', enquiryRules, checkValidation, propertyController.submitEnquiry);
 router.post('/action/review', authenticateJWT, requireAuth, propertyController.addReview);
 
 // Reels Feed routes

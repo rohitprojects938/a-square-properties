@@ -219,17 +219,6 @@
             <span style="background:var(--primary-red); color:white; font-size:9px; font-weight:700; padding:4px 8px; border-radius:8px;">OWNER</span>
           </div>
 
-          <!-- Inquiries / Lead generation form -->
-          <div class="emi-card" style="margin-top:16px;">
-            <h3 style="font-size:15px; font-weight:700;">Inquire About Property</h3>
-            <form onsubmit="handleSendEnquiry(event)" style="margin-top:12px; display:flex; flex-direction:column; gap:12px;">
-              <input type="text" id="enq-name" class="form-input" placeholder="Your Name" required>
-              <input type="tel" id="enq-phone" class="form-input" placeholder="Your Phone Number" required>
-              <input type="email" id="enq-email" class="form-input" placeholder="Your Email Address" required>
-              <textarea id="enq-msg" class="form-input" rows="3" placeholder="I am interested in this listing. Please contact me." required></textarea>
-              <button type="submit" class="btn-primary">Send Message</button>
-            </form>
-          </div>
         </div>
       </div>
 
@@ -270,10 +259,6 @@
       <!-- Share link -->
       <button class="action-circle-btn" style="background:#FF9F0A;" onclick="handleShareLink()">
         <i class="bx bx-share-alt"></i>
-      </button>
-      <!-- Direct Enquiry -->
-      <button class="btn-primary" style="flex:1; max-width:180px; padding:12px;" onclick="document.getElementById('enq-name').focus()">
-        Enquire Now
       </button>
     </div>
 
@@ -404,7 +389,7 @@
           }
 
           // Set Call / WhatsApp links using listing's contact_phone
-          const waMessage = encodeURIComponent(`Hi,\nI found your property on HouseRenter.in.\nI'm interested in your listing.\nCan you please share more details?`);
+          const waMessage = encodeURIComponent(`Hi,\nI found your property on HouseRenter.in.\nI am interested in your property listing.\nIs it still available?\n\nPlease share more details.`);
           document.getElementById('call-action-btn').href = contactPhone ? `tel:${contactPhone}` : '#';
           document.getElementById('whatsapp-action-btn').href = contactPhone
             ? `https://wa.me/${contactPhone.replace('+', '')}?text=${waMessage}`
@@ -561,61 +546,51 @@
     });
 
 
-    // Inquiry Dispatcher
-    async function handleSendEnquiry(e) {
-      e.preventDefault();
-      const name = document.getElementById('enq-name').value;
-      const phone = document.getElementById('enq-phone').value;
-      const email = document.getElementById('enq-email').value;
-      const message = document.getElementById('enq-msg').value;
+    // Share action — uses Web Share API with full property details; falls back to clipboard
+    function handleShareLink() {
+      const title   = (propertyDetails && propertyDetails.title)   ? propertyDetails.title   : document.title;
+      const price   = (propertyDetails && propertyDetails.price)   ? `₹${Number(propertyDetails.price).toLocaleString('en-IN')}` : '';
+      const city    = (propertyDetails && propertyDetails.city)    ? propertyDetails.city    : '';
+      const image   = (propertyDetails && propertyDetails.images && propertyDetails.images[0]) ? propertyDetails.images[0].image_url : '';
+      const url     = window.location.href;
 
-      // Client-side validations
-      const nameTrimmed = name.trim();
-      if (nameTrimmed.length < 2 || nameTrimmed.length > 60) {
-        return alert('Name must be between 2 and 60 characters.');
-      }
-      if (/^\d+$/.test(nameTrimmed)) {
-        return alert('Name cannot contain only numbers.');
-      }
-      if (/[<>]/.test(nameTrimmed)) {
-        return alert('HTML tags are not allowed in name.');
-      }
+      const shareText = [title, price && `Price: ${price}`, city && `Location: ${city}`].filter(Boolean).join(' • ');
 
-      const emailVal = email.trim().toLowerCase();
-      if (emailVal.includes('..') || emailVal.includes(' ') || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailVal)) {
-        return alert('Please enter a valid email address.');
-      }
-
-      const phoneTrimmed = phone.trim();
-      if (!/^[6-9]\d{9}$/.test(phoneTrimmed)) {
-        return alert('Please enter a valid 10-digit Indian mobile number.');
-      }
-
-      try {
-        const result = await apiRequest('/api/properties/action/enquiry', 'POST', {
-          propertyId, name: nameTrimmed, phone: phoneTrimmed, email: emailVal, message
+      if (navigator.share) {
+        navigator.share({
+          title: title,
+          text:  shareText,
+          url:   url
+        }).catch(() => {
+          // User cancelled or error — silently ignore
         });
-        if (result.success) {
-          alert('Your inquiry was successfully sent to the property owner! They will contact you shortly.');
-          e.target.reset();
+      } else {
+        // Fallback: copy URL to clipboard
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+            showToastMsg('Property link copied to clipboard!');
+          });
+        } else {
+          // Last resort for older browsers
+          const ta = document.createElement('textarea');
+          ta.value = url;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToastMsg('Property link copied to clipboard!');
         }
-      } catch (err) {
-        alert(err.message);
       }
     }
 
-
-    // Share action
-    function handleShareLink() {
-      if (navigator.share) {
-        navigator.share({
-          title: document.getElementById('details-title').innerText,
-          url: window.location.href
-        }).catch(err => console.log(err));
-      } else {
-        navigator.clipboard.writeText(window.location.href);
-        alert('Property link copied to clipboard!');
-      }
+    // Minimal toast helper (reuse existing if available, else create inline)
+    function showToastMsg(msg) {
+      if (typeof showToast === 'function') { showToast(msg); return; }
+      const d = document.createElement('div');
+      d.innerText = msg;
+      Object.assign(d.style, { position:'fixed', bottom:'80px', left:'50%', transform:'translateX(-50%)', background:'#1a1a1a', color:'#fff', padding:'10px 18px', borderRadius:'20px', fontSize:'12px', fontWeight:'600', zIndex:'9999', opacity:'1', transition:'opacity 0.4s' });
+      document.body.appendChild(d);
+      setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 400); }, 2200);
     }
 
     let activeImageIndex = 0;
