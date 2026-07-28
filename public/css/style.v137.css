@@ -92,6 +92,72 @@ body {
   font-size: 20px;
   color: var(--primary-red);
   letter-spacing: -0.5px;
+  text-decoration: none;
+}
+
+.logo-branded {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  text-decoration: none;
+}
+
+.logo-svg {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.logo-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.logo-main-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: baseline;
+}
+
+.logo-main-text .text-blue {
+  color: #004b93;
+}
+
+.logo-main-text .text-orange {
+  color: #ff6a00;
+}
+
+.logo-tagline-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.logo-tagline {
+  font-family: 'Outfit', sans-serif;
+  font-size: 7.5px;
+  font-weight: 600;
+  color: #333333;
+  text-transform: capitalize;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.tagline-line {
+  flex-grow: 1;
+  height: 1px;
+  background: #004b93;
+  min-width: 8px;
 }
 
 .hamburger-btn, .header-icon {

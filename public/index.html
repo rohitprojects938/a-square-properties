@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v136.css">
+  <link rel="stylesheet" href="/css/style.v137.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -393,7 +393,31 @@
       <button class="hamburger-btn" id="hamburger-btn">
         <i class="bx bx-menu"></i>
       </button>
-      <div class="logo">House Rental</div>
+      <a href="/" class="logo logo-branded">
+        <!-- SVG Icon -->
+        <svg viewBox="0 0 100 100" class="logo-svg">
+          <!-- House roof and outer wall outline in blue -->
+          <path d="M50 15 L20 46 L20 85 Q20 88 23 88 L77 88 Q80 88 80 85 L80 46 Z" fill="none" stroke="#004b93" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+          <path d="M14 50 L50 15 L86 50" fill="none" stroke="#004b93" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+          <!-- Window: 4 orange squares -->
+          <rect x="38" y="46" width="10" height="10" fill="#ff6a00" rx="1.5"/>
+          <rect x="52" y="46" width="10" height="10" fill="#ff6a00" rx="1.5"/>
+          <rect x="38" y="58" width="10" height="10" fill="#ff6a00" rx="1.5"/>
+          <rect x="52" y="58" width="10" height="10" fill="#ff6a00" rx="1.5"/>
+          <!-- Door: 1 blue square at bottom center -->
+          <rect x="44" y="74" width="12" height="14" fill="#004b93" rx="1"/>
+        </svg>
+        <div class="logo-text-wrapper">
+          <div class="logo-main-text">
+            <span class="text-blue">house</span><span class="text-orange">renter</span><span class="text-blue">.in</span>
+          </div>
+          <div class="logo-tagline-container">
+            <span class="tagline-line"></span>
+            <span class="logo-tagline">Find. Connect. Rent.</span>
+            <span class="tagline-line"></span>
+          </div>
+        </div>
+      </a>
       <a href="/profile.html" class="profile-avatar-container">
         <img id="header-profile-pic" class="profile-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%23F5F6F8'/></svg>" alt="Profile">
         <span class="notification-dot"></span>
@@ -763,7 +787,7 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v136.js"></script>
+  <script src="/js/main.v137.js"></script>
   <script>
 
     // Greet user dynamically
