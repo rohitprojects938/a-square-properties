@@ -367,6 +367,70 @@
       margin-bottom: 12px;
       color: #1a1a1a;
     }
+    .loan-field-wrap { position: relative; }
+    .loan-field-wrap input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1.5px solid #e2e8f0;
+      font-size: 13px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .loan-field-wrap input:focus { border-color: #004b93; }
+    .loan-field-wrap input.loan-field-error { border-color: #e53e3e !important; }
+    .loan-field-wrap input.loan-field-ok { border-color: #38a169 !important; }
+    .loan-inline-error {
+      font-size: 10.5px;
+      color: #e53e3e;
+      margin-top: 3px;
+      padding-left: 4px;
+      display: none;
+    }
+    .loan-inline-error.show { display: block; }
+    .loan-submit-btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ff6a00 0%, #ff9a3c 100%);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255,106,0,0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .loan-submit-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(255,106,0,0.25); }
+    .loan-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+    .loan-btn-spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: loan-spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes loan-spin { to { transform: rotate(360deg); } }
+    .loan-success-msg {
+      background: linear-gradient(135deg, #e6ffed, #f0fff4);
+      border: 1.5px solid #38a169;
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: center;
+      display: none;
+    }
+    .loan-success-msg .loan-success-icon { font-size: 28px; margin-bottom: 6px; }
+    .loan-success-msg h5 { font-size: 13px; font-weight: 700; color: #276749; margin: 0 0 4px; }
+    .loan-success-msg p { font-size: 11px; color: #2f855a; margin: 0; }
 
     /* 8. Infinite Property Feed */
     .infinite-feed-grid {
@@ -657,17 +721,35 @@
           <!-- Application Form -->
           <div class="loan-lead-form" id="loan-application-form" style="display: none;">
             <h4>Apply for Instant Loan</h4>
-            <form onsubmit="submitLoanApplication(event)" style="display:flex; flex-direction:column; gap:12px;">
-              <div>
-                <input type="text" id="loan-aadhaar" placeholder="Enter 12-Digit Aadhaar Number" maxlength="12" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); font-size:13px; box-sizing:border-box;" required>
+
+            <!-- Success message (shown after submission) -->
+            <div class="loan-success-msg" id="loan-success-msg">
+              <div class="loan-success-icon">🎉</div>
+              <h5>Application Submitted!</h5>
+              <p>Our team will contact you shortly on your registered mobile number.</p>
+            </div>
+
+            <form id="loan-form-inner" onsubmit="submitLoanApplication(event)" style="display:flex; flex-direction:column; gap:12px;">
+              <!-- Aadhaar -->
+              <div class="loan-field-wrap">
+                <input type="tel" id="loan-aadhaar" placeholder="Enter 12-Digit Aadhaar Number" maxlength="12" inputmode="numeric" autocomplete="off">
+                <div class="loan-inline-error" id="loan-aadhaar-err">Aadhaar must be exactly 12 digits (numbers only).</div>
               </div>
-              <div>
-                <input type="text" id="loan-pan" placeholder="Enter 10-Digit PAN Number (e.g. ABCDE1234F)" maxlength="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); font-size:13px; box-sizing:border-box;" required>
+              <!-- PAN -->
+              <div class="loan-field-wrap">
+                <input type="text" id="loan-pan" placeholder="Enter PAN Number (e.g. ABCDE1234F)" maxlength="10" autocomplete="off" style="text-transform:uppercase;">
+                <div class="loan-inline-error" id="loan-pan-err">Enter a valid PAN (e.g. ABCDE1234F).</div>
               </div>
-              <div>
-                <input type="text" id="loan-mobile" placeholder="Enter 10-Digit Mobile Number" maxlength="10" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); font-size:13px; box-sizing:border-box;" required>
+              <!-- Mobile -->
+              <div class="loan-field-wrap">
+                <input type="tel" id="loan-mobile" placeholder="Enter 10-Digit Mobile Number" maxlength="10" inputmode="numeric" autocomplete="off">
+                <div class="loan-inline-error" id="loan-mobile-err">Enter a valid 10-digit Indian mobile number.</div>
               </div>
-              <button type="submit" class="apply-btn-submit" style="background:var(--primary-color); color:white; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer; font-size:13px; width: 100%;">Submit Application</button>
+              <!-- Premium Submit Button -->
+              <button type="submit" class="loan-submit-btn" id="loan-submit-btn">
+                <div class="loan-btn-spinner" id="loan-btn-spinner"></div>
+                <span id="loan-btn-text">Apply for Loan</span>
+              </button>
             </form>
           </div>
         </div>
@@ -1601,11 +1683,57 @@ Please share more details.`;
 
     window.submitLoanApplication = async function(e) {
       e.preventDefault();
-      const aadhaar = document.getElementById('loan-aadhaar').value.trim();
-      const pan = document.getElementById('loan-pan').value.trim();
-      const mobile = document.getElementById('loan-mobile').value.trim();
 
-      if (!aadhaar || !pan || !mobile) return;
+      const aadhaarEl = document.getElementById('loan-aadhaar');
+      const panEl     = document.getElementById('loan-pan');
+      const mobileEl  = document.getElementById('loan-mobile');
+
+      const aadhaar = aadhaarEl.value.trim();
+      const pan     = panEl.value.trim().toUpperCase();
+      const mobile  = mobileEl.value.trim();
+
+      // Helper: show/clear inline errors
+      const setErr = (inputEl, errId, msg) => {
+        const errEl = document.getElementById(errId);
+        if (msg) {
+          inputEl.classList.add('loan-field-error');
+          inputEl.classList.remove('loan-field-ok');
+          errEl.innerText = msg;
+          errEl.classList.add('show');
+        } else {
+          inputEl.classList.remove('loan-field-error');
+          inputEl.classList.add('loan-field-ok');
+          errEl.classList.remove('show');
+        }
+      };
+
+      // Validate
+      let valid = true;
+      if (!/^\d{12}$/.test(aadhaar)) {
+        setErr(aadhaarEl, 'loan-aadhaar-err', 'Aadhaar must be exactly 12 digits (numbers only).');
+        valid = false;
+      } else { setErr(aadhaarEl, 'loan-aadhaar-err', null); }
+
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+        setErr(panEl, 'loan-pan-err', 'Enter a valid PAN number (e.g. ABCDE1234F).');
+        valid = false;
+      } else { setErr(panEl, 'loan-pan-err', null); }
+
+      if (!/^[6-9]\d{9}$/.test(mobile)) {
+        setErr(mobileEl, 'loan-mobile-err', 'Enter a valid 10-digit Indian mobile number starting with 6–9.');
+        valid = false;
+      } else { setErr(mobileEl, 'loan-mobile-err', null); }
+
+      if (!valid) return;
+
+      // Loading state
+      const btn     = document.getElementById('loan-submit-btn');
+      const spinner = document.getElementById('loan-btn-spinner');
+      const btnText = document.getElementById('loan-btn-text');
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      btnText.innerText = 'Submitting...';
+
       try {
         const res = await apiRequest('/api/public/loan/apply', 'POST', {
           aadhaar_number: aadhaar,
@@ -1613,12 +1741,22 @@ Please share more details.`;
           mobile_number: mobile
         });
         if (res.success) {
-          alert('Application submitted successfully! Our representative will call you back soon.');
-          document.getElementById('loan-application-form').reset();
-          document.getElementById('loan-application-form').style.display = 'none';
+          // Show success card, hide form
+          document.getElementById('loan-form-inner').style.display = 'none';
+          const successEl = document.getElementById('loan-success-msg');
+          successEl.style.display = 'block';
+          // Reset fields silently
+          aadhaarEl.value = ''; panEl.value = ''; mobileEl.value = '';
+          [aadhaarEl, panEl, mobileEl].forEach(el => el.classList.remove('loan-field-ok', 'loan-field-error'));
+        } else {
+          alert(res.error || 'Submission failed. Please try again.');
         }
       } catch(err) {
-        alert(err.message || 'Submission failed.');
+        alert(err.message || 'Network error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        btnText.innerText = 'Apply for Loan';
       }
     };
 

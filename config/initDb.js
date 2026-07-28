@@ -125,6 +125,10 @@ async function initializeDatabase() {
         )
       `);
       console.log('✅ MySQL Migration: Ensure loan_leads table exists.');
+      await addColumnIfNotExist('loan_leads', 'user_id', "ALTER TABLE loan_leads ADD COLUMN user_id INT DEFAULT NULL;");
+      await addColumnIfNotExist('loan_leads', 'applicant_name', "ALTER TABLE loan_leads ADD COLUMN applicant_name VARCHAR(255) DEFAULT NULL;");
+      await addColumnIfNotExist('loan_leads', 'email', "ALTER TABLE loan_leads ADD COLUMN email VARCHAR(255) DEFAULT NULL;");
+      await addColumnIfNotExist('loan_leads', 'status', "ALTER TABLE loan_leads ADD COLUMN status ENUM('pending','approved','rejected') DEFAULT 'pending';");
     } catch(err) {
       console.error('❌ Migration failed for loan_leads:', err.message);
     }

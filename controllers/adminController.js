@@ -378,33 +378,132 @@ async function deleteReview(req, res) {
 
 // ─── LOAN LEADS & SETTINGS ────────────────────────────────────────────────────────
 async function getLoans(req, res) {
-  const page  = Math.max(1, parseInt(req.query.page)  || 1);
-  const limit = Math.min(100, parseInt(req.query.limit) || 20);
+  const page   = Math.max(1, parseInt(req.query.page)  || 1);
+  const limit  = Math.min(100, parseInt(req.query.limit) || 20);
   const offset = (page - 1) * limit;
-  const { search } = req.query;
+  const { search, status, date_from, date_to } = req.query;
 
-  let sql = 'SELECT * FROM loan_leads';
-  let countSql = 'SELECT COUNT(*) as total FROM loan_leads';
+  let where = [];
   let params = [];
 
   if (search) {
-    sql += ' WHERE aadhaar_number LIKE ? OR pan_number LIKE ? OR mobile_number LIKE ?';
-    countSql += ' WHERE aadhaar_number LIKE ? OR pan_number LIKE ? OR mobile_number LIKE ?';
     const s = `%${search}%`;
-    params = [s, s, s];
+    where.push('(ll.aadhaar_number LIKE ? OR ll.pan_number LIKE ? OR ll.mobile_number LIKE ? OR ll.applicant_name LIKE ? OR ll.email LIKE ?)');
+    params.push(s, s, s, s, s);
+  }
+  if (status && ['pending', 'approved', 'rejected'].includes(status)) {
+    where.push('ll.status = ?');
+    params.push(status);
+  }
+  if (date_from) {
+    where.push('DATE(ll.created_at) >= ?');
+    params.push(date_from);
+  }
+  if (date_to) {
+    where.push('DATE(ll.created_at) <= ?');
+    params.push(date_to);
   }
 
-  sql += ' ORDER BY id DESC LIMIT ? OFFSET ?';
-  const queryParams = [...params, limit, offset];
+  const whereClause = where.length ? ' WHERE ' + where.join(' AND ') : '';
+  const sql      = `SELECT ll.*, u.name as user_name FROM loan_leads ll LEFT JOIN users u ON ll.user_id = u.id${whereClause} ORDER BY ll.id DESC LIMIT ? OFFSET ?`;
+  const countSql = `SELECT COUNT(*) as total FROM loan_leads ll${whereClause}`;
 
   try {
-    const [rows] = await db.query(sql, queryParams);
+    const [rows]      = await db.query(sql, [...params, limit, offset]);
     const [[counter]] = await db.query(countSql, params);
-    res.json({
-      success: true,
-      data: rows,
-      pagination: { total: counter.total, page, limit }
+    res.json({ success: true, data: rows, pagination: { total: counter.total, page, limit } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function updateLoanStatus(req, res) {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!['pending', 'approved', 'rejected'].includes(status)) {
+    return res.status(400).json({ success: false, error: 'Invalid status value.' });
+  }
+  try {
+    await db.query('UPDATE loan_leads SET status = ? WHERE id = ?', [status, id]);
+    res.json({ success: true, message: `Application ${status} successfully.` });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function exportLoansXlsx(req, res) {
+  const { search, status, date_from, date_to } = req.query;
+  let where = [];
+  let params = [];
+
+  if (search) {
+    const s = `%${search}%`;
+    where.push('(aadhaar_number LIKE ? OR pan_number LIKE ? OR mobile_number LIKE ? OR applicant_name LIKE ? OR email LIKE ?)');
+    params.push(s, s, s, s, s);
+  }
+  if (status && ['pending', 'approved', 'rejected'].includes(status)) {
+    where.push('status = ?');
+    params.push(status);
+  }
+  if (date_from) { where.push('DATE(created_at) >= ?'); params.push(date_from); }
+  if (date_to)   { where.push('DATE(created_at) <= ?'); params.push(date_to); }
+
+  const whereClause = where.length ? ' WHERE ' + where.join(' AND ') : '';
+
+  try {
+    const [rows] = await db.query(`SELECT * FROM loan_leads${whereClause} ORDER BY id DESC`, params);
+
+    // Build XLSX using ExcelJS
+    let ExcelJS;
+    try { ExcelJS = require('exceljs'); } catch(e) {
+      // Fallback: stream CSV if exceljs not installed
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="loan_applications.csv"');
+      const header = 'App ID,Applicant Name,Email,Mobile Number,Aadhaar Number,PAN Number,Status,Submission Date\n';
+      const body = rows.map(r =>
+        [r.id, r.applicant_name||'', r.email||'', r.mobile_number, r.aadhaar_number, r.pan_number, r.status, new Date(r.created_at).toLocaleString()].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')
+      ).join('\n');
+      return res.send(header + body);
+    }
+
+    const workbook  = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Loan Applications');
+
+    worksheet.columns = [
+      { header: 'App ID',          key: 'id',              width: 10 },
+      { header: 'Applicant Name',  key: 'applicant_name',  width: 22 },
+      { header: 'Email',           key: 'email',           width: 28 },
+      { header: 'Mobile Number',   key: 'mobile_number',   width: 16 },
+      { header: 'Aadhaar Number',  key: 'aadhaar_number',  width: 18 },
+      { header: 'PAN Number',      key: 'pan_number',      width: 14 },
+      { header: 'Status',          key: 'status',          width: 12 },
+      { header: 'Submission Date', key: 'created_at',      width: 22 },
+    ];
+
+    // Style header row
+    worksheet.getRow(1).eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF004B93' } };
+      cell.alignment = { horizontal: 'center' };
     });
+
+    rows.forEach(r => {
+      worksheet.addRow({
+        id:             r.id,
+        applicant_name: r.applicant_name || 'Guest',
+        email:          r.email || '',
+        mobile_number:  r.mobile_number,
+        aadhaar_number: r.aadhaar_number,
+        pan_number:     r.pan_number,
+        status:         r.status,
+        created_at:     new Date(r.created_at).toLocaleString('en-IN'),
+      });
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="loan_applications.xlsx"');
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -645,7 +744,7 @@ module.exports = {
   getAdminProperties, updatePropertyStatus, deleteProperty, togglePropertyVisibility, toggleFeatured,
   getServices, createService, updateService, deleteService,
   getReviews, updateReviewStatus, replyToReview, deleteReview,
-  getLoans, deleteLoan, updateLoanSettings,
+  getLoans, updateLoanStatus, exportLoansXlsx, deleteLoan, updateLoanSettings,
   getPlans, createPlan, updatePlan, deletePlan,
   getPayments, getReels, updateReelStatus,
   getAnalytics, sendNotification,

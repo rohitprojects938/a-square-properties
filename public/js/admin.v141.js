@@ -663,37 +663,81 @@ window.deleteReview = async (rid) => {
 
 // ─── LOAN LEADS MANAGER ──────────────────────────────────────────
 let loansList = [];
+let loansCurrentPage = 1;
 
-async function loadLoansManager() {
-  // First load settings
+function getLoanFilters() {
+  return {
+    search:    (document.getElementById('loan-search')        || {}).value || '',
+    status:    (document.getElementById('loan-status-filter') || {}).value || '',
+    date_from: (document.getElementById('loan-date-from')     || {}).value || '',
+    date_to:   (document.getElementById('loan-date-to')       || {}).value || '',
+  };
+}
+
+async function loadLoansManager(page = 1) {
+  loansCurrentPage = page;
   await loadAdminLoanSettings();
 
-  const search = document.getElementById('loan-search').value.trim();
-  const res = await apiRequest(`/api/admin/loans?search=${encodeURIComponent(search)}`);
-  if (res.success) {
-    loansList = res.data;
-    const tbody = document.getElementById('loans-manager-list');
-    if (!tbody) return;
+  const { search, status, date_from, date_to } = getLoanFilters();
+  const params = new URLSearchParams({ search, status, date_from, date_to, page, limit: 20 });
+  const res = await apiRequest(`/api/admin/loans?${params}`);
 
-    if (loansList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--adm-muted);">No loan applications found.</td></tr>';
-      return;
+  if (!res.success) return;
+  loansList = res.data;
+
+  // Update count label
+  const countLabel = document.getElementById('loans-count-label');
+  if (countLabel && res.pagination) {
+    countLabel.innerText = `${res.pagination.total} application${res.pagination.total !== 1 ? 's' : ''} found`;
+  }
+
+  const tbody = document.getElementById('loans-manager-list');
+  if (!tbody) return;
+
+  if (loansList.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--adm-muted); padding:24px;">No loan applications found.</td></tr>';
+    return;
+  }
+
+  const statusBadge = (s) => {
+    const colors = { pending: '#f59e0b', approved: '#22c55e', rejected: '#ef4444' };
+    return `<span style="display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:700; background:${colors[s] || '#888'}22; color:${colors[s] || '#888'}; border:1px solid ${colors[s] || '#888'}44; text-transform:capitalize;">${s}</span>`;
+  };
+
+  tbody.innerHTML = loansList.map(l => `
+    <tr>
+      <td><strong>#${l.id}</strong></td>
+      <td>${l.applicant_name || l.user_name || '<span style="color:var(--adm-muted)">Guest</span>'}</td>
+      <td style="font-size:11px;">${l.email || '<span style="color:var(--adm-muted)">—</span>'}</td>
+      <td><a href="tel:${l.mobile_number}" style="color:var(--adm-primary); text-decoration:none; font-weight:600;">${l.mobile_number}</a></td>
+      <td><code style="font-size:11px;">${l.aadhaar_number}</code></td>
+      <td><code style="font-size:11px;">${l.pan_number}</code></td>
+      <td>${statusBadge(l.status || 'pending')}</td>
+      <td style="font-size:11px; white-space:nowrap;">${new Date(l.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</td>
+      <td>
+        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+          ${l.status !== 'approved'  ? `<button class="adm-btn adm-btn-sm" style="background:#22c55e22; color:#22c55e; border:1px solid #22c55e44;" onclick="updateLoanStatus(${l.id},'approved')" title="Approve"><i data-lucide="check"></i></button>` : ''}
+          ${l.status !== 'rejected'  ? `<button class="adm-btn adm-btn-sm" style="background:#ef444422; color:#ef4444; border:1px solid #ef444444;" onclick="updateLoanStatus(${l.id},'rejected')" title="Reject"><i data-lucide="x"></i></button>` : ''}
+          ${l.status !== 'pending'   ? `<button class="adm-btn adm-btn-sm" style="background:#f59e0b22; color:#f59e0b; border:1px solid #f59e0b44;" onclick="updateLoanStatus(${l.id},'pending')" title="Set Pending"><i data-lucide="clock"></i></button>` : ''}
+          <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteLoanLead(${l.id})" title="Delete"><i data-lucide="trash-2"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  if (window.lucide) window.lucide.createIcons();
+
+  // Pagination
+  if (res.pagination) {
+    const totalPages = Math.ceil(res.pagination.total / res.pagination.limit);
+    const paginationEl = document.getElementById('loans-pagination');
+    if (paginationEl && totalPages > 1) {
+      paginationEl.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1).map(p =>
+        `<button class="adm-btn adm-btn-sm ${p === page ? 'adm-btn-primary' : 'adm-btn-ghost'}" onclick="loadLoansManager(${p})">${p}</button>`
+      ).join('');
+    } else if (paginationEl) {
+      paginationEl.innerHTML = '';
     }
-
-    tbody.innerHTML = loansList.map(l => `
-      <tr>
-        <td>${l.id}</td>
-        <td><code>${l.aadhaar_number}</code></td>
-        <td><code>${l.pan_number}</code></td>
-        <td><a href="tel:${l.mobile_number}" style="color:var(--adm-primary); text-decoration:none;">${l.mobile_number}</a></td>
-        <td>${new Date(l.created_at).toLocaleString()}</td>
-        <td>
-          <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteLoanLead(${l.id})"><i data-lucide="trash-2"></i></button>
-        </td>
-      </tr>
-    `).join('');
-
-    if (window.lucide) window.lucide.createIcons();
   }
 }
 
@@ -720,14 +764,40 @@ window.saveAdminLoanSettings = async (e) => {
   }
 };
 
+window.updateLoanStatus = async (lid, status) => {
+  const res = await apiRequest(`/api/admin/loans/${lid}/status`, 'PUT', { status });
+  if (res.success) {
+    showToast(`Application marked as ${status}.`);
+    loadLoansManager(loansCurrentPage);
+  } else {
+    showToast(res.error || 'Status update failed.', 'error');
+  }
+};
+
 window.deleteLoanLead = async (lid) => {
-  if (confirm('Delete this loan application permanently?')) {
+  if (confirm('Permanently delete this loan application?')) {
     const res = await apiRequest(`/api/admin/loans/${lid}`, 'DELETE');
     if (res.success) {
-      showToast('Lead deleted successfully.');
-      loadLoansManager();
+      showToast('Application deleted successfully.');
+      loadLoansManager(loansCurrentPage);
     }
   }
+};
+
+window.exportLoansXlsx = () => {
+  const { search, status, date_from, date_to } = getLoanFilters();
+  const params = new URLSearchParams({ search, status, date_from, date_to });
+  const token = localStorage.getItem('token');
+  // Create a temporary link to download the file
+  const a = document.createElement('a');
+  a.href = `/api/admin/loans/export/xlsx?${params}`;
+  // Pass auth token via URL since file downloads can't use headers easily
+  a.href += `&_token=${encodeURIComponent(token || '')}`;
+  a.download = 'loan_applications.xlsx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('Downloading Excel export...');
 };
 
 

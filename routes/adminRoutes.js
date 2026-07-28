@@ -39,9 +39,11 @@ router.post('/reviews/:id/reply',admin.replyToReview);
 router.delete('/reviews/:id',    admin.deleteReview);
 
 // Loan Leads
-router.get('/loans',             admin.getLoans);
-router.delete('/loans/:id',      admin.deleteLoan);
-router.put('/settings/loan',     admin.updateLoanSettings);
+router.get('/loans',                 admin.getLoans);
+router.put('/loans/:id/status',      admin.updateLoanStatus);
+router.delete('/loans/:id',          admin.deleteLoan);
+router.get('/loans/export/xlsx',     admin.exportLoansXlsx);
+router.put('/settings/loan',         admin.updateLoanSettings);
 
 // Plans & Subscriptions
 router.get('/plans',           admin.getPlans);

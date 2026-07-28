@@ -60,33 +60,60 @@ router.post('/reviews', async (req, res) => {
   }
 });
 
+// Rate-limit store for loan applications (in-memory, keyed by mobile number)
+const loanRateLimitMap = new Map();
+
 // 3. Submit a new loan lead application
 router.post('/loan/apply', async (req, res) => {
-  const { aadhaar_number, pan_number, mobile_number } = req.body;
+  const sanitize = (str) => (str || '').toString().trim()
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  const aadhaar_number = sanitize(req.body.aadhaar_number);
+  const pan_number     = sanitize(req.body.pan_number).toUpperCase();
+  const mobile_number  = sanitize(req.body.mobile_number);
+
+  // Required field checks
   if (!aadhaar_number || !pan_number || !mobile_number) {
     return res.status(400).json({ success: false, error: 'Aadhaar, PAN, and Mobile number are required.' });
   }
-  // Validate Aadhaar (12 digits)
+  // Validate Aadhaar (exactly 12 digits, numbers only)
   if (!/^\d{12}$/.test(aadhaar_number)) {
-    return res.status(400).json({ success: false, error: 'Please enter a valid 12-digit Aadhaar number.' });
+    return res.status(400).json({ success: false, error: 'Aadhaar must be exactly 12 digits.' });
   }
-  // Validate PAN (10 chars, standard regex)
-  if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan_number.toUpperCase())) {
-    return res.status(400).json({ success: false, error: 'Please enter a valid PAN number (e.g. ABCDE1234F).' });
+  // Validate PAN (standard Indian PAN format)
+  if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan_number)) {
+    return res.status(400).json({ success: false, error: 'Enter a valid PAN number (e.g. ABCDE1234F).' });
   }
-  // Validate Indian mobile (10 digits)
+  // Validate Indian mobile number
   if (!/^[6-9]\d{9}$/.test(mobile_number)) {
-    return res.status(400).json({ success: false, error: 'Please enter a valid 10-digit mobile number.' });
+    return res.status(400).json({ success: false, error: 'Enter a valid 10-digit Indian mobile number.' });
   }
 
+  // Rate-limit: one submission per mobile number per 60 seconds
+  const now = Date.now();
+  const lastTime = loanRateLimitMap.get(mobile_number) || 0;
+  if (now - lastTime < 60000) {
+    return res.status(429).json({ success: false, error: 'Please wait 60 seconds before resubmitting.' });
+  }
+  loanRateLimitMap.set(mobile_number, now);
+  // Auto-clean old entries to prevent memory bloat
+  if (loanRateLimitMap.size > 5000) {
+    for (const [k, v] of loanRateLimitMap) { if (now - v > 120000) loanRateLimitMap.delete(k); }
+  }
+
+  // Extract logged-in user info from session (if authenticated)
+  const userId        = (req.session && req.session.userId) ? req.session.userId : null;
+  const applicantName = (req.session && req.session.user && req.session.user.name) ? req.session.user.name : null;
+  const email         = (req.session && req.session.user && req.session.user.email) ? req.session.user.email : null;
+
   try {
-    await db.query(
-      'INSERT INTO loan_leads (aadhaar_number, pan_number, mobile_number) VALUES (?, ?, ?)',
-      [aadhaar_number, pan_number.toUpperCase(), mobile_number]
+    const [result] = await db.query(
+      'INSERT INTO loan_leads (aadhaar_number, pan_number, mobile_number, user_id, applicant_name, email, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [aadhaar_number, pan_number, mobile_number, userId, applicantName, email, 'pending']
     );
-    res.json({ success: true, message: 'Loan application submitted successfully.' });
+    res.json({ success: true, message: 'Loan application submitted successfully. Our team will contact you shortly.', id: result.insertId });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Submission failed. Please try again.' });
   }
 });
 

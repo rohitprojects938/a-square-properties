@@ -34,6 +34,10 @@ async function authenticateJWT(req, res, next) {
     if (cookies.token) token = cookies.token;
   }
 
+  if (!token && req.query._token) {
+    token = req.query._token;
+  }
+
   if (!token) { req.user = null; return next(); }
 
   try {

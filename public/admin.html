@@ -427,50 +427,69 @@
           </div>
         </section>
 
-        <!-- Loan Leads & Configurations Section -->
+        <!-- Loan Applications Section -->
         <section class="adm-section" id="sec-loans">
           <div class="adm-section-header">
             <div>
-              <h2>Loan Section Configurations</h2>
-              <p>Enable/disable the loan promotion card and change the Apply button text.</p>
+              <h2>Loan Applications</h2>
+              <p>Review, manage, and export submitted home loan applications.</p>
             </div>
           </div>
 
           <!-- Configuration Panel Form -->
           <form onsubmit="saveAdminLoanSettings(event)" style="background:var(--adm-bg-card, #2c3a50); padding:20px; border-radius:12px; margin-bottom:24px; display:flex; flex-direction:column; gap:16px; border:1px solid var(--border-color);">
+            <h3 style="margin:0; font-size:14px; color:var(--adm-text,#fff);">Loan Section Configuration</h3>
             <div style="display:flex; align-items:center; gap:12px;">
               <input type="checkbox" id="admin-loan-enabled" style="width:20px; height:20px; cursor:pointer;">
               <label for="admin-loan-enabled" style="font-weight:700; cursor:pointer; color:var(--adm-text, #ffffff);">Enable Loan Card Section on Homepage</label>
             </div>
             <div class="adm-form-group" style="margin-bottom:0;">
-              <label class="adm-form-label" style="color:var(--adm-text, #ffffff);">Apply Call-to-Action Button Text</label>
+              <label class="adm-form-label" style="color:var(--adm-text, #ffffff);">Apply Button Text</label>
               <input type="text" id="admin-loan-button-text" class="adm-form-input" style="max-width:300px;" placeholder="e.g. Apply Now" required>
             </div>
             <button type="submit" class="adm-btn adm-btn-primary" style="align-self:flex-start;">Save Configuration</button>
           </form>
 
+          <!-- Submitted Applications -->
           <div class="adm-section-header">
             <div>
-              <h2>Submitted Loan Lead Applications</h2>
-              <p>View, search, and download applications submitted by users.</p>
+              <h2>Submitted Applications</h2>
+              <p id="loans-count-label">Loading...</p>
             </div>
-            <div style="display:flex; gap:10px;">
-              <button class="adm-btn adm-btn-ghost" onclick="exportTableToCSV('loans-table-data', 'loan_leads.csv')"><i data-lucide="download"></i> Export CSV</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="adm-btn adm-btn-ghost" onclick="exportLoansXlsx()" title="Export to Excel">
+                <i data-lucide="file-spreadsheet"></i> Export Excel
+              </button>
             </div>
           </div>
 
-          <div style="margin-bottom:16px;">
-            <input type="text" id="loan-search" class="adm-form-input" style="max-width:300px;" placeholder="Search by Aadhaar, PAN, or Mobile..." oninput="loadLoansManager()">
+          <!-- Filters row -->
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; align-items:center;">
+            <input type="text" id="loan-search" class="adm-form-input" style="max-width:220px; flex:1;" placeholder="Search name, mobile, PAN, email..." oninput="loadLoansManager()">
+            <select id="loan-status-filter" class="adm-form-input" style="max-width:140px;" onchange="loadLoansManager()">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <input type="date" id="loan-date-from" class="adm-form-input" style="max-width:145px;" onchange="loadLoansManager()" title="From date">
+            <input type="date" id="loan-date-to" class="adm-form-input" style="max-width:145px;" onchange="loadLoansManager()" title="To date">
+            <button class="adm-btn adm-btn-ghost" onclick="document.getElementById('loan-search').value=''; document.getElementById('loan-status-filter').value=''; document.getElementById('loan-date-from').value=''; document.getElementById('loan-date-to').value=''; loadLoansManager();" title="Clear filters">
+              <i data-lucide="x-circle"></i> Clear
+            </button>
           </div>
 
           <div class="adm-table-wrapper">
             <table class="adm-table" id="loans-table-data">
               <thead>
                 <tr>
-                  <th>Lead ID</th>
-                  <th>Aadhaar Number</th>
-                  <th>PAN Number</th>
-                  <th>Mobile Number</th>
+                  <th>App ID</th>
+                  <th>Applicant Name</th>
+                  <th>Email</th>
+                  <th>Mobile</th>
+                  <th>Aadhaar</th>
+                  <th>PAN</th>
+                  <th>Status</th>
                   <th>Submitted At</th>
                   <th>Actions</th>
                 </tr>
@@ -480,6 +499,9 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Pagination -->
+          <div id="loans-pagination" style="display:flex; gap:8px; margin-top:16px; justify-content:center; flex-wrap:wrap;"></div>
         </section>
 
         <!-- 10. PLANS & SUBSCRIPTIONS -->
