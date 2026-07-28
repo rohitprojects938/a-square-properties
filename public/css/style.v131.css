@@ -567,6 +567,64 @@ body {
   }
 }
 
+/* Hero Inner Search Bar (Overlay) */
+.hero-inner-search {
+  position: absolute;
+  left: 20px;
+  bottom: 22px;
+  width: 155px;            /* Width: 150-180px */
+  height: 34px;            /* Height: 34-38px */
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 17px;     /* Pill style */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 0 3px 0 10px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.hero-inner-search-icon {
+  font-size: 14px;
+  color: #777777;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.hero-inner-input {
+  width: 100%;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  font-size: 11px !important;
+  color: #333333 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  height: 100% !important;
+}
+
+.hero-inner-input::placeholder {
+  color: #999999;
+}
+
+.hero-inner-btn {
+  width: 28px;
+  height: 28px;
+  background: var(--secondary-orange);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(255, 106, 0, 0.2);
+}
+
 @media (min-width: 768px) {
   .hero-greeting-bar {
     padding: 0 0 8px 0;

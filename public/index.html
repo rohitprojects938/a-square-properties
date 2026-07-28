@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v130.css">
+  <link rel="stylesheet" href="/css/style.v131.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -391,6 +391,14 @@
         <!-- Hero Banner -->
         <div class="home-hero-container">
           <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="home-hero-image">
+          <!-- Compact search bar overlay (Inside container, bottom left overlaying the image text section) -->
+          <div class="hero-inner-search" id="hero-inner-search">
+            <i class="bx bx-search hero-inner-search-icon"></i>
+            <input type="text" placeholder="Search property..." class="hero-inner-input" readonly>
+            <button class="hero-inner-btn" aria-label="Search">
+              <i class="bx bx-right-arrow-alt"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -713,7 +721,7 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v130.js"></script>
+  <script src="/js/main.v131.js"></script>
   <script>
 
     // Greet user dynamically
@@ -1116,7 +1124,6 @@
     }
 
     // Enter Search trigger
-    // Enter Search trigger
     const homeSearchInput = document.getElementById('home-search-input');
     if (homeSearchInput) {
       homeSearchInput.addEventListener('keypress', (e) => {
@@ -1124,6 +1131,14 @@
           const query = e.target.value;
           window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
         }
+      });
+    }
+
+    // Hero Inner Search Overlay Click Flow
+    const heroInnerSearch = document.getElementById('hero-inner-search');
+    if (heroInnerSearch) {
+      heroInnerSearch.addEventListener('click', () => {
+        window.location.href = '/search.html';
       });
     }
 
