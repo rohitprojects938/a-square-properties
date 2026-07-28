@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Post Property - House Rental</title>
-  <link rel="stylesheet" href="/css/style.v140.css">
+  <link rel="stylesheet" href="/css/style.v141.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -125,10 +125,11 @@
               <input type="text" id="post-title" class="form-input" placeholder="e.g. Modern 3 BHK Apartment in Jubilee Hills" required>
             </div>
 
-            <div class="form-group">
+             <div class="form-group">
               <label class="form-label">Property Category</label>
               <select id="post-category" class="form-input">
                 <option value="apartment">Apartment</option>
+                <option value="house">House</option>
                 <option value="villa">Villa</option>
                 <option value="pg">PG / Co-living</option>
                 <option value="commercial">Commercial Space</option>
@@ -142,7 +143,13 @@
               <select id="post-category-type" class="form-input">
                 <option value="new">New Construction</option>
                 <option value="resale">Resale</option>
+                <option value="house">House</option>
               </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Contact Mobile Number</label>
+              <input type="tel" id="post-contact-phone" class="form-input" placeholder="e.g. 9876543210" required>
             </div>
 
             <div class="form-group">
@@ -262,17 +269,19 @@
             <div class="form-group">
               <label class="form-label">Upload Property Images (1 to 6 images)</label>
               <input type="file" id="post-media-files" class="form-input" accept="image/*" multiple style="display:none;">
-              <button type="button" class="btn-secondary" onclick="document.getElementById('post-media-files').click()" style="margin-bottom:12px; display:flex; align-items:center; gap:6px; font-weight:700;"><i class="bx bx-image-add" style="font-size:18px;"></i> Choose Images</button>
+              <div class="upload-zone" onclick="document.getElementById('post-media-files').click()" style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; background: var(--accent-gray); transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px; color: var(--text-muted);">
+                  <i class="bx bx-cloud-upload" style="font-size: 32px; color: var(--secondary-orange);"></i>
+                  <i class="bx bx-camera" style="font-size: 32px; color: var(--secondary-orange);"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 14px; color: var(--text-dark);">Choose Images</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Upload 1–6 Property Images (Tap here to upload property photos)</div>
+              </div>
               
               <!-- Previews Grid -->
               <div id="image-previews-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                 <!-- Previews loaded dynamically -->
               </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Upload Property Tour Video (Optional)</label>
-              <input type="file" id="post-video-file" class="form-input" accept="video/mp4">
             </div>
 
             <div style="display:flex; gap:12px; margin-top:32px;">
@@ -300,7 +309,7 @@
     </div>
   </div>
 
-  <script src="/js/main.v140.js"></script>
+  <script src="/js/main.v141.js"></script>
   <script>
     let currentWizardStep = 1;
     let leafMap = null;
@@ -312,7 +321,31 @@
       window.location.href = '/login.html';
     }
 
+    // Auto-fill contact mobile number from user storage
+    window.addEventListener('DOMContentLoaded', () => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const u = JSON.parse(userStr);
+          if (u && u.phone) {
+            const phoneInput = document.getElementById('post-contact-phone');
+            if (phoneInput && !phoneInput.value) phoneInput.value = u.phone;
+          }
+        } catch(e) {}
+      }
+    });
+
     function goToStep(step) {
+      if (currentWizardStep === 1 && step > 1) {
+        const phoneInput = document.getElementById('post-contact-phone');
+        const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+        if (!/^[6-9]\d{9}$/.test(phoneVal)) {
+          alert('Please enter a valid 10-digit Indian contact mobile number.');
+          if (phoneInput) phoneInput.focus();
+          return;
+        }
+      }
+
       if (step === 2 && currentWizardStep === 1) {
         setTimeout(initPostMap, 200);
       }
@@ -445,6 +478,7 @@
           document.getElementById('post-category').value = p.category || 'apartment';
           document.getElementById('post-listing-type').value = p.listing_type || 'rent';
           document.getElementById('post-category-type').value = p.category_type || 'new';
+          document.getElementById('post-contact-phone').value = p.contact_phone || '';
           document.getElementById('post-price').value = p.price || '';
           document.getElementById('post-area').value = p.area_sqft || '';
           document.getElementById('post-beds').value = p.bedrooms || 0;
@@ -552,12 +586,7 @@
       formData.append('pincode', document.getElementById('post-pincode').value);
       formData.append('latitude', document.getElementById('post-lat').value);
       formData.append('longitude', document.getElementById('post-lng').value);
-
-      // Append video if selected
-      const vidInput = document.getElementById('post-video-file');
-      if (vidInput.files.length > 0) {
-        formData.append('video', vidInput.files[0]);
-      }
+      formData.append('contact_phone', document.getElementById('post-contact-phone').value.trim());
 
       let url = '/api/properties';
       let method = 'POST';

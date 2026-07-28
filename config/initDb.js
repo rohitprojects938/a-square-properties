@@ -69,6 +69,14 @@ async function initializeDatabase() {
     await addColumnIfNotExist('property_images', 'sort_order', "ALTER TABLE property_images ADD COLUMN sort_order INT DEFAULT 0;");
     await addColumnIfNotExist('homepage_banners', 'sort_order', "ALTER TABLE homepage_banners ADD COLUMN sort_order INT DEFAULT 0;");
     await addColumnIfNotExist('properties', 'status', "ALTER TABLE properties ADD COLUMN status VARCHAR(50) DEFAULT 'active';");
+    await addColumnIfNotExist('properties', 'contact_phone', "ALTER TABLE properties ADD COLUMN contact_phone VARCHAR(50) DEFAULT NULL;");
+
+    try {
+      await db.query("ALTER TABLE properties MODIFY COLUMN category ENUM('independent_house', 'house', 'apartment', 'villa', 'pg', 'commercial', 'plot', 'farmhouse') NOT NULL;");
+      await db.query("ALTER TABLE properties MODIFY COLUMN category_type ENUM('new', 'resale', 'house') DEFAULT 'new';");
+    } catch(err) {
+      console.log('⚠️ Enum alter warning:', err.message);
+    }
 
     // Blog table schema alignment — admin controller uses these columns
     await addColumnIfNotExist('blogs', 'excerpt', "ALTER TABLE blogs ADD COLUMN excerpt TEXT DEFAULT NULL;");

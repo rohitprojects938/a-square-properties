@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Property Details - House Rental</title>
-  <link rel="stylesheet" href="/css/style.v140.css">
+  <link rel="stylesheet" href="/css/style.v141.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <!-- Leaflet CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -260,11 +260,11 @@
     <!-- Contact Sticky Action Bar -->
     <div class="action-bar-sticky">
       <!-- Call Owner -->
-      <a href="tel:+919919014220" class="action-circle-btn" style="background:#0071e3;" id="call-action-btn">
+      <a href="#" class="action-circle-btn" style="background:#0071e3;" id="call-action-btn">
         <i class="bx bxs-phone"></i>
       </a>
       <!-- WhatsApp chat -->
-      <a href="https://wa.me/919919014220" class="action-circle-btn" style="background:#25D366;" id="whatsapp-action-btn" target="_blank">
+      <a href="#" class="action-circle-btn" style="background:#25D366;" id="whatsapp-action-btn" target="_blank">
         <i class="bx bxl-whatsapp" style="font-size:24px;"></i>
       </a>
       <!-- Share link -->
@@ -279,7 +279,7 @@
 
   </div>
 
-  <script src="/js/main.v140.js"></script>
+  <script src="/js/main.v141.js"></script>
   <script>
     let propertyId = null;
     let propertyDetails = null;
@@ -386,10 +386,13 @@
           const ownerNameText = window.SafeRender.safeText(propertyDetails.owner_name, 'Owner');
           const ownerRoleText = window.SafeRender.safeText(propertyDetails.owner_role, 'Agent').toUpperCase();
           const ownerPhoneText = window.SafeRender.safeText(propertyDetails.owner_phone, '');
-          
+
+          // Prefer the listing's own contact_phone; fall back to owner's profile phone
+          const contactPhone = (propertyDetails.contact_phone || ownerPhoneText || '').replace(/[^0-9+]/g, '');
+
           document.getElementById('owner-name').innerText = ownerNameText;
-          document.getElementById('owner-tag').innerText = `Direct ${ownerRoleText} ${ownerPhoneText ? '• ' + ownerPhoneText : ''}`;
-          
+          document.getElementById('owner-tag').innerText = `Direct ${ownerRoleText} ${contactPhone ? '• ' + contactPhone : ''}`;
+
           const ownerAvatar = document.getElementById('owner-avatar');
           if (ownerAvatar) {
             ownerAvatar.src = window.SafeRender.safeAvatar({
@@ -400,9 +403,12 @@
             ownerAvatar.onerror = function() { window.AvatarSystem.handleImageError(this); };
           }
 
-          // Set Call / Whatsapp links
-          document.getElementById('call-action-btn').href = ownerPhoneText ? `tel:${ownerPhoneText}` : '#';
-          document.getElementById('whatsapp-action-btn').href = `https://wa.me/${ownerPhoneText.replace('+', '')}?text=I am interested in your property "${window.SafeRender.safeText(propertyDetails.title, 'Listing')}" listed on House Rental.`;
+          // Set Call / WhatsApp links using listing's contact_phone
+          const waMessage = encodeURIComponent(`Hi,\nI found your property on HouseRenter.in.\nI'm interested in your listing.\nCan you please share more details?`);
+          document.getElementById('call-action-btn').href = contactPhone ? `tel:${contactPhone}` : '#';
+          document.getElementById('whatsapp-action-btn').href = contactPhone
+            ? `https://wa.me/${contactPhone.replace('+', '')}?text=${waMessage}`
+            : '#';
 
           // Setup Favorite icon status
           checkFavStatus();

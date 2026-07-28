@@ -30,8 +30,12 @@ async function createProperty(req, res) {
     const {
       title, description, category, listing_type, category_type, price, area_sqft,
       bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status,
-      address, city, state, pincode, latitude, longitude
+      address, city, state, pincode, latitude, longitude, contact_phone
     } = req.body;
+
+    if (!contact_phone || !/^[6-9]\d{9}$/.test(contact_phone)) {
+      return res.status(400).json({ success: false, error: 'A valid 10-digit Indian contact mobile number is required.' });
+    }
 
     // Validate required numeric fields before SQL insert
     const parsedPrice = safeFloat(price, null);
@@ -48,15 +52,16 @@ async function createProperty(req, res) {
       `INSERT INTO properties 
       (user_id, title, description, category, listing_type, category_type, price, area_sqft, 
        bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status, 
-       address, city, state, pincode, latitude, longitude, approval_status) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')`,
+       address, city, state, pincode, latitude, longitude, contact_phone, approval_status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')`,
       [
         req.user.id, title, description, category, listing_type, category_type || 'new',
         parsedPrice, parsedArea, safeInt(bedrooms, 0), safeInt(bathrooms, 0),
         facing || null, safeInt(floor_number, 0), safeInt(parking_spaces, 0), furnishing_status || 'unfurnished',
         address, city, state, pincode,
         safeFloat(latitude, null),
-        safeFloat(longitude, null)
+        safeFloat(longitude, null),
+        contact_phone
       ]
     );
 
@@ -135,8 +140,12 @@ async function updateProperty(req, res) {
       title, description, category, listing_type, category_type, price, area_sqft,
       bedrooms, bathrooms, facing, floor_number, parking_spaces, furnishing_status,
       address, city, state, pincode, latitude, longitude, status,
-      kept_images, image_order
+      kept_images, image_order, contact_phone
     } = req.body;
+
+    if (!contact_phone || !/^[6-9]\d{9}$/.test(contact_phone)) {
+      return res.status(400).json({ success: false, error: 'A valid 10-digit Indian contact mobile number is required.' });
+    }
 
     // Validate required numeric fields before SQL update
     const parsedPrice = safeFloat(price, null);
@@ -155,7 +164,7 @@ async function updateProperty(req, res) {
         price = ?, area_sqft = ?, bedrooms = ?, bathrooms = ?, facing = ?, 
         floor_number = ?, parking_spaces = ?, furnishing_status = ?, address = ?, 
         city = ?, state = ?, pincode = ?, 
-        latitude = ?, longitude = ?, status = ? 
+        latitude = ?, longitude = ?, status = ?, contact_phone = ? 
       WHERE id = ?`,
       [
         title, description, category, listing_type, category_type || 'new',
@@ -165,6 +174,7 @@ async function updateProperty(req, res) {
         safeFloat(latitude, null),
         safeFloat(longitude, null),
         status || 'active',
+        contact_phone,
         id
       ]
     );
