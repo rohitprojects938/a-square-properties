@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { upload, processProfileImage } = require('../middlewares/uploadMiddleware');
 
 // 1. Get approved customer reviews
 router.get('/reviews', async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM customer_reviews WHERE status = 'approved' ORDER BY id DESC");
+    const [rows] = await db.query("SELECT * FROM customer_reviews WHERE status = 'approved' ORDER BY rating DESC, id DESC");
     res.json({ success: true, data: rows });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 2. Submit a new customer review (defaults to pending)
-router.post('/reviews', async (req, res) => {
-  const { name, rating, review_text } = req.body;
+// 2. Submit a new customer review (defaults to approved instantly)
+router.post('/reviews', upload.single('profile_photo'), async (req, res) => {
+  const { name, city, rating, review_text } = req.body;
   if (!name || !rating || !review_text) {
     return res.status(400).json({ success: false, error: 'Name, rating, and review text are required.' });
   }
@@ -43,18 +44,42 @@ router.post('/reviews', async (req, res) => {
   };
 
   const sanitizedName = sanitizeHtml(name);
+  const sanitizedCity = city ? sanitizeHtml(city) : null;
   const sanitizedReviewText = sanitizeHtml(review_text);
 
   // Extract user details if logged in
   const userId = (req.session && req.session.userId) ? req.session.userId : null;
   const userEmail = (req.session && req.session.user && req.session.user.email) ? req.session.user.email : null;
 
+  let profilePhotoUrl = null;
   try {
-    await db.query(
-      'INSERT INTO customer_reviews (name, rating, review_text, status, user_id, email) VALUES (?, ?, ?, "pending", ?, ?)',
-      [sanitizedName, ratingInt, sanitizedReviewText, userId, userEmail]
+    if (req.file) {
+      profilePhotoUrl = await processProfileImage(req.file.buffer);
+    }
+  } catch (sharpErr) {
+    console.warn('⚠️ Profile image processing failed:', sharpErr.message);
+  }
+
+  try {
+    const result = await db.query(
+      'INSERT INTO customer_reviews (name, city, rating, review_text, status, profile_photo, user_id, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [sanitizedName, sanitizedCity, ratingInt, sanitizedReviewText, "approved", profilePhotoUrl, userId, userEmail]
     );
-    res.json({ success: true, message: 'Review submitted successfully and is pending approval.' });
+    
+    const insertId = result && result[0] ? result[0].insertId : (result ? result.insertId : null);
+
+    const newReview = {
+      id: insertId,
+      name: sanitizedName,
+      city: sanitizedCity,
+      rating: ratingInt,
+      review_text: sanitizedReviewText,
+      status: 'approved',
+      profile_photo: profilePhotoUrl,
+      created_at: new Date()
+    };
+
+    res.json({ success: true, message: 'Review published successfully!', data: newReview });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

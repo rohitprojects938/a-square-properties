@@ -146,6 +146,8 @@ async function initializeDatabase() {
       console.log('✅ MySQL Migration: Ensure customer_reviews table exists.');
       await addColumnIfNotExist('customer_reviews', 'user_id', "ALTER TABLE customer_reviews ADD COLUMN user_id INT DEFAULT NULL;");
       await addColumnIfNotExist('customer_reviews', 'email', "ALTER TABLE customer_reviews ADD COLUMN email VARCHAR(255) DEFAULT NULL;");
+      await addColumnIfNotExist('customer_reviews', 'city', "ALTER TABLE customer_reviews ADD COLUMN city VARCHAR(100) DEFAULT NULL;");
+      await addColumnIfNotExist('customer_reviews', 'profile_photo', "ALTER TABLE customer_reviews ADD COLUMN profile_photo VARCHAR(255) DEFAULT NULL;");
     } catch(err) {
       console.error('❌ Migration failed for customer_reviews:', err.message);
     }

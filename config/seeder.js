@@ -325,6 +325,24 @@ async function seedDatabaseData() {
         console.log('✅ Homepage banners table seeded successfully!');
       }
 
+      // 8. Seed customer reviews if empty
+      const [reviewCount] = await db.query('SELECT COUNT(*) as count FROM customer_reviews');
+      if (reviewCount[0].count === 0) {
+        const sampleReviews = [
+          { name: 'Rahul Sharma', city: 'Lucknow', rating: 5, review_text: 'Found a rental house within two days. Very smooth experience.', status: 'approved' },
+          { name: 'Priya Verma', city: 'Kanpur', rating: 5, review_text: 'The website is easy to use and the owner contacted me quickly.', status: 'approved' },
+          { name: 'Aman Singh', city: 'Delhi', rating: 4, review_text: 'Good listings and fast response. Highly recommended.', status: 'approved' },
+          { name: 'Neha Gupta', city: 'Noida', rating: 5, review_text: 'Very clean interface and genuine property listings.', status: 'approved' }
+        ];
+        for (const sr of sampleReviews) {
+          await db.query(
+            'INSERT INTO customer_reviews (name, city, rating, review_text, status, profile_photo) VALUES (?, ?, ?, ?, ?, ?)',
+            [sr.name, sr.city, sr.rating, sr.review_text, sr.status, null]
+          );
+        }
+        console.log('✅ Customer reviews table seeded successfully!');
+      }
+
       console.log('✅ Physical MySQL database seeded successfully!');
     } catch (err) {
       console.error('❌ Database seeding error: ', err.message);

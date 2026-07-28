@@ -145,7 +145,12 @@ const mockDb = {
   property_views: [],
   visits: [],
   enquiries: [],
-  reviews: []
+  customer_reviews: [
+    { id: 1, name: 'Rahul Sharma', city: 'Lucknow', rating: 5, review_text: 'Found a rental house within two days. Very smooth experience.', status: 'approved', created_at: new Date('2026-07-28T12:00:00.000Z'), profile_photo: null },
+    { id: 2, name: 'Priya Verma', city: 'Kanpur', rating: 5, review_text: 'The website is easy to use and the owner contacted me quickly.', status: 'approved', created_at: new Date('2026-07-28T13:00:00.000Z'), profile_photo: null },
+    { id: 3, name: 'Aman Singh', city: 'Delhi', rating: 4, review_text: 'Good listings and fast response. Highly recommended.', status: 'approved', created_at: new Date('2026-07-28T14:00:00.000Z'), profile_photo: null },
+    { id: 4, name: 'Neha Gupta', city: 'Noida', rating: 5, review_text: 'Very clean interface and genuine property listings.', status: 'approved', created_at: new Date('2026-07-28T15:00:00.000Z'), profile_photo: null }
+  ]
 };
 
 async function initPool() {
@@ -1239,6 +1244,68 @@ async function executeMock(sql, params = []) {
     };
     mockDb.notifications.push(newNotif);
     return [{ insertId: newNotif.id }];
+  }
+
+  // G. CUSTOMER REVIEWS
+  if (normalizedSql.includes('customer_reviews')) {
+    if (normalizedSql.startsWith('select')) {
+      let list = mockDb.customer_reviews || [];
+      if (normalizedSql.includes("status = 'approved'") || normalizedSql.includes('status = ?')) {
+        list = list.filter(r => r.status === 'approved');
+      }
+      
+      // Sorting: Highest Rating, then Most Recent
+      list = [...list];
+      list.sort((a, b) => {
+        const ratingDiff = (b.rating || 0) - (a.rating || 0);
+        if (ratingDiff !== 0) return ratingDiff;
+        return b.id - a.id;
+      });
+
+      if (normalizedSql.startsWith('select count(') || normalizedSql.startsWith('select count(*)')) {
+        return [[{ total: list.length }]];
+      }
+
+      return [list];
+    }
+    if (normalizedSql.startsWith('insert')) {
+      const colsMatch = sql.match(/\(([^)]+)\)\s*values/i);
+      if (colsMatch) {
+        const cols = colsMatch[1].split(',').map(c => c.trim().replace(/`/g, ''));
+        const newRev = { 
+          id: (mockDb.customer_reviews || []).length + 1, 
+          status: 'approved',
+          created_at: new Date() 
+        };
+        cols.forEach((col, idx) => {
+          newRev[col] = params[idx];
+        });
+        mockDb.customer_reviews = mockDb.customer_reviews || [];
+        mockDb.customer_reviews.push(newRev);
+        return [{ insertId: newRev.id }];
+      }
+    }
+    if (normalizedSql.startsWith('update')) {
+      const idMatch = normalizedSql.match(/id\s*=\s*\?/);
+      if (idMatch) {
+        const idVal = params[params.length - 1];
+        const match = (mockDb.customer_reviews || []).find(r => r.id === parseInt(idVal));
+        if (match) {
+          if (normalizedSql.includes('status = ?')) {
+            match.status = params[0];
+          }
+          if (normalizedSql.includes('reply_text = ?')) {
+            match.reply_text = params[0];
+          }
+        }
+      }
+      return [{ affectedRows: 1 }];
+    }
+    if (normalizedSql.startsWith('delete')) {
+      const idVal = params[0];
+      mockDb.customer_reviews = (mockDb.customer_reviews || []).filter(r => r.id !== parseInt(idVal));
+      return [{ affectedRows: 1 }];
+    }
   }
 
   // Default empty return
