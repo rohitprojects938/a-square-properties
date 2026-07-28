@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v135.css">
+  <link rel="stylesheet" href="/css/style.v136.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -68,10 +68,18 @@
       align-items: center;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-      transition: transform 0.2s ease;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .service-card-new:hover {
+      background: #fafafa;
+      border-color: #e5e5e5;
+      transform: translateY(-2px);
     }
     .service-card-new:active {
       transform: scale(0.97);
+      background: #f5f5f5;
     }
     .service-card-icon-new {
       font-size: 28px;
@@ -755,7 +763,7 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v135.js"></script>
+  <script src="/js/main.v136.js"></script>
   <script>
 
     // Greet user dynamically
@@ -1352,17 +1360,18 @@
           if (!container) return;
           container.innerHTML = res.data.map(s => {
             const cleanNumber = (s.whatsapp_number || '+919919014220').replace(/[^0-9+]/g, '');
-            const msg = encodeURIComponent(`Hello, I am interested in your ${s.name}.`);
+            const messageText = `Hi,
+I found your service on House Rental.
+I am interested in your service.
+Please share more details.`;
+            const msg = encodeURIComponent(messageText);
             const whatsappUrl = `https://wa.me/${cleanNumber}?text=${msg}`;
             const icon = s.icon || '🔧';
             return `
-              <div class="service-card-new">
+              <a href="${whatsappUrl}" target="_blank" class="service-card-new">
                 <div class="service-card-icon-new">${icon}</div>
-                <div class="service-card-title-new">${s.name}</div>
-                <a href="${whatsappUrl}" target="_blank" class="whatsapp-btn">
-                  <i class="bx bxl-whatsapp" style="font-size:16px;"></i> WhatsApp
-                </a>
-              </div>
+                <div class="service-card-title-new" style="margin-bottom: 0;">${s.name}</div>
+              </a>
             `;
           }).join('');
         }
