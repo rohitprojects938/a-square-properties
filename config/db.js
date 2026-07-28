@@ -942,6 +942,12 @@ async function executeMock(sql, params = []) {
     if (normalizedSql.startsWith('select')) {
       let list = mockDb.services;
 
+      // Check if filtering by specific ID
+      if (normalizedSql.includes('id = ?') || normalizedSql.includes('hs.id = ?')) {
+        const targetId = parseInt(params[0]);
+        list = list.filter(s => s.id === targetId);
+      }
+
       // Check if public getServices (filtered by status = 'approved')
       if (normalizedSql.includes("status = 'approved'")) {
         list = list.filter(s => s.status === 'approved');
@@ -1130,10 +1136,17 @@ async function executeMock(sql, params = []) {
       }
     }
     if (normalizedSql.startsWith('delete')) {
-      const rid = parseInt(params[0]);
-      const prevLen = mockDb.service_ratings.length;
-      mockDb.service_ratings = mockDb.service_ratings.filter(r => r.id !== rid);
-      return [{ affectedRows: prevLen - mockDb.service_ratings.length }];
+      if (normalizedSql.includes('service_id = ?')) {
+        const sid = parseInt(params[0]);
+        const prevLen = mockDb.service_ratings.length;
+        mockDb.service_ratings = mockDb.service_ratings.filter(r => r.service_id !== sid);
+        return [{ affectedRows: prevLen - mockDb.service_ratings.length }];
+      } else {
+        const rid = parseInt(params[0]);
+        const prevLen = mockDb.service_ratings.length;
+        mockDb.service_ratings = mockDb.service_ratings.filter(r => r.id !== rid);
+        return [{ affectedRows: prevLen - mockDb.service_ratings.length }];
+      }
     }
   }
 

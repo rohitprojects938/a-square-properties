@@ -116,5 +116,6 @@ module.exports = {
   upload,
   processImage,
   processProfileImage,
-  processVideo
+  processVideo,
+  baseUploads
 };

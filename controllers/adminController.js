@@ -1,4 +1,6 @@
 const db = require('../config/db');
+const fs = require('fs');
+const path = require('path');
 
 // ─── DASHBOARD STATS ───────────────────────────────────────────────────────────
 async function getDashboardStats(req, res) {
@@ -426,9 +428,56 @@ async function updateServiceStatus(req, res) {
 
 async function deleteService(req, res) {
   const { id } = req.params;
+  const serviceId = parseInt(id);
   try {
-    await db.query('DELETE FROM home_services WHERE id = ?', [id]);
-    res.json({ success: true, message: 'Service deleted.' });
+    const [[service]] = await db.query('SELECT * FROM home_services WHERE id = ?', [serviceId]);
+    if (!service) {
+      return res.status(404).json({ success: false, error: 'Service not found.' });
+    }
+
+    // 1. Delete associated local images on disk
+    let imgs = [];
+    if (service.image_url) imgs.push(service.image_url);
+    if (service.image_urls) {
+      try {
+        const parsed = JSON.parse(service.image_urls);
+        if (Array.isArray(parsed)) imgs = imgs.concat(parsed);
+      } catch (e) {
+        if (typeof service.image_urls === 'string') {
+          imgs = imgs.concat(service.image_urls.split(',').map(u => u.trim()));
+        }
+      }
+    }
+    
+    // De-duplicate paths
+    imgs = [...new Set(imgs.filter(Boolean))];
+
+    const { baseUploads } = require('../middlewares/uploadMiddleware');
+    imgs.forEach(urlPath => {
+      if (urlPath.startsWith('/uploads/')) {
+        const parts = urlPath.split('/');
+        const folder = parts[2];
+        const filename = parts[3];
+        if (folder && filename) {
+          const filePath = path.join(baseUploads, folder, filename);
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
+          } catch (err) {
+            console.warn(`⚠️ Failed to delete image file ${filePath}:`, err.message);
+          }
+        }
+      }
+    });
+
+    // 2. Delete ratings
+    await db.query('DELETE FROM service_ratings WHERE service_id = ?', [serviceId]);
+
+    // 3. Delete service listing itself
+    await db.query('DELETE FROM home_services WHERE id = ?', [serviceId]);
+
+    res.json({ success: true, message: 'Service and associated ratings/images deleted.' });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

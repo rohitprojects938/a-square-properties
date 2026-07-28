@@ -1237,6 +1237,15 @@
             </div>
           </div>
 
+          <!-- Owner Controls -->
+          <div id="sd-owner-controls" style="display: none; background: #fff1f2; border: 1.5px solid #ffe4e6; border-radius: 16px; padding: 16px; flex-direction: column; gap: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: #991b1b;">Owner Controls</div>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="editServiceFromDetails()" class="btn-secondary" style="flex:1; border-color:#fda4af; color:#be123c; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px; border-radius:8px; background:none; cursor:pointer;"><i class="bx bx-edit"></i> Edit Service</button>
+              <button onclick="deleteServiceFromDetails()" class="btn-primary" style="flex:1; background:#e11d48; color:white; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:10px; border-radius:8px; border:none; cursor:pointer;"><i class="bx bx-trash"></i> Delete Service</button>
+            </div>
+          </div>
+
           <!-- Carousel / Images Gallery -->
           <div id="sd-gallery-container" style="display: none;">
             <h4 style="font-size: 13px; font-weight: 700; color: #1a1a1a; margin: 0 0 10px 0;">Gallery</h4>
@@ -1271,15 +1280,14 @@
             <form id="sd-rate-form" onsubmit="submitServiceRating(event)" style="background: #f8fafc; border-radius: 12px; padding: 12px; border: 1px solid #f1f5f9; margin-bottom: 16px; display: none;">
               <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px;">Rate this service</div>
               <div style="display: flex; gap: 6px; font-size: 20px; color: #cbd5e1; cursor: pointer; margin-bottom: 8px;" id="rate-star-selector">
-                <i class="bx bx-star" data-index="1"></i>
-                <i class="bx bx-star" data-index="2"></i>
-                <i class="bx bx-star" data-index="3"></i>
-                <i class="bx bx-star" data-index="4"></i>
-                <i class="bx bx-star" data-index="5"></i>
+                <i class="bx bx-star" data-index="1" onclick="setRateStarValue(1)"></i>
+                <i class="bx bx-star" data-index="2" onclick="setRateStarValue(2)"></i>
+                <i class="bx bx-star" data-index="3" onclick="setRateStarValue(3)"></i>
+                <i class="bx bx-star" data-index="4" onclick="setRateStarValue(4)"></i>
+                <i class="bx bx-star" data-index="5" onclick="setRateStarValue(5)"></i>
               </div>
               <input type="hidden" id="rate-value" value="0">
-              <textarea id="rate-review-text" rows="2" placeholder="Write a review (optional)..." style="width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; font-size: 11px; outline: none; box-sizing: border-box; margin-bottom: 8px; font-family: sans-serif; resize: none;"></textarea>
-              <button type="submit" class="btn-primary" style="padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; color: white; cursor: pointer; width: 100%;">Submit Review</button>
+              <button type="submit" class="btn-primary" style="padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; color: white; cursor: pointer; width: 100%;">Submit Rating</button>
             </form>
             <div id="sd-login-to-rate" style="font-size: 11px; color: var(--text-muted); background: #f8fafc; border-radius: 12px; padding: 10px; text-align: center; border: 1px solid #f1f5f9; margin-bottom: 16px; display: none;">
               Please <a href="/login.html" style="color: var(--primary-red); font-weight: 700; text-decoration: none;">login</a> to rate this service provider.
@@ -1909,123 +1917,10 @@
 
     let selectedServiceForRating = null;
 
-    window.openServiceDetailsModal = async function(serviceId) {
-      const s = (window.allServices || []).find(item => item.id === serviceId);
-      if (!s) return;
-      selectedServiceForRating = serviceId;
-
-      document.getElementById('sd-title').innerText = s.name;
-      document.getElementById('sd-provider-name').innerText = s.provider_name || 'Verified Provider';
-      document.getElementById('sd-category').innerText = s.category.toUpperCase();
-      document.getElementById('sd-experience').innerText = s.experience || 'N/A';
-      document.getElementById('sd-price').innerText = s.starting_price ? `Starting from ₹${s.starting_price}` : 'N/A';
-      document.getElementById('sd-days').innerText = s.available_days || 'Mon - Sat';
-      document.getElementById('sd-hours').innerText = s.working_hours || '9 AM - 6 PM';
-      document.getElementById('sd-address').innerText = `${s.address || ''}, ${s.city}`;
-      document.getElementById('sd-description').innerText = s.description;
-
-      const avatarContainer = document.getElementById('sd-avatar');
-      avatarContainer.innerHTML = '';
-      if (s.image_url) {
-        avatarContainer.innerHTML = `<img src="${s.image_url}" alt="Logo" style="width:100%; height:100%; object-fit:cover;">`;
-      } else {
-        avatarContainer.innerText = (s.provider_name || 'S').charAt(0).toUpperCase();
-      }
-
-      const galleryDiv = document.getElementById('sd-gallery');
-      const galleryContainer = document.getElementById('sd-gallery-container');
-      galleryDiv.innerHTML = '';
-      let imgs = [];
-      try {
-        if (s.image_urls) {
-          imgs = JSON.parse(s.image_urls);
-        }
-      } catch(e) {
-        if (typeof s.image_urls === 'string') {
-          imgs = s.image_urls.split(',').map(u => u.trim());
-        }
-      }
-      if (!imgs.includes(s.image_url) && s.image_url) {
-        imgs.unshift(s.image_url);
-      }
-      imgs = imgs.filter(Boolean);
-
-      if (imgs.length > 0) {
-        galleryContainer.style.display = 'block';
-        galleryDiv.innerHTML = imgs.map(url => `
-          <div style="flex: 0 0 100%; width: 100%; scroll-snap-align: start; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: #e2e8f0;">
-            <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" class="lazy-load">
-          </div>
-        `).join('');
-        if (window.triggerLazyLoad) window.triggerLazyLoad();
-        enableMouseDragScroll('#sd-gallery');
-      } else {
-        galleryContainer.style.display = 'none';
-      }
-
-      const socialsDiv = document.getElementById('sd-socials');
-      socialsDiv.innerHTML = '';
-      let hasSocials = false;
-      if (s.website) {
-        socialsDiv.innerHTML += `<a href="${s.website}" target="_blank" style="color: #475569; font-size: 20px;" title="Website"><i class="bx bx-globe"></i></a>`;
-        hasSocials = true;
-      }
-      if (s.facebook) {
-        socialsDiv.innerHTML += `<a href="${s.facebook}" target="_blank" style="color: #1877f2; font-size: 20px;" title="Facebook"><i class="bx bxl-facebook-circle"></i></a>`;
-        hasSocials = true;
-      }
-      if (s.instagram) {
-        socialsDiv.innerHTML += `<a href="${s.instagram}" target="_blank" style="color: #e1306c; font-size: 20px;" title="Instagram"><i class="bx bxl-instagram-alt"></i></a>`;
-        hasSocials = true;
-      }
-      socialsDiv.style.display = hasSocials ? 'flex' : 'none';
-
-      document.getElementById('sd-rating-avg').innerText = parseFloat(s.avg_rating || 0).toFixed(1);
-      document.getElementById('sd-rating-count').innerText = `(${s.total_ratings || 0} ratings)`;
-      const starsCount = Math.round(s.avg_rating || 0);
-      document.getElementById('sd-rating-stars').innerText = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
-
-      const phoneVal = (s.mobile_number || '').replace(/[^0-9+]/g, '');
-      const waVal = (s.whatsapp_number || s.mobile_number || '').replace(/[^0-9+]/g, '');
-      const waText = encodeURIComponent(`Hi ${s.provider_name || ''},\nI found your service "${s.name}" on HouseRenter.in.\nI am interested in hiring you.`);
-      const whatsappUrl = `https://wa.me/${waVal.replace('+', '')}?text=${waText}`;
-
-      document.getElementById('sd-actions').innerHTML = `
-        <a href="tel:${phoneVal}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:12px; border-radius:10px;"><i class="bx bx-phone"></i> Call Now</a>
-        <a href="${whatsappUrl}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:12px; border-radius:10px;" target="_blank"><i class="bx bxl-whatsapp"></i> WhatsApp</a>
-        <button onclick="shareService(${s.id}, '${s.name.replace(/'/g, "\\'")}')" class="btn-secondary" style="display:flex; align-items:center; justify-content:center; width:44px; height:44px; padding:0; border-radius:10px; border:1.5px solid var(--border-color); background:none; cursor:pointer;" title="Share"><i class="bx bx-share-alt" style="font-size:16px;"></i></button>
-      `;
-
-      const token = localStorage.getItem('token');
-      if (token) {
-        document.getElementById('sd-rate-form').style.display = 'block';
-        document.getElementById('sd-login-to-rate').style.display = 'none';
-        document.getElementById('rate-value').value = '0';
-        document.getElementById('rate-review-text').value = '';
-        highlightRatingStars(0);
-      } else {
-        document.getElementById('sd-rate-form').style.display = 'none';
-        document.getElementById('sd-login-to-rate').style.display = 'block';
-      }
-
-      loadServiceReviewsList(s.id);
-      document.getElementById('service-details-modal-overlay').classList.add('active');
+    window.setRateStarValue = function(rating) {
+      document.getElementById('rate-value').value = rating;
+      highlightRatingStars(rating);
     };
-
-    window.closeServiceDetailsModal = function() {
-      document.getElementById('service-details-modal-overlay').classList.remove('active');
-    };
-
-    // Stars selector click
-    setTimeout(() => {
-      document.querySelectorAll('#rate-star-selector i').forEach(star => {
-        star.addEventListener('click', () => {
-          const rating = parseInt(star.getAttribute('data-index'));
-          document.getElementById('rate-value').value = rating;
-          highlightRatingStars(rating);
-        });
-      });
-    }, 100);
 
     function highlightRatingStars(rating) {
       document.querySelectorAll('#rate-star-selector i').forEach(star => {
@@ -2040,34 +1935,183 @@
       });
     }
 
+    window.openServiceDetailsModal = async function(serviceId) {
+      selectedServiceForRating = serviceId;
+      
+      try {
+        const res = await apiRequest(`/api/services/${serviceId}`);
+        if (!res.success || !res.data) {
+          alert('Service does not exist or has been deleted.');
+          return;
+        }
+        
+        const s = res.data;
+
+        document.getElementById('sd-title').innerText = s.name;
+        document.getElementById('sd-provider-name').innerText = s.provider_name || 'Verified Provider';
+        document.getElementById('sd-category').innerText = s.category.toUpperCase();
+        document.getElementById('sd-experience').innerText = s.experience || 'N/A';
+        document.getElementById('sd-price').innerText = s.starting_price ? `Starting from ₹${s.starting_price}` : 'N/A';
+        document.getElementById('sd-days').innerText = s.available_days || 'Mon - Sat';
+        document.getElementById('sd-hours').innerText = s.working_hours || '9 AM - 6 PM';
+        document.getElementById('sd-address').innerText = `${s.address || ''}, ${s.city}`;
+        document.getElementById('sd-description').innerText = s.description;
+
+        // Show owner controls for owner/admin
+        const ownerControls = document.getElementById('sd-owner-controls');
+        if (ownerControls) {
+          let isOwnerOrAdmin = false;
+          const loggedUserStr = localStorage.getItem('user');
+          if (loggedUserStr) {
+            const loggedUser = JSON.parse(loggedUserStr);
+            if (loggedUser.id === s.user_id || loggedUser.role === 'admin') {
+              isOwnerOrAdmin = true;
+            }
+          }
+          ownerControls.style.display = isOwnerOrAdmin ? 'flex' : 'none';
+        }
+
+        const avatarContainer = document.getElementById('sd-avatar');
+        avatarContainer.innerHTML = '';
+        if (s.image_url) {
+          avatarContainer.innerHTML = `<img src="${s.image_url}" alt="Logo" style="width:100%; height:100%; object-fit:cover;">`;
+        } else {
+          avatarContainer.innerText = (s.provider_name || 'S').charAt(0).toUpperCase();
+        }
+
+        const galleryDiv = document.getElementById('sd-gallery');
+        const galleryContainer = document.getElementById('sd-gallery-container');
+        galleryDiv.innerHTML = '';
+        let imgs = [];
+        try {
+          if (s.image_urls) {
+            imgs = JSON.parse(s.image_urls);
+          }
+        } catch(e) {
+          if (typeof s.image_urls === 'string') {
+            imgs = s.image_urls.split(',').map(u => u.trim());
+          }
+        }
+        if (!imgs.includes(s.image_url) && s.image_url) {
+          imgs.unshift(s.image_url);
+        }
+        imgs = imgs.filter(Boolean);
+
+        if (imgs.length > 0) {
+          galleryContainer.style.display = 'block';
+          galleryDiv.innerHTML = imgs.map(url => `
+            <div style="flex: 0 0 100%; width: 100%; scroll-snap-align: start; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: #e2e8f0;">
+              <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" class="lazy-load">
+            </div>
+          `).join('');
+          if (window.triggerLazyLoad) window.triggerLazyLoad();
+          enableMouseDragScroll('#sd-gallery');
+        } else {
+          galleryContainer.style.display = 'none';
+        }
+
+        const socialsDiv = document.getElementById('sd-socials');
+        socialsDiv.innerHTML = '';
+        let hasSocials = false;
+        if (s.website) {
+          socialsDiv.innerHTML += `<a href="${s.website}" target="_blank" style="color: #475569; font-size: 20px;" title="Website"><i class="bx bx-globe"></i></a>`;
+          hasSocials = true;
+        }
+        if (s.facebook) {
+          socialsDiv.innerHTML += `<a href="${s.facebook}" target="_blank" style="color: #1877f2; font-size: 20px;" title="Facebook"><i class="bx bxl-facebook-circle"></i></a>`;
+          hasSocials = true;
+        }
+        if (s.instagram) {
+          socialsDiv.innerHTML += `<a href="${s.instagram}" target="_blank" style="color: #e1306c; font-size: 20px;" title="Instagram"><i class="bx bxl-instagram-alt"></i></a>`;
+          hasSocials = true;
+        }
+        socialsDiv.style.display = hasSocials ? 'flex' : 'none';
+
+        document.getElementById('sd-rating-avg').innerText = parseFloat(s.avg_rating || 0).toFixed(1);
+        document.getElementById('sd-rating-count').innerText = `(${s.total_ratings || 0} ratings)`;
+        const starsCount = Math.round(s.avg_rating || 0);
+        document.getElementById('sd-rating-stars').innerText = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
+
+        const phoneVal = (s.mobile_number || '').replace(/[^0-9+]/g, '');
+        const waVal = (s.whatsapp_number || s.mobile_number || '').replace(/[^0-9+]/g, '');
+        const waText = encodeURIComponent(`Hi ${s.provider_name || ''},\nI found your service "${s.name}" on HouseRenter.in.\nI am interested in hiring you.`);
+        const whatsappUrl = `https://wa.me/${waVal.replace('+', '')}?text=${waText}`;
+
+        document.getElementById('sd-actions').innerHTML = `
+          <a href="tel:${phoneVal}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:12px; border-radius:10px;"><i class="bx bx-phone"></i> Call Now</a>
+          <a href="${whatsappUrl}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:12px; border-radius:10px;" target="_blank"><i class="bx bxl-whatsapp"></i> WhatsApp</a>
+          <button onclick="shareService(${s.id}, '${s.name.replace(/'/g, "\\'")}')" class="btn-secondary" style="display:flex; align-items:center; justify-content:center; width:44px; height:44px; padding:0; border-radius:10px; border:1.5px solid var(--border-color); background:none; cursor:pointer;" title="Share"><i class="bx bx-share-alt" style="font-size:16px;"></i></button>
+        `;
+
+        const token = localStorage.getItem('token');
+        if (token) {
+          document.getElementById('sd-rate-form').style.display = 'block';
+          document.getElementById('sd-login-to-rate').style.display = 'none';
+          document.getElementById('rate-value').value = '0';
+          highlightRatingStars(0);
+        } else {
+          document.getElementById('sd-rate-form').style.display = 'none';
+          document.getElementById('sd-login-to-rate').style.display = 'block';
+        }
+
+        loadServiceReviewsList(s.id);
+        document.getElementById('service-details-modal-overlay').classList.add('active');
+      } catch(err) {
+        alert(err.message || 'Failed to load service details.');
+      }
+    };
+
+    window.closeServiceDetailsModal = function() {
+      document.getElementById('service-details-modal-overlay').classList.remove('active');
+    };
+
+    window.editServiceFromDetails = function() {
+      if (selectedServiceForRating) {
+        window.location.href = `/marketplace.html?action=edit&id=${selectedServiceForRating}`;
+      }
+    };
+
+    window.deleteServiceFromDetails = async function() {
+      if (!selectedServiceForRating) return;
+      if (confirm('Are you sure you want to permanently delete this service listing? This will also delete all its ratings and images.')) {
+        try {
+          const res = await apiRequest(`/api/services/${selectedServiceForRating}`, 'DELETE');
+          if (res.success) {
+            alert('Service deleted successfully.');
+            closeServiceDetailsModal();
+            if (window.loadHomeServices) window.loadHomeServices();
+          } else {
+            alert(res.error || 'Failed to delete service.');
+          }
+        } catch(err) {
+          alert(err.message || 'Failed to delete service.');
+        }
+      }
+    };
+
     window.submitServiceRating = async function(e) {
       e.preventDefault();
       const rating = parseInt(document.getElementById('rate-value').value);
-      const review = document.getElementById('rate-review-text').value.trim();
 
       if (rating === 0) {
         return alert('Please select a star rating.');
       }
 
       try {
-        const res = await apiRequest(`/api/services/${selectedServiceForRating}/ratings`, 'POST', { rating, review });
+        const res = await apiRequest(`/api/services/${selectedServiceForRating}/ratings`, 'POST', { rating });
         if (res.success) {
-          alert('Review saved successfully!');
+          alert('Rating submitted successfully!');
           loadServiceReviewsList(selectedServiceForRating);
           
           if (window.loadHomeServices) window.loadHomeServices();
-          if (window.loadServicesFiltered) window.loadServicesFiltered(currentCategory || 'all');
           
-          const updatedRes = await apiRequest('/api/services');
-          if (updatedRes.success) {
-            window.allServices = updatedRes.data;
-            const updatedSvc = window.allServices.find(item => item.id === selectedServiceForRating);
-            if (updatedSvc) {
-              document.getElementById('sd-rating-avg').innerText = parseFloat(updatedSvc.avg_rating || 0).toFixed(1);
-              document.getElementById('sd-rating-count').innerText = `(${updatedSvc.total_ratings || 0} ratings)`;
-              const starsCount = Math.round(updatedSvc.avg_rating || 0);
-              document.getElementById('sd-rating-stars').innerText = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
-            }
+          const updatedRes = await apiRequest(`/api/services/${selectedServiceForRating}`);
+          if (updatedRes.success && updatedRes.data) {
+            const updatedSvc = updatedRes.data;
+            document.getElementById('sd-rating-avg').innerText = parseFloat(updatedSvc.avg_rating || 0).toFixed(1);
+            document.getElementById('sd-rating-count').innerText = `(${updatedSvc.total_ratings || 0} ratings)`;
+            const starsCount = Math.round(updatedSvc.avg_rating || 0);
+            document.getElementById('sd-rating-stars').innerText = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
           }
         }
       } catch(err) {

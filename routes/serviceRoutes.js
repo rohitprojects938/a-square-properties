@@ -6,6 +6,9 @@ const { upload } = require('../middlewares/uploadMiddleware');
 
 router.get('/', serviceController.getServices);
 router.post('/', authenticateJWT, upload.array('images', 5), serviceController.postService);
+router.get('/:id', serviceController.getServiceById);
+router.put('/:id', authenticateJWT, upload.array('images', 5), serviceController.updateService);
+router.delete('/:id', authenticateJWT, serviceController.deleteService);
 
 // Rating and Reviews endpoints
 router.post('/:id/ratings', authenticateJWT, serviceController.rateService);
