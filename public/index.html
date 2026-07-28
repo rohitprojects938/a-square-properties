@@ -379,8 +379,8 @@
       </a>
     </header>
 
-    <!-- App Content Scroll Area (no padding - hero needs to be edge-to-edge) -->
-    <div class="app-content full-width" id="app-content-area">
+    <!-- App Content Scroll Area -->
+    <div class="app-content home-app-content full-width" id="app-content-area">
 
       <!-- Hero Section (True Full Width - no padding applied here) -->
       <div class="home-hero-section">
@@ -402,18 +402,18 @@
                 class="hero-search-input"
                 placeholder="Search by city, area, pincode..."
                 autocomplete="off"
-                onkeydown="if(event.key==='Enter') triggerHomeSearch()"
               >
             </div>
-            <button class="hero-search-btn" onclick="triggerHomeSearch()">
+            <button class="hero-search-btn" id="hero-search-btn">
               Search
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Padded content column -->
-      <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px; padding: 16px; padding-bottom: 0;">
+
+      <!-- Homepage content column (Quick Actions + sections below) -->
+      <div class="home-content-col">
 
         <!-- Redesigned Quick Actions Section -->
         <div class="quick-actions-container">
@@ -1149,6 +1149,12 @@
         window.location.href = '/search.html';
       }
     };
+
+    // Hero search button click — no inline onclick needed
+    const heroSearchBtn = document.getElementById('hero-search-btn');
+    if (heroSearchBtn) {
+      heroSearchBtn.addEventListener('click', window.triggerHomeSearch);
+    }
 
     // Load desktop widgets
     function loadDesktopWidgets(user) {
