@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v131.css">
+  <link rel="stylesheet" href="/css/style.v132.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -393,9 +393,9 @@
           <img src="/uploads/home_image.png" alt="Premium Home Rentals" class="home-hero-image">
           <!-- Compact search bar overlay (Inside container, bottom left overlaying the image text section) -->
           <div class="hero-inner-search" id="hero-inner-search">
-            <i class="bx bx-search hero-inner-search-icon"></i>
-            <input type="text" placeholder="Search property..." class="hero-inner-input" readonly>
-            <button class="hero-inner-btn" aria-label="Search">
+            <i class="bx bx-search hero-inner-search-icon" id="hero-inner-search-icon"></i>
+            <input type="text" id="hero-inner-input" placeholder="Search property..." class="hero-inner-input">
+            <button class="hero-inner-btn" id="hero-inner-search-btn" aria-label="Search">
               <i class="bx bx-right-arrow-alt"></i>
             </button>
           </div>
@@ -721,7 +721,7 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v131.js"></script>
+  <script src="/js/main.v132.js"></script>
   <script>
 
     // Greet user dynamically
@@ -1134,11 +1134,49 @@
       });
     }
 
-    // Hero Inner Search Overlay Click Flow
+    // Hero Inner Search Interactive Flow
     const heroInnerSearch = document.getElementById('hero-inner-search');
-    if (heroInnerSearch) {
-      heroInnerSearch.addEventListener('click', () => {
+    const heroInnerInput = document.getElementById('hero-inner-input');
+    const heroInnerBtn = document.getElementById('hero-inner-search-btn');
+    const heroInnerIcon = document.getElementById('hero-inner-search-icon');
+
+    function performHeroInnerSearch() {
+      const query = heroInnerInput ? heroInnerInput.value.trim() : '';
+      if (query) {
+        window.location.href = `/search.html?city=${encodeURIComponent(query)}`;
+      } else {
         window.location.href = '/search.html';
+      }
+    }
+
+    if (heroInnerSearch && heroInnerInput) {
+      // Focus input when clicking anywhere on the wrapper container (excluding button/icon)
+      heroInnerSearch.addEventListener('click', (e) => {
+        if (e.target !== heroInnerBtn && e.target !== heroInnerIcon && !heroInnerBtn.contains(e.target) && !heroInnerIcon.contains(e.target)) {
+          heroInnerInput.focus();
+        }
+      });
+    }
+
+    if (heroInnerBtn) {
+      heroInnerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        performHeroInnerSearch();
+      });
+    }
+
+    if (heroInnerIcon) {
+      heroInnerIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        performHeroInnerSearch();
+      });
+    }
+
+    if (heroInnerInput) {
+      heroInnerInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          performHeroInnerSearch();
+        }
       });
     }
 
