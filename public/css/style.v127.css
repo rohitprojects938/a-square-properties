@@ -513,10 +513,10 @@ body {
 /* Redesigned Hero Banner Section (Modern Premium Full-Width Layout) */
 @keyframes heroImageZoom {
   0% {
-    transform: scale(1);
+    transform: scale(1.04);
   }
   100% {
-    transform: scale(1.03);
+    transform: scale(1);
   }
 }
 
@@ -524,7 +524,7 @@ body {
   position: relative;
   width: calc(100% + 32px);
   margin-left: -16px;
-  height: 260px; /* Mobile height 240-300px */
+  height: 240px; /* Refined compact height for mobile */
   overflow: hidden;
   margin-bottom: 24px;
   background: #000000;
@@ -535,6 +535,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
   display: block;
   animation: heroImageZoom 8s ease-out forwards;
 }
@@ -545,7 +546,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.7) 100%);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.65) 100%);
   z-index: 1;
 }
 
@@ -559,27 +560,41 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 24px 16px 16px 16px; /* spacing inside the hero container */
+  padding: 20px; /* refined padding - keeps text and elements spaced nicely */
   box-sizing: border-box;
 }
 
-.home-hero-banner .hero-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 4px 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-  letter-spacing: -0.3px;
+.home-hero-banner .hero-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
 }
 
-.home-hero-banner .hero-subtitle {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
+.home-hero-banner .hero-greeting {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0 0 6px 0; /* Gap of 6-8px between greeting and heading */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.home-hero-banner .hero-heading {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
   margin: 0;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
 }
 
 .hero-search-float {
+  position: absolute;
+  left: 20px; /* Spacing 16-20px from left */
+  bottom: 20px; /* Spacing 16-20px from bottom */
   background: rgba(255, 255, 255, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 32px;
@@ -588,7 +603,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
+  width: 68%; /* Mobile: Around 65-70% width */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
@@ -653,33 +668,42 @@ body {
   transform: scale(0.97);
 }
 
+/* Tablet Responsiveness */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hero-search-float {
+    width: 55%; /* Tablet: Around 55% width */
+  }
+}
+
 /* Tablet & Desktop Responsiveness */
 @media (min-width: 769px) {
   .home-hero-banner {
     width: calc(100% + 64px);
     margin-left: -32px;
-    height: 450px; /* Desktop height 420-500px */
+    height: 400px; /* Refined compact height for desktop */
     margin-bottom: 32px;
   }
   
   .home-hero-banner .hero-content {
-    padding: 40px 32px 32px 32px;
+    padding: 30px 20px 20px 20px; /* left: 20px, bottom: 20px */
   }
   
-  .home-hero-banner .hero-title {
-    font-size: 36px;
-    margin-bottom: 6px;
+  .home-hero-banner .hero-greeting {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .home-hero-banner .hero-heading {
+    font-size: 38px;
     letter-spacing: -0.5px;
   }
   
-  .home-hero-banner .hero-subtitle {
-    font-size: 16px;
-  }
-  
   .hero-search-float {
-    width: 460px; /* Desktop search float width */
+    width: 45%; /* Desktop: Around 45% width */
     padding: 8px 10px 8px 22px;
     border-radius: 36px;
+    left: 20px;
+    bottom: 20px;
   }
   
   .hero-search-float .search-input {
