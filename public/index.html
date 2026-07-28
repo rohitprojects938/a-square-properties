@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
-  <link rel="stylesheet" href="/css/style.v138.css">
+  <link rel="stylesheet" href="/css/style.v139.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
     /* 2. Popular Near You */
@@ -49,6 +49,79 @@
       border-radius: 4px;
       width: fit-content;
       margin-top: 2px;
+    }
+
+    /* Customer Reviews Form Styles */
+    .review-form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    @media (min-width: 480px) {
+      .review-form-row {
+        flex-direction: row;
+      }
+      .review-form-row input {
+        flex: 1;
+      }
+      .review-form-row select {
+        width: 120px;
+      }
+    }
+    .review-form-row input,
+    .review-form-row select,
+    .review-form textarea {
+      width: 100%;
+      padding: 10.5px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+      box-sizing: border-box;
+      background: var(--background-white);
+      color: var(--text-dark);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .review-form-row input:focus,
+    .review-form-row select:focus,
+    .review-form textarea:focus {
+      border-color: var(--secondary-orange);
+    }
+    .review-form textarea {
+      min-height: 80px;
+      resize: vertical;
+      margin-bottom: 10px;
+      font-family: inherit;
+    }
+    .btn-submit-review {
+      background: var(--secondary-orange);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13.5px;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(255, 106, 0, 0.2);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-submit-review:hover {
+      background: #e05d00;
+    }
+    .btn-submit-review:active {
+      transform: scale(0.98);
+    }
+    .btn-submit-review:disabled {
+      background: #ccc;
+      color: #666;
+      cursor: not-allowed;
+      box-shadow: none;
     }
 
     /* 5. Services Grid */
@@ -527,9 +600,10 @@
           </div>
           <form class="review-form" id="submit-review-form" onsubmit="submitCustomerReview(event)">
             <div class="review-form-title">Share Your Experience</div>
-            <div style="display: flex; gap: 10px; margin-bottom: 8px;">
-              <input type="text" id="rev-name" placeholder="Your Name" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px;" required>
-              <select id="rev-rating" style="width: 110px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px;" required>
+            <div class="review-form-row">
+              <input type="text" id="rev-name" placeholder="Your Name" required>
+              <select id="rev-rating" required>
+                <option value="" disabled selected>Select Rating</option>
                 <option value="5">5 Stars</option>
                 <option value="4">4 Stars</option>
                 <option value="3">3 Stars</option>
@@ -537,8 +611,8 @@
                 <option value="1">1 Star</option>
               </select>
             </div>
-            <textarea id="rev-text" placeholder="Write your review here..." style="width: 100%; min-height: 80px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; font-family: inherit; resize: vertical; box-sizing: border-box; margin-bottom: 8px;" required></textarea>
-            <button type="submit" class="apply-btn-submit" style="background: var(--primary-color); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px; width: 100%;">Submit Review</button>
+            <textarea id="rev-text" placeholder="Write your review here..." required></textarea>
+            <button type="submit" class="btn-submit-review">Submit Review</button>
           </form>
         </div>
 
@@ -786,7 +860,7 @@
   </div>
 
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="/js/main.v138.js"></script>
+  <script src="/js/main.v139.js"></script>
   <script>
 
     // Greet user dynamically
@@ -1431,19 +1505,52 @@ Please share more details.`;
 
     window.submitCustomerReview = async function(e) {
       e.preventDefault();
+      const form = document.getElementById('submit-review-form');
       const name = document.getElementById('rev-name').value.trim();
       const rating = document.getElementById('rev-rating').value;
       const review_text = document.getElementById('rev-text').value.trim();
+      const submitBtn = form.querySelector('.btn-submit-review');
 
-      if (!name || !review_text) return;
+      // Clear previous validation highlights
+      document.getElementById('rev-name').style.borderColor = '';
+      document.getElementById('rev-rating').style.borderColor = '';
+      document.getElementById('rev-text').style.borderColor = '';
+
+      // Validate fields on frontend
+      let hasError = false;
+      if (!name) {
+        document.getElementById('rev-name').style.borderColor = 'red';
+        hasError = true;
+      }
+      if (!rating || rating === "") {
+        document.getElementById('rev-rating').style.borderColor = 'red';
+        hasError = true;
+      }
+      if (!review_text) {
+        document.getElementById('rev-text').style.borderColor = 'red';
+        hasError = true;
+      }
+
+      if (hasError) {
+        alert('Please fill out all required fields.');
+        return;
+      }
+
       try {
+        // Disable multiple clicks and show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; display: inline-block; animation: spin 0.8s linear infinite;"></span> Submitting...';
+
         const res = await apiRequest('/api/public/reviews', 'POST', { name, rating, review_text });
         if (res.success) {
           alert('Thank you! Your review has been submitted for moderation.');
-          document.getElementById('submit-review-form').reset();
+          form.reset();
         }
       } catch(err) {
         alert(err.message || 'Submission failed.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Submit Review';
       }
     };
 

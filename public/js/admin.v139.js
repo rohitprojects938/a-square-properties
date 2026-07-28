@@ -586,12 +586,26 @@ async function loadReviewsManager() {
       if (r.status === 'approved') badgeColor = 'badge-green';
       if (r.status === 'rejected') badgeColor = 'badge-red';
 
+      const formattedDate = new Date(r.created_at).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
       return `
         <tr>
           <td>${r.id}</td>
-          <td><strong>${r.name}</strong></td>
+          <td>
+            <strong>${r.name}</strong>
+            ${r.email ? `<br><span style="font-size:10px; color:var(--adm-muted);">${r.email}</span>` : ''}
+          </td>
           <td><span style="color:#ffb800;">${stars}</span></td>
-          <td><div style="max-width:250px; white-space:normal; font-size:12px;">${r.review_text}</div></td>
+          <td>
+            <div style="max-width:250px; white-space:normal; font-size:12px;">${r.review_text}</div>
+            <div style="font-size:9px; color:var(--adm-muted); margin-top:4px;">Date: ${formattedDate}</div>
+          </td>
           <td><span class="adm-badge ${badgeColor}">${r.status}</span></td>
           <td><div style="max-width:180px; white-space:normal; font-size:11px; color:#a0aec0;">${r.reply_text || '<em>No reply</em>'}</div></td>
           <td>

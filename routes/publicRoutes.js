@@ -18,14 +18,41 @@ router.post('/reviews', async (req, res) => {
   if (!name || !rating || !review_text) {
     return res.status(400).json({ success: false, error: 'Name, rating, and review text are required.' });
   }
+
+  // Prevent duplicate rapid submissions (rate limit 10 seconds per submission)
+  const now = Date.now();
+  if (req.session && req.session.lastReviewSubmitTime && (now - req.session.lastReviewSubmitTime < 10000)) {
+    return res.status(429).json({ success: false, error: 'Please wait at least 10 seconds between submissions.' });
+  }
+  if (req.session) {
+    req.session.lastReviewSubmitTime = now;
+  }
+
   const ratingInt = parseInt(rating);
   if (isNaN(ratingInt) || ratingInt < 1 || ratingInt > 5) {
     return res.status(400).json({ success: false, error: 'Rating must be an integer between 1 and 5.' });
   }
+
+  // Sanitize text inputs for basic XSS prevention
+  const sanitizeHtml = (str) => {
+    return str.trim()
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  };
+
+  const sanitizedName = sanitizeHtml(name);
+  const sanitizedReviewText = sanitizeHtml(review_text);
+
+  // Extract user details if logged in
+  const userId = (req.session && req.session.userId) ? req.session.userId : null;
+  const userEmail = (req.session && req.session.user && req.session.user.email) ? req.session.user.email : null;
+
   try {
     await db.query(
-      'INSERT INTO customer_reviews (name, rating, review_text, status) VALUES (?, ?, ?, "pending")',
-      [name, ratingInt, review_text]
+      'INSERT INTO customer_reviews (name, rating, review_text, status, user_id, email) VALUES (?, ?, ?, "pending", ?, ?)',
+      [sanitizedName, ratingInt, sanitizedReviewText, userId, userEmail]
     );
     res.json({ success: true, message: 'Review submitted successfully and is pending approval.' });
   } catch (err) {
