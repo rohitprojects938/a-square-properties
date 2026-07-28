@@ -535,6 +535,7 @@ async function loadServicesManager() {
           <td style="font-weight:700;">${s.name}</td>
           <td>${s.provider_name || 'Guest'}</td>
           <td style="text-transform:uppercase; font-size:11px;">${s.category}</td>
+          <td>${parseFloat(s.avg_rating || 0).toFixed(1)} ★ (${s.total_ratings || 0})</td>
           <td>${s.city}</td>
           <td>${s.mobile_number}</td>
           <td>${s.whatsapp_number || 'N/A'}</td>
@@ -546,6 +547,7 @@ async function loadServicesManager() {
               ${rejectBtn}
               ${suspendBtn}
               ${restoreBtn}
+              <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="openServiceReviewsModerator(${s.id})" title="Moderate Reviews" style="color:var(--adm-yellow);"><i data-lucide="star"></i></button>
               <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick="editServiceModal(${s.id})" title="Edit"><i data-lucide="edit-2"></i></button>
               <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteService(${s.id})" title="Delete"><i data-lucide="trash-2"></i></button>
             </div>
@@ -594,6 +596,13 @@ window.openAddServiceModal = () => {
   form.reset();
   document.getElementById('service-modal-title').textContent = 'Add New Service';
   form.removeAttribute('data-id');
+  
+  document.getElementById('service-hours').value = '';
+  document.getElementById('service-website').value = '';
+  document.getElementById('service-facebook').value = '';
+  document.getElementById('service-instagram').value = '';
+  document.getElementById('service-image-urls').value = '';
+
   openModal('service-modal');
 };
 
@@ -618,6 +627,12 @@ window.editServiceModal = (sid) => {
   document.getElementById('service-order').value = s.sort_order || 0;
   document.getElementById('service-status').value = s.status || 'pending';
   
+  document.getElementById('service-hours').value = s.working_hours || '';
+  document.getElementById('service-website').value = s.website || '';
+  document.getElementById('service-facebook').value = s.facebook || '';
+  document.getElementById('service-instagram').value = s.instagram || '';
+  document.getElementById('service-image-urls').value = s.image_urls || '';
+
   openModal('service-modal');
 };
 
@@ -638,7 +653,12 @@ window.saveAdminService = async (e) => {
     image_url: document.getElementById('service-image').value,
     available_days: document.getElementById('service-days').value,
     sort_order: parseInt(document.getElementById('service-order').value) || 0,
-    status: document.getElementById('service-status').value
+    status: document.getElementById('service-status').value,
+    working_hours: document.getElementById('service-hours').value,
+    website: document.getElementById('service-website').value,
+    facebook: document.getElementById('service-facebook').value,
+    instagram: document.getElementById('service-instagram').value,
+    image_urls: document.getElementById('service-image-urls').value
   };
 
   const url = sid ? `/api/admin/services/${sid}` : '/api/admin/services';
@@ -657,6 +677,60 @@ window.deleteService = async (sid) => {
     if (res.success) {
       showToast('Service listing deleted.');
       loadServicesManager();
+    }
+  }
+};
+
+let activeServiceReviewsId = null;
+
+window.openServiceReviewsModerator = async (sid) => {
+  const s = servicesList.find(item => item.id === sid);
+  if (!s) return;
+  activeServiceReviewsId = sid;
+
+  document.getElementById('srv-rev-modal-name').textContent = s.name;
+  document.getElementById('srv-rev-modal-avg').textContent = parseFloat(s.avg_rating || 0).toFixed(1);
+
+  await loadServiceReviewsTable();
+  openModal('service-reviews-modal');
+};
+
+async function loadServiceReviewsTable() {
+  const tbody = document.getElementById('service-reviews-modal-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:12px; color:var(--adm-muted);">Loading reviews...</td></tr>`;
+
+  const res = await apiRequest(`/api/admin/services/${activeServiceReviewsId}/reviews`);
+  if (res.success) {
+    if (res.data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:12px; color:var(--adm-muted);">No customer reviews found.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = res.data.map(r => {
+      const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A';
+      return `
+        <tr>
+          <td>${r.user_name}</td>
+          <td style="color:#ffa500; font-weight:700;">${r.rating} ★</td>
+          <td>${r.review || '<span style="color:var(--adm-muted); font-style:italic;">Rating only</span>'}</td>
+          <td>${dateStr}</td>
+          <td>
+            <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="deleteServiceReview(${r.id})" title="Delete Review"><i data-lucide="trash-2"></i></button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    if (window.lucide) window.lucide.createIcons();
+  }
+}
+
+window.deleteServiceReview = async (reviewId) => {
+  if (confirm('Delete this user review permanently?')) {
+    const res = await apiRequest(`/api/admin/services/reviews/${reviewId}`, 'DELETE');
+    if (res.success) {
+      showToast('Service review deleted.');
+      await loadServiceReviewsTable();
+      loadServicesManager(); // Refresh counts in master list
     }
   }
 };

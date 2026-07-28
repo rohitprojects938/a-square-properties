@@ -419,6 +419,7 @@
                   <th>Service Title</th>
                   <th>Provider</th>
                   <th>Category</th>
+                  <th>Rating</th>
                   <th>City</th>
                   <th>Mobile</th>
                   <th>WhatsApp</th>
@@ -954,8 +955,32 @@
           <input type="url" id="service-image" class="adm-form-input" placeholder="e.g. https://images.unsplash.com/...">
         </div>
         <div class="adm-form-group">
-          <label class="adm-form-label">Available Days / Time (Optional)</label>
-          <input type="text" id="service-days" class="adm-form-input" placeholder="e.g. Mon - Sat, 9 AM - 6 PM">
+          <label class="adm-form-label">Available Days (Optional)</label>
+          <input type="text" id="service-days" class="adm-form-input" placeholder="e.g. Mon - Sat">
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Working Hours (Optional)</label>
+            <input type="text" id="service-hours" class="adm-form-input" placeholder="e.g. 9 AM - 6 PM">
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Website (Optional)</label>
+            <input type="url" id="service-website" class="adm-form-input" placeholder="e.g. https://provider.com">
+          </div>
+        </div>
+        <div class="adm-form-row">
+          <div class="adm-form-group">
+            <label class="adm-form-label">Facebook Link (Optional)</label>
+            <input type="url" id="service-facebook" class="adm-form-input" placeholder="e.g. https://facebook.com/...">
+          </div>
+          <div class="adm-form-group">
+            <label class="adm-form-label">Instagram Link (Optional)</label>
+            <input type="url" id="service-instagram" class="adm-form-input" placeholder="e.g. https://instagram.com/...">
+          </div>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Service Images (JSON or Comma-separated URLs)</label>
+          <textarea id="service-image-urls" class="adm-form-input" placeholder='["/uploads/services/img1.webp", "/uploads/services/img2.webp"]' rows="2"></textarea>
         </div>
         <div class="adm-form-row">
           <div class="adm-form-group">
@@ -974,6 +999,37 @@
         </div>
         <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Service</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Service Reviews Moderation Modal -->
+  <div class="adm-modal-overlay" id="service-reviews-modal">
+    <div class="adm-modal" style="max-width:600px;">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title">Moderate Service Reviews</div>
+        <button class="adm-modal-close" onclick="closeModal('service-reviews-modal')">×</button>
+      </div>
+      <div style="padding:16px;">
+        <div style="margin-bottom:12px; font-size:13px; color:var(--adm-muted);">
+          Service Name: <strong id="srv-rev-modal-name" style="color:var(--adm-dark);"></strong> | Avg Rating: <strong id="srv-rev-modal-avg">0.0</strong> ★
+        </div>
+        <div class="adm-table-container" style="max-height:400px; overflow-y:auto;">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Rating</th>
+                <th>Review Comment</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="service-reviews-modal-table-body">
+              <!-- Loaded dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 

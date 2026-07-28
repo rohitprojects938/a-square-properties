@@ -124,14 +124,11 @@
       box-shadow: none;
     }
 
-    /* 5. Services Grid */
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .service-card-new {
+    /* 5. Services Horizontal Scroll */
+    .service-scroll-card {
+      flex: 0 0 160px;
+      width: 160px;
+      scroll-snap-align: start;
       background: #ffffff;
       border-radius: 16px;
       border: 1px solid #f0f0f0;
@@ -144,17 +141,17 @@
       transition: all 0.2s ease;
       text-decoration: none;
       cursor: pointer;
+      box-sizing: border-box;
     }
-    .service-card-new:hover {
+    .service-scroll-card:hover {
       background: #fafafa;
       border-color: #e5e5e5;
       transform: translateY(-2px);
     }
-    .service-card-new:active {
+    .service-scroll-card:active {
       transform: scale(0.97);
-      background: #f5f5f5;
     }
-    .service-card-icon-new {
+    .service-scroll-card-icon {
       font-size: 28px;
       margin-bottom: 8px;
       width: 50px;
@@ -165,11 +162,20 @@
       align-items: center;
       justify-content: center;
     }
-    .service-card-title-new {
+    .service-scroll-card-title {
       font-size: 13px;
       font-weight: 700;
       color: #1a1a1a;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 100%;
+    }
+    .service-scroll-card-rating {
+      font-size: 11px;
+      color: #ffa500;
+      font-weight: 700;
     }
     .whatsapp-btn {
       display: flex;
@@ -668,7 +674,7 @@
             <i class="bx bx-plus" style="font-size:14px; font-weight:bold;"></i> Add Your Service
           </a>
         </div>
-        <div class="services-grid" id="services-grid-container" style="margin-bottom: 20px;">
+        <div class="horizontal-scroll" id="services-grid-container" style="margin-bottom: 20px;">
           <!-- Loaded dynamically -->
         </div>
 
@@ -960,6 +966,97 @@
         <div style="display: flex; flex-direction: column; width: 100%; gap: 8px; margin-top: 8px;">
           <button class="btn-primary" id="btn-allow-location" style="width: 100%; height: 44px; font-weight: 700; border-radius: 12px; border: none; background: var(--secondary-orange); color: white; cursor: pointer; font-size: 14px;">Allow Location</button>
           <button class="btn-secondary" id="btn-maybe-later" style="width: 100%; height: 44px; font-weight: 600; border-radius: 12px; border: 1px solid var(--border-color); background: transparent; color: var(--text-dark); cursor: pointer; font-size: 14px;">Maybe Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Details Modal -->
+    <div class="service-modal-overlay" id="service-details-modal-overlay" onclick="if(event.target === this) closeServiceDetailsModal();" style="z-index: 12000;">
+      <div class="service-modal" style="max-width: 500px; border-radius: 20px; overflow: hidden; height: 90vh;">
+        <!-- Header -->
+        <div class="service-modal-header" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+          <h2 id="sd-title" style="font-size: 16px; font-weight: 800; color: #1a1a1a; margin: 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 80%;">Service Details</h2>
+          <button type="button" onclick="closeServiceDetailsModal()" style="border: none; background: none; font-size: 24px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 4px;"><i class="bx bx-x"></i></button>
+        </div>
+
+        <!-- Body (Scrollable) -->
+        <div class="service-modal-body" style="padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; height: calc(100% - 130px);">
+          <!-- Provider Info Card -->
+          <div style="background: #f8fafc; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #f1f5f9;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <div id="sd-avatar" style="width: 54px; height: 54px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #475569; overflow: hidden;"></div>
+              <div>
+                <h3 id="sd-provider-name" style="font-size: 14px; font-weight: 700; color: #1a1a1a; margin: 0;"></h3>
+                <span id="sd-category" style="background: #ffeaeb; color: var(--primary-red); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-top: 4px; display: inline-block;"></span>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+              <div><strong>💼 Experience:</strong> <span id="sd-experience"></span></div>
+              <div><strong>💰 Starting Price:</strong> <span id="sd-price"></span></div>
+              <div><strong>📅 Days:</strong> <span id="sd-days"></span></div>
+              <div><strong>🕒 Hours:</strong> <span id="sd-hours"></span></div>
+              <div style="grid-column: span 2;"><strong>📍 Address:</strong> <span id="sd-address"></span></div>
+            </div>
+          </div>
+
+          <!-- Carousel / Images Gallery -->
+          <div id="sd-gallery-container" style="display: none;">
+            <h4 style="font-size: 13px; font-weight: 700; color: #1a1a1a; margin: 0 0 10px 0;">Gallery</h4>
+            <div class="horizontal-scroll" id="sd-gallery" style="scroll-snap-type: x mandatory; padding-bottom: 4px;">
+              <!-- Dynamic image tags -->
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <h4 style="font-size: 13px; font-weight: 700; color: #1a1a1a; margin: 0 0 8px 0;">Description</h4>
+            <p id="sd-description" style="font-size: 12px; color: #475569; line-height: 1.6; margin: 0;"></p>
+          </div>
+
+          <!-- Social Links -->
+          <div id="sd-socials" style="display: flex; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+            <!-- Render social anchors dynamically -->
+          </div>
+
+          <!-- Ratings Header -->
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="font-size: 13px; font-weight: 700; color: #1a1a1a; margin: 0;">Customer Reviews</h4>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 13px; font-weight: 800; color: #1a1a1a;" id="sd-rating-avg">0.0</span>
+                <span style="color: #ffa500; font-size: 14px;" id="sd-rating-stars"></span>
+                <span style="font-size: 11px; color: var(--text-muted);" id="sd-rating-count">(0 ratings)</span>
+              </div>
+            </div>
+
+            <!-- Submit Rating/Review Form -->
+            <form id="sd-rate-form" onsubmit="submitServiceRating(event)" style="background: #f8fafc; border-radius: 12px; padding: 12px; border: 1px solid #f1f5f9; margin-bottom: 16px; display: none;">
+              <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 6px;">Rate this service</div>
+              <div style="display: flex; gap: 6px; font-size: 20px; color: #cbd5e1; cursor: pointer; margin-bottom: 8px;" id="rate-star-selector">
+                <i class="bx bx-star" data-index="1"></i>
+                <i class="bx bx-star" data-index="2"></i>
+                <i class="bx bx-star" data-index="3"></i>
+                <i class="bx bx-star" data-index="4"></i>
+                <i class="bx bx-star" data-index="5"></i>
+              </div>
+              <input type="hidden" id="rate-value" value="0">
+              <textarea id="rate-review-text" rows="2" placeholder="Write a review (optional)..." style="width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; font-size: 11px; outline: none; box-sizing: border-box; margin-bottom: 8px; font-family: sans-serif; resize: none;"></textarea>
+              <button type="submit" class="btn-primary" style="padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; color: white; cursor: pointer; width: 100%;">Submit Review</button>
+            </form>
+            <div id="sd-login-to-rate" style="font-size: 11px; color: var(--text-muted); background: #f8fafc; border-radius: 12px; padding: 10px; text-align: center; border: 1px solid #f1f5f9; margin-bottom: 16px; display: none;">
+              Please <a href="/login.html" style="color: var(--primary-red); font-weight: 700; text-decoration: none;">login</a> to rate this service provider.
+            </div>
+
+            <!-- Reviews Board List -->
+            <div id="sd-reviews-list" style="display: flex; flex-direction: column; gap: 12px;">
+              <p style="font-size: 11px; color: var(--text-muted); margin: 0; padding: 8px 0;">No reviews yet. Be the first to review!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="service-modal-footer" id="sd-actions" style="padding: 16px 20px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; background: white;">
+          <!-- Dynamically filled anchors -->
         </div>
       </div>
     </div>
@@ -1572,39 +1669,278 @@
       }
     };
 
+    let selectedServiceForRating = null;
+
+    window.openServiceDetailsModal = async function(serviceId) {
+      const s = (window.allServices || []).find(item => item.id === serviceId);
+      if (!s) return;
+      selectedServiceForRating = serviceId;
+
+      document.getElementById('sd-title').innerText = s.name;
+      document.getElementById('sd-provider-name').innerText = s.provider_name || 'Verified Provider';
+      document.getElementById('sd-category').innerText = s.category.toUpperCase();
+      document.getElementById('sd-experience').innerText = s.experience || 'N/A';
+      document.getElementById('sd-price').innerText = s.starting_price ? `Starting from ₹${s.starting_price}` : 'N/A';
+      document.getElementById('sd-days').innerText = s.available_days || 'Mon - Sat';
+      document.getElementById('sd-hours').innerText = s.working_hours || '9 AM - 6 PM';
+      document.getElementById('sd-address').innerText = `${s.address || ''}, ${s.city}`;
+      document.getElementById('sd-description').innerText = s.description;
+
+      const avatarContainer = document.getElementById('sd-avatar');
+      avatarContainer.innerHTML = '';
+      if (s.image_url) {
+        avatarContainer.innerHTML = `<img src="${s.image_url}" alt="Logo" style="width:100%; height:100%; object-fit:cover;">`;
+      } else {
+        avatarContainer.innerText = (s.provider_name || 'S').charAt(0).toUpperCase();
+      }
+
+      const galleryDiv = document.getElementById('sd-gallery');
+      const galleryContainer = document.getElementById('sd-gallery-container');
+      galleryDiv.innerHTML = '';
+      let imgs = [];
+      try {
+        if (s.image_urls) {
+          imgs = JSON.parse(s.image_urls);
+        }
+      } catch(e) {
+        if (typeof s.image_urls === 'string') {
+          imgs = s.image_urls.split(',').map(u => u.trim());
+        }
+      }
+      if (!imgs.includes(s.image_url) && s.image_url) {
+        imgs.unshift(s.image_url);
+      }
+      imgs = imgs.filter(Boolean);
+
+      if (imgs.length > 0) {
+        galleryContainer.style.display = 'block';
+        galleryDiv.innerHTML = imgs.map(url => `
+          <div style="flex: 0 0 100%; width: 100%; scroll-snap-align: start; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; background: #e2e8f0;">
+            <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" class="lazy-load">
+          </div>
+        `).join('');
+        if (window.triggerLazyLoad) window.triggerLazyLoad();
+        enableMouseDragScroll('#sd-gallery');
+      } else {
+        galleryContainer.style.display = 'none';
+      }
+
+      const socialsDiv = document.getElementById('sd-socials');
+      socialsDiv.innerHTML = '';
+      let hasSocials = false;
+      if (s.website) {
+        socialsDiv.innerHTML += `<a href="${s.website}" target="_blank" style="color: #475569; font-size: 20px;" title="Website"><i class="bx bx-globe"></i></a>`;
+        hasSocials = true;
+      }
+      if (s.facebook) {
+        socialsDiv.innerHTML += `<a href="${s.facebook}" target="_blank" style="color: #1877f2; font-size: 20px;" title="Facebook"><i class="bx bxl-facebook-circle"></i></a>`;
+        hasSocials = true;
+      }
+      if (s.instagram) {
+        socialsDiv.innerHTML += `<a href="${s.instagram}" target="_blank" style="color: #e1306c; font-size: 20px;" title="Instagram"><i class="bx bxl-instagram-alt"></i></a>`;
+        hasSocials = true;
+      }
+      socialsDiv.style.display = hasSocials ? 'flex' : 'none';
+
+      document.getElementById('sd-rating-avg').innerText = parseFloat(s.avg_rating || 0).toFixed(1);
+      document.getElementById('sd-rating-count').innerText = `(${s.total_ratings || 0} ratings)`;
+      const starsCount = Math.round(s.avg_rating || 0);
+      document.getElementById('sd-rating-stars').innerText = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
+
+      const phoneVal = (s.mobile_number || '').replace(/[^0-9+]/g, '');
+      const waVal = (s.whatsapp_number || s.mobile_number || '').replace(/[^0-9+]/g, '');
+      const waText = encodeURIComponent(`Hi ${s.provider_name || ''},\nI found your service "${s.name}" on HouseRenter.in.\nI am interested in hiring you.`);
+      const whatsappUrl = `https://wa.me/${waVal.replace('+', '')}?text=${waText}`;
+
+      document.getElementById('sd-actions').innerHTML = `
+        <a href="tel:${phoneVal}" class="btn-secondary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:12px; border-radius:10px;"><i class="bx bx-phone"></i> Call Now</a>
+        <a href="${whatsappUrl}" class="btn-primary" style="flex:1; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; padding:12px; border-radius:10px;" target="_blank"><i class="bx bxl-whatsapp"></i> WhatsApp</a>
+        <button onclick="shareService(${s.id}, '${s.name.replace(/'/g, "\\'")}')" class="btn-secondary" style="display:flex; align-items:center; justify-content:center; width:44px; height:44px; padding:0; border-radius:10px; border:1.5px solid var(--border-color); background:none; cursor:pointer;" title="Share"><i class="bx bx-share-alt" style="font-size:16px;"></i></button>
+      `;
+
+      const token = localStorage.getItem('token');
+      if (token) {
+        document.getElementById('sd-rate-form').style.display = 'block';
+        document.getElementById('sd-login-to-rate').style.display = 'none';
+        document.getElementById('rate-value').value = '0';
+        document.getElementById('rate-review-text').value = '';
+        highlightRatingStars(0);
+      } else {
+        document.getElementById('sd-rate-form').style.display = 'none';
+        document.getElementById('sd-login-to-rate').style.display = 'block';
+      }
+
+      loadServiceReviewsList(s.id);
+      document.getElementById('service-details-modal-overlay').classList.add('active');
+    };
+
+    window.closeServiceDetailsModal = function() {
+      document.getElementById('service-details-modal-overlay').classList.remove('active');
+    };
+
+    // Stars selector click
+    setTimeout(() => {
+      document.querySelectorAll('#rate-star-selector i').forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = parseInt(star.getAttribute('data-index'));
+          document.getElementById('rate-value').value = rating;
+          highlightRatingStars(rating);
+        });
+      });
+    }, 100);
+
+    function highlightRatingStars(rating) {
+      document.querySelectorAll('#rate-star-selector i').forEach(star => {
+        const index = parseInt(star.getAttribute('data-index'));
+        if (index <= rating) {
+          star.className = 'bx bxs-star';
+          star.style.color = '#ffa500';
+        } else {
+          star.className = 'bx bx-star';
+          star.style.color = '#cbd5e1';
+        }
+      });
+    }
+
+    window.submitServiceRating = async function(e) {
+      e.preventDefault();
+      const rating = parseInt(document.getElementById('rate-value').value);
+      const review = document.getElementById('rate-review-text').value.trim();
+
+      if (rating === 0) {
+        return alert('Please select a star rating.');
+      }
+
+      try {
+        const res = await apiRequest(`/api/services/${selectedServiceForRating}/ratings`, 'POST', { rating, review });
+        if (res.success) {
+          alert('Review saved successfully!');
+          loadServiceReviewsList(selectedServiceForRating);
+          
+          if (window.loadHomeServices) window.loadHomeServices();
+          if (window.loadServicesFiltered) window.loadServicesFiltered(currentCategory || 'all');
+          
+          const updatedRes = await apiRequest('/api/services');
+          if (updatedRes.success) {
+            window.allServices = updatedRes.data;
+            const updatedSvc = window.allServices.find(item => item.id === selectedServiceForRating);
+            if (updatedSvc) {
+              document.getElementById('sd-rating-avg').innerText = parseFloat(updatedSvc.avg_rating || 0).toFixed(1);
+              document.getElementById('sd-rating-count').innerText = `(${updatedSvc.total_ratings || 0} ratings)`;
+              const starsCount = Math.round(updatedSvc.avg_rating || 0);
+              document.getElementById('sd-rating-stars').innerText = '★'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
+            }
+          }
+        }
+      } catch(err) {
+        alert(err.message || 'Failed to submit review.');
+      }
+    };
+
+    async function loadServiceReviewsList(serviceId) {
+      const container = document.getElementById('sd-reviews-list');
+      container.innerHTML = '<p style="font-size: 11px; color: var(--text-muted); margin:0; padding:8px 0;">Loading reviews...</p>';
+
+      try {
+        const res = await apiRequest(`/api/services/${serviceId}/reviews`);
+        if (res.success && res.data && res.data.length > 0) {
+          container.innerHTML = res.data.map(r => {
+            const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+            const dateStr = new Date(r.created_at).toLocaleDateString();
+            const reviewComment = r.review ? `<p style="font-size:11.5px; color:#475569; margin: 4px 0 0 0; line-height: 1.4;">${r.review}</p>` : '';
+            return `
+              <div style="background: #ffffff; border: 1px solid #f1f5f9; padding: 12px; border-radius: 10px; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 11.5px; font-weight: 700; color: #1a1a1a;">${r.user_name}</span>
+                  <span style="font-size: 10px; color: var(--text-muted);">${dateStr}</span>
+                </div>
+                <div style="color: #ffa500; font-size: 11px; margin-top: 2px;">${stars}</div>
+                ${reviewComment}
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = '<p style="font-size: 11px; color: var(--text-muted); margin: 0; padding: 8px 0;">No reviews yet.</p>';
+        }
+      } catch (err) {
+        container.innerHTML = '<p style="font-size: 11px; color: var(--primary-red); margin: 0; padding: 8px 0;">Failed to load reviews.</p>';
+      }
+    }
+
+    window.shareService = function(serviceId, serviceName) {
+      const shareUrl = `${window.location.origin}/marketplace.html?id=${serviceId}`;
+      if (navigator.share) {
+        navigator.share({
+          title: serviceName,
+          text: `Check out this service provider "${serviceName}" on HouseRenter.in!`,
+          url: shareUrl
+        }).catch(err => console.log('Share canceled'));
+      } else {
+        navigator.clipboard.writeText(shareUrl)
+          .then(() => alert('Link copied to clipboard!'))
+          .catch(() => alert('Failed to copy link.'));
+      }
+    };
+
+    function enableMouseDragScroll(selector) {
+      const sliders = document.querySelectorAll(selector);
+      sliders.forEach(slider => {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        slider.addEventListener('mousedown', (e) => {
+          isDown = true;
+          slider.style.cursor = 'grabbing';
+          startX = e.pageX - slider.offsetLeft;
+          scrollLeft = slider.scrollLeft;
+        });
+        slider.addEventListener('mouseleave', () => {
+          isDown = false;
+          slider.style.cursor = 'grab';
+        });
+        slider.addEventListener('mouseup', () => {
+          isDown = false;
+          slider.style.cursor = 'grab';
+        });
+        slider.addEventListener('mousemove', (e) => {
+          if(!isDown) return;
+          e.preventDefault();
+          const x = e.pageX - slider.offsetLeft;
+          const walk = (x - startX) * 1.5;
+          slider.scrollLeft = scrollLeft - walk;
+        });
+        slider.style.cursor = 'grab';
+      });
+    }
+
     async function loadHomeServices() {
       try {
         const res = await apiRequest('/api/services');
         if (res.success && res.data && res.data.length > 0) {
+          window.allServices = res.data;
           const container = document.getElementById('services-grid-container');
           if (!container) return;
           container.innerHTML = res.data.map(s => {
-            const cleanNumber = (s.whatsapp_number || '+919919014220').replace(/[^0-9+]/g, '');
-            const messageText = `Hi,
-I found your service on House Rental.
-I am interested in your service.
-Please share more details.`;
-            const msg = encodeURIComponent(messageText);
-            const whatsappUrl = `https://wa.me/${cleanNumber}?text=${msg}`;
-            let icon = s.icon;
-            if (!icon) {
-              const cat = (s.category || '').toLowerCase();
-              if (cat === 'electrician') icon = '⚡';
-              else if (cat === 'painter') icon = '🎨';
-              else if (cat === 'plumber') icon = '🪠';
-              else if (cat === 'cleaning') icon = '🧹';
-              else if (cat === 'gardening') icon = '🌱';
-              else if (cat === 'packers' || cat === 'movers') icon = '📦';
-              else if (cat === 'contractor') icon = '🏗️';
-              else icon = '🔧';
-            }
+            let icon = '🔧';
+            const cat = (s.category || '').toLowerCase();
+            if (cat === 'electrician') icon = '⚡';
+            else if (cat === 'painter') icon = '🎨';
+            else if (cat === 'plumber') icon = '🪠';
+            else if (cat === 'cleaning') icon = '🧹';
+            else if (cat === 'gardening') icon = '🌱';
+            else if (cat === 'packers' || cat === 'movers') icon = '📦';
+            else if (cat === 'contractor') icon = '🏗️';
+
             return `
-              <a href="${whatsappUrl}" target="_blank" class="service-card-new">
-                <div class="service-card-icon-new">${icon}</div>
-                <div class="service-card-title-new" style="margin-bottom: 0;">${s.name}</div>
-              </a>
+              <div onclick="openServiceDetailsModal(${s.id})" class="service-scroll-card">
+                <div class="service-scroll-card-icon">${icon}</div>
+                <div class="service-scroll-card-title">${s.name}</div>
+                <div class="service-scroll-card-rating">⭐ ${parseFloat(s.avg_rating || 0).toFixed(1)} (${s.total_ratings || 0})</div>
+              </div>
             `;
           }).join('');
+          enableMouseDragScroll('#services-grid-container');
         }
       } catch(e) {
         console.warn('Services failed:', e.message);

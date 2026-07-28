@@ -276,8 +276,17 @@ async function getServices(req, res) {
     params.push(category);
   }
 
-  const whereClause = where.length ? ' WHERE ' + where.join(' AND ') : '';
-  const sql      = `SELECT hs.*, u.name as user_name FROM home_services hs LEFT JOIN users u ON hs.user_id = u.id${whereClause} ORDER BY hs.sort_order ASC, hs.id DESC LIMIT ? OFFSET ?`;
+  const sql      = `
+    SELECT hs.*, u.name as user_name,
+           COALESCE((SELECT AVG(rating) FROM service_ratings WHERE service_id = hs.id), 0) as avg_rating,
+           (SELECT COUNT(*) FROM service_ratings WHERE service_id = hs.id) as total_ratings,
+           (SELECT COUNT(*) FROM service_ratings WHERE service_id = hs.id AND review IS NOT NULL AND TRIM(review) != '') as total_reviews
+    FROM home_services hs
+    LEFT JOIN users u ON hs.user_id = u.id
+    ${whereClause}
+    ORDER BY hs.sort_order ASC, hs.id DESC
+    LIMIT ? OFFSET ?
+  `;
   const countSql = `SELECT COUNT(*) as total FROM home_services hs${whereClause}`;
 
   try {
@@ -866,10 +875,38 @@ async function updateSettings(req, res) {
   }
 }
 
+// Reviews for Home Services
+async function getServiceReviews(req, res) {
+  const serviceId = parseInt(req.params.id);
+  try {
+    const [rows] = await db.query(
+      `SELECT sr.id, sr.user_id, sr.rating, sr.review, sr.created_at, u.name as user_name
+       FROM service_ratings sr
+       JOIN users u ON sr.user_id = u.id
+       WHERE sr.service_id = ?
+       ORDER BY sr.created_at DESC`,
+      [serviceId]
+    );
+    res.json({ success: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
+async function deleteServiceReview(req, res) {
+  const { reviewId } = req.params;
+  try {
+    await db.query('DELETE FROM service_ratings WHERE id = ?', [reviewId]);
+    res.json({ success: true, message: 'Review deleted successfully.' });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+}
+
 module.exports = {
   getDashboardStats, getUsers, getUserById, updateUser, deleteUser, updateUserRole,
   getAdminProperties, updatePropertyStatus, deleteProperty, togglePropertyVisibility, toggleFeatured,
-  getServices, createService, updateService, updateServiceStatus, deleteService,
+  getServices, createService, updateService, updateServiceStatus, deleteService, getServiceReviews, deleteServiceReview,
   getReviews, updateReviewStatus, replyToReview, deleteReview,
   getLoans, updateLoanStatus, exportLoansXlsx, deleteLoan, updateLoanSettings,
   getPlans, createPlan, updatePlan, deletePlan,

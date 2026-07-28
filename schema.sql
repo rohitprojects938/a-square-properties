@@ -336,12 +336,31 @@ CREATE TABLE IF NOT EXISTS home_services (
     experience VARCHAR(100) DEFAULT NULL,
     starting_price DECIMAL(10, 2) DEFAULT NULL,
     image_url VARCHAR(255) DEFAULT NULL,
+    image_urls TEXT DEFAULT NULL,
     available_days VARCHAR(255) DEFAULT NULL,
+    working_hours VARCHAR(100) DEFAULT NULL,
+    website VARCHAR(255) DEFAULT NULL,
+    facebook VARCHAR(255) DEFAULT NULL,
+    instagram VARCHAR(255) DEFAULT NULL,
     status ENUM('pending', 'approved', 'rejected', 'suspended') DEFAULT 'pending',
     sort_order INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- 22b. Service Ratings and Reviews Table
+CREATE TABLE IF NOT EXISTS service_ratings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    service_id INT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    review TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_user_service (user_id, service_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (service_id) REFERENCES home_services(id) ON DELETE CASCADE
 );
 
 -- 23. Audit Logs Table

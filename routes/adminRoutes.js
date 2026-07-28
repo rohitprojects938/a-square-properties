@@ -32,6 +32,8 @@ router.post('/services',         admin.createService);
 router.put('/services/:id',      admin.updateService);
 router.put('/services/:id/status', admin.updateServiceStatus);
 router.delete('/services/:id',   admin.deleteService);
+router.get('/services/:id/reviews', admin.getServiceReviews);
+router.delete('/services/reviews/:reviewId', admin.deleteServiceReview);
 
 // Customer Reviews
 router.get('/reviews',           admin.getReviews);

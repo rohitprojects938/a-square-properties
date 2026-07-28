@@ -127,8 +127,12 @@ const mockDb = {
   reel_likes: [],
   reel_comments: [],
   services: [
-    { id: 1, name: 'Raj Paint Services', category: 'painter', contact_number: '+919876543210', mobile_number: '+919876543210', whatsapp_number: '+919876543210', experience: '8 Years', ratings: 4.8, reviews_count: 120, description: 'Premium wall painting, texture finish, and waterproofing services.', image_url: '/uploads/services/paint.webp', city: 'Lucknow', status: 'approved', provider_name: 'Raj Kumar', created_at: new Date() },
-    { id: 2, name: 'Suresh Wireman', category: 'electrician', contact_number: '+919876543211', mobile_number: '+919876543211', whatsapp_number: '+919876543211', experience: '5 Years', ratings: 4.6, reviews_count: 85, description: 'Residential wiring, switchboard installation, and electric repairs.', image_url: '/uploads/services/electric.webp', city: 'Lucknow', status: 'approved', provider_name: 'Suresh Soni', created_at: new Date() }
+    { id: 1, name: 'Raj Paint Services', category: 'painter', contact_number: '+919876543210', mobile_number: '+919876543210', whatsapp_number: '+919876543210', experience: '8 Years', starting_price: 15000, description: 'Premium wall painting, texture finish, and waterproofing services.', image_url: '/uploads/services/paint.webp', image_urls: JSON.stringify(['/uploads/services/paint.webp']), working_hours: '9 AM - 6 PM', available_days: 'Mon - Sat', website: 'https://rajpaint.in', status: 'approved', provider_name: 'Raj Kumar', created_at: new Date() },
+    { id: 2, name: 'Suresh Wireman', category: 'electrician', contact_number: '+919876543211', mobile_number: '+919876543211', whatsapp_number: '+919876543211', experience: '5 Years', starting_price: 350, description: 'Residential wiring, switchboard installation, and electric repairs.', image_url: '/uploads/services/electric.webp', image_urls: JSON.stringify(['/uploads/services/electric.webp']), working_hours: '8 AM - 8 PM', available_days: 'All Days', website: '', status: 'approved', provider_name: 'Suresh Soni', created_at: new Date() }
+  ],
+  service_ratings: [
+    { id: 1, user_id: 1, service_id: 1, rating: 5, review: 'Excellent painting service! High quality texture paint.', created_at: new Date() },
+    { id: 2, user_id: 1, service_id: 2, rating: 4, review: 'Very professional wireman. Fixed short circuit issues instantly.', created_at: new Date() }
   ],
   blogs: [
     { id: 1, title: 'Real Estate Trends in India (2026)', slug: 'real-estate-trends-2026', content: 'Real estate in India is scaling higher. With digital processes and smart home requirements, buyers are shifting towards luxury yet affordable properties.', category: 'Market Trends', author_name: 'Manoj Soni', image_url: '/uploads/blogs/trends.webp', views_count: 104, created_at: new Date() }
@@ -958,10 +962,6 @@ async function executeMock(sql, params = []) {
         }
       } else {
         // Admin getServices query (no status = 'approved' literal)
-        // Parse parameters in adminController order:
-        // 1. search (first 5 params if present)
-        // 2. status = ? (next param if present)
-        // 3. category = ? (next param if present)
         let paramIdx = 0;
         if (normalizedSql.includes("hs.name like ?")) {
           const sVal = (params[paramIdx] || '').replace(/%/g, '').toLowerCase();
@@ -988,14 +988,41 @@ async function executeMock(sql, params = []) {
         }
       }
 
+      // Compute calculated ratings fields on each item
+      const serviceRatings = mockDb.service_ratings || [];
+      list = list.map(s => {
+        const ratingsForSvc = serviceRatings.filter(sr => sr.service_id === s.id);
+        const avgRating = ratingsForSvc.length > 0 ? (ratingsForSvc.reduce((sum, r) => sum + r.rating, 0) / ratingsForSvc.length) : 0;
+        const totalReviews = ratingsForSvc.filter(sr => sr.review && sr.review.trim() !== '').length;
+        return {
+          ...s,
+          avg_rating: avgRating,
+          total_ratings: ratingsForSvc.length,
+          total_reviews: totalReviews,
+          ratings: parseFloat(avgRating.toFixed(1)),
+          reviews_count: totalReviews
+        };
+      });
+
       // Check for COUNT query
-      if (normalizedSql.includes('count(')) {
+      if (normalizedSql.startsWith('select count(') || normalizedSql.startsWith('select count(*)')) {
         return [[{ total: list.length }]];
       }
 
       // Sorting
-      list = [...list]; // clone before sort to avoid in-place issues
-      list.sort((a, b) => (b.sort_order || 0) - (a.sort_order || 0) || b.id - a.id);
+      list = [...list];
+      list.sort((a, b) => {
+        // Priority 1: Highest Average Rating
+        const ratingDiff = (b.avg_rating || 0) - (a.avg_rating || 0);
+        if (Math.abs(ratingDiff) > 0.001) return ratingDiff;
+        // Priority 2: Highest Number of Ratings
+        const countDiff = (b.total_ratings || 0) - (a.total_ratings || 0);
+        if (countDiff !== 0) return countDiff;
+        // Priority 3: Sort Order / Recency
+        const sortDiff = (b.sort_order || 0) - (a.sort_order || 0);
+        if (sortDiff !== 0) return sortDiff;
+        return b.id - a.id;
+      });
 
       // Pagination: LIMIT ? OFFSET ?
       if (normalizedSql.includes('limit ?')) {
@@ -1007,86 +1034,101 @@ async function executeMock(sql, params = []) {
       return [list];
     }
     if (normalizedSql.startsWith('insert')) {
-      let newSvc = {};
-      if (normalizedSql.includes('(user_id,')) {
-        // User marketplace submission
-        newSvc = {
-          id: mockDb.services.length + 1,
-          user_id: params[0] || null,
-          provider_name: params[1] || 'Guest Provider',
-          name: params[2] || '',
-          category: params[3] || 'other',
-          description: params[4] || '',
-          mobile_number: params[5] || '',
-          whatsapp_number: params[6] || params[5] || '',
-          city: params[7] || 'Lucknow',
-          address: params[8] || null,
-          experience: params[9] || null,
-          starting_price: params[10] || null,
-          image_url: params[11] || null,
-          available_days: params[12] || null,
-          status: 'pending',
+      // Parse columns from the SQL string dynamically to be extremely robust
+      const colsMatch = sql.match(/\(([^)]+)\)\s*values/i);
+      if (colsMatch) {
+        const cols = colsMatch[1].split(',').map(c => c.trim().replace(/`/g, ''));
+        const newSvc = { 
+          id: mockDb.services.length + 1, 
+          status: 'approved',
           sort_order: 0,
-          contact_number: params[5] || '',
-          created_at: new Date()
+          created_at: new Date() 
         };
-      } else {
-        // Admin dashboard manual service creation
-        newSvc = {
-          id: mockDb.services.length + 1,
-          user_id: null,
-          provider_name: params[0] || 'Admin Added',
-          name: params[1] || '',
-          category: params[2] || 'other',
-          description: params[3] || '',
-          mobile_number: params[4] || '',
-          whatsapp_number: params[5] || params[4] || '',
-          city: params[6] || 'Lucknow',
-          address: params[7] || null,
-          experience: params[8] || null,
-          starting_price: params[9] || null,
-          image_url: params[10] || null,
-          available_days: params[11] || null,
-          status: params[12] || 'approved',
-          sort_order: params[13] || 0,
-          contact_number: params[4] || '',
-          created_at: new Date()
-        };
+        cols.forEach((col, idx) => {
+          newSvc[col] = params[idx];
+        });
+        if (!newSvc.image_urls && newSvc.image_url) {
+          newSvc.image_urls = JSON.stringify([newSvc.image_url]);
+        }
+        mockDb.services.push(newSvc);
+        return [{ insertId: newSvc.id }];
       }
-      mockDb.services.push(newSvc);
-      return [{ insertId: newSvc.id }];
     }
     if (normalizedSql.startsWith('update')) {
-      const sid = parseInt(params[params.length - 1]);
-      const svc = mockDb.services.find(s => s.id === sid);
-      if (svc) {
-        if (normalizedSql.includes('status = ?') && params.length === 2) {
-          svc.status = params[0];
-        } else {
-          svc.provider_name = params[0];
-          svc.name = params[1] || svc.name;
-          svc.category = params[2] || svc.category;
-          svc.description = params[3] || '';
-          svc.mobile_number = params[4] || svc.mobile_number;
-          svc.whatsapp_number = params[5] || params[4];
-          svc.city = params[6] || svc.city;
-          svc.address = params[7];
-          svc.experience = params[8];
-          svc.starting_price = params[9];
-          svc.image_url = params[10];
-          svc.available_days = params[11];
-          svc.status = params[12] || svc.status;
-          svc.sort_order = params[13] || 0;
-          svc.contact_number = svc.mobile_number;
+      const colsMatch = sql.match(/set\s+([^where]+)/i);
+      const idMatch = sql.match(/where\s+id\s*=\s*\?/i) || sql.match(/where\s+hs.id\s*=\s*\?/i);
+      if (colsMatch && idMatch) {
+        const sets = colsMatch[1].split(',').map(s => s.trim().split('=')[0].trim().replace(/`/g, ''));
+        const sid = parseInt(params[params.length - 1]);
+        const svc = mockDb.services.find(s => s.id === sid);
+        if (svc) {
+          sets.forEach((col, idx) => {
+            svc[col] = params[idx];
+          });
+          if (!svc.image_urls && svc.image_url) {
+            svc.image_urls = JSON.stringify([svc.image_url]);
+          }
         }
+        return [{ affectedRows: svc ? 1 : 0 }];
       }
-      return [{ affectedRows: svc ? 1 : 0 }];
     }
     if (normalizedSql.startsWith('delete')) {
       const sid = parseInt(params[0]);
       const prevLen = mockDb.services.length;
       mockDb.services = mockDb.services.filter(s => s.id !== sid);
       return [{ affectedRows: prevLen - mockDb.services.length }];
+    }
+  }
+
+  // B2. SERVICE RATINGS CRUD
+  if (normalizedSql.includes('service_ratings') || normalizedSql.includes('from service_ratings')) {
+    if (normalizedSql.startsWith('select')) {
+      let list = mockDb.service_ratings || [];
+      if (normalizedSql.includes('service_id = ?')) {
+        const sid = parseInt(params[0]);
+        list = list.filter(r => r.service_id === sid);
+      }
+      list = list.map(r => {
+        const u = mockDb.users.find(user => user.id === r.user_id);
+        return {
+          ...r,
+          user_name: u ? u.name : 'Verified Customer'
+        };
+      });
+      list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      return [list];
+    }
+    if (normalizedSql.startsWith('insert')) {
+      const userId = parseInt(params[0]);
+      const serviceId = parseInt(params[1]);
+      const rating = parseInt(params[2]);
+      const review = params[3] || null;
+
+      let existing = (mockDb.service_ratings || []).find(r => r.user_id === userId && r.service_id === serviceId);
+      if (existing) {
+        existing.rating = rating;
+        existing.review = review;
+        existing.updated_at = new Date();
+        return [{ affectedRows: 1, insertId: existing.id }];
+      } else {
+        const newRating = {
+          id: (mockDb.service_ratings || []).length + 1,
+          user_id: userId,
+          service_id: serviceId,
+          rating: rating,
+          review: review,
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+        mockDb.service_ratings.push(newRating);
+        return [{ affectedRows: 1, insertId: newRating.id }];
+      }
+    }
+    if (normalizedSql.startsWith('delete')) {
+      const rid = parseInt(params[0]);
+      const prevLen = mockDb.service_ratings.length;
+      mockDb.service_ratings = mockDb.service_ratings.filter(r => r.id !== rid);
+      return [{ affectedRows: prevLen - mockDb.service_ratings.length }];
     }
   }
 

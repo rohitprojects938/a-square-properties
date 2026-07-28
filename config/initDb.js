@@ -99,6 +99,33 @@ async function initializeDatabase() {
     await addColumnIfNotExist('home_services', 'available_days', "ALTER TABLE home_services ADD COLUMN available_days VARCHAR(255) DEFAULT NULL;");
     await addColumnIfNotExist('home_services', 'status', "ALTER TABLE home_services ADD COLUMN status ENUM('pending', 'approved', 'rejected', 'suspended') DEFAULT 'approved';");
 
+    await addColumnIfNotExist('home_services', 'image_urls', "ALTER TABLE home_services ADD COLUMN image_urls TEXT DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'working_hours', "ALTER TABLE home_services ADD COLUMN working_hours VARCHAR(100) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'website', "ALTER TABLE home_services ADD COLUMN website VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'facebook', "ALTER TABLE home_services ADD COLUMN facebook VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('home_services', 'instagram', "ALTER TABLE home_services ADD COLUMN instagram VARCHAR(255) DEFAULT NULL;");
+
+    // Create Service Ratings and Reviews table
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS service_ratings (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          user_id INT NOT NULL,
+          service_id INT NOT NULL,
+          rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+          review TEXT DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY unique_user_service (user_id, service_id),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (service_id) REFERENCES home_services(id) ON DELETE CASCADE
+        )
+      `);
+      console.log('✅ MySQL Migration: Ensure service_ratings table exists.');
+    } catch (err) {
+      console.error('❌ Failed to create service_ratings table:', err.message);
+    }
+
     // Site settings loan configuration migrations
     await addColumnIfNotExist('site_settings', 'loan_section_enabled', "ALTER TABLE site_settings ADD COLUMN loan_section_enabled TINYINT DEFAULT 1;");
     await addColumnIfNotExist('site_settings', 'loan_apply_button_text', "ALTER TABLE site_settings ADD COLUMN loan_apply_button_text VARCHAR(100) DEFAULT 'Apply Now';");
