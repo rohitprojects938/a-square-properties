@@ -183,10 +183,40 @@ async function startApp(userPromise) {
   injectDesktopLayout(user);
   setupNavigation();
   renderUserUI(user);
+  injectStandardFooter();
 
   // Trigger page specific callbacks if defined
   if (window.onAppReady) {
     window.onAppReady(user);
+  }
+}
+
+// Dynamically inject the standardized footer into target informational pages
+function injectStandardFooter() {
+  const currentPath = window.location.pathname.toLowerCase();
+  const targetPages = ['profile.html', 'search.html', 'about.html', 'blogs.html', 'marketplace.html'];
+  const isTarget = targetPages.some(page => currentPath.includes(page));
+  if (!isTarget) return;
+
+  // Locate the scrollable container so the footer flows naturally and doesn't stick statically
+  const container = document.querySelector('.app-content') || document.querySelector('.scrollable-content');
+  if (container) {
+    // Prevent duplicate rendering
+    if (container.querySelector('footer')) return;
+
+    const footer = document.createElement('footer');
+    footer.style.textAlign = 'center';
+    footer.style.padding = '24px 16px';
+    footer.style.marginTop = '24px';
+    footer.style.borderTop = '1px solid var(--border-color)';
+    footer.style.color = 'var(--text-muted)';
+    footer.style.fontFamily = "'Outfit', sans-serif";
+
+    footer.innerHTML = `
+      <div style="font-size: 12px; margin-bottom: 4px;">Copyright © Houserenter.in 2026</div>
+      <div style="font-size: 11px;">WebApp Built by ~ <a href="https://roitsa.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary-red); text-decoration: none; font-weight: 700; transition: opacity 0.2s;">roitsa.in</a></div>
+    `;
+    container.appendChild(footer);
   }
 }
 
