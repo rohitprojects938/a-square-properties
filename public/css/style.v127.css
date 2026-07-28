@@ -510,11 +510,20 @@ body {
   background: #ECECEC;
 }
 
-/* Hero Section – Greeting above image */
-.hero-above-greeting {
-  margin-bottom: 6px;
-}
+/* ================================================
+   HERO SECTION — clean rebuild
+   Architecture:
+     .hero-above-greeting  (outside banner, above)
+     .home-hero-banner     (position: relative, fixed height)
+       ├── .hero-image     (absolute fill, object-fit: cover)
+       ├── .hero-gradient-overlay  (absolute bottom gradient)
+       └── .hero-search-float      (absolute, bottom-left, z-index: 3)
+   ================================================ */
 
+/* — Greeting above image — */
+.hero-above-greeting {
+  margin-bottom: 8px;
+}
 .hero-above-greeting-text {
   font-size: 15px;
   font-weight: 700;
@@ -522,160 +531,195 @@ body {
   letter-spacing: -0.2px;
 }
 
-/* Hero Image Banner */
+/* — Subtle zoom animation — */
 @keyframes heroImageZoom {
-  0%   { transform: scale(1.02); }
-  100% { transform: scale(1);    }
+  from { transform: scale(1.03); }
+  to   { transform: scale(1); }
 }
 
+/* — Banner container — */
 .home-hero-banner {
-  position: relative;
-  width: calc(100% + 32px);
+  position: relative;           /* stacking context for children */
+  width: calc(100% + 32px);    /* bleed past app-content 16px padding */
   margin-left: -16px;
-  height: 155px;        /* Mobile-first: compact */
-  overflow: hidden;
-  margin-bottom: 14px;
-  background: #111;
-  border-radius: 0;
+  height: 190px;               /* mobile-first compact height */
+  background: #1a1a2e;
+  margin-bottom: 16px;
+  /* NO overflow:hidden here — applied to image instead via clip */
+  overflow: hidden;            /* still needed to clip image */
 }
 
+/* — Hero image fills the banner — */
 .home-hero-banner .hero-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center center;
+  object-position: center 40%;  /* slightly above center to show room interiors */
   display: block;
-  animation: heroImageZoom 10s ease-out forwards;
+  animation: heroImageZoom 12s ease-out forwards;
+  z-index: 0;
 }
 
-/* Light bottom-only gradient so search bar stays readable */
+/* — Bottom gradient for search bar readability only — */
 .home-hero-banner .hero-gradient-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 60%;
-  background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 100%);
+  height: 50%;                  /* only bottom half */
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
   z-index: 1;
   pointer-events: none;
 }
 
-/* Search bar – compact, bottom-left inside the image */
+/* — Floating search bar — bottom-left, always visible — */
 .hero-search-float {
-  position: absolute;
-  left: 14px;
-  bottom: 14px;
-  z-index: 2;
-  width: 50%;
-  display: flex;
-  align-items: center;
+  position: absolute !important;
+  left: 14px !important;
+  bottom: 14px !important;
+  z-index: 3 !important;        /* above image(0) and overlay(1) */
+  width: 52%;
+  display: flex !important;
+  align-items: center !important;
   gap: 6px;
-  background: rgba(255,255,255,0.96);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 28px;
-  padding: 5px 6px 5px 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.22);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-sizing: border-box;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: rgba(255, 255, 255, 0.97) !important;
+  border: none !important;
+  border-radius: 30px !important;
+  padding: 5px 5px 5px 12px !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22) !important;
+  box-sizing: border-box !important;
+  transition: box-shadow 0.2s ease;
 }
 
 .hero-search-float:focus-within {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.30) !important;
 }
 
+/* Search icon wrapper — scoped to hero only */
 .hero-search-float .search-input-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-width: 0;
+  position: relative !important;
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
 }
 
-.hero-search-float .search-input {
-  width: 100%;
+/* Search icon */
+.hero-search-float .search-input-wrapper .bx-search {
+  position: absolute !important;
+  left: 2px !important;
+  font-size: 15px !important;
+  color: #666 !important;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Search input — high-specificity to defeat global .search-input rule */
+.home-hero-banner .hero-search-float input.search-input {
+  width: 100% !important;
+  height: 28px !important;
+  padding: 0 4px 0 22px !important;
+  font-size: 11.5px !important;
   border: none !important;
+  outline: none !important;
   background: transparent !important;
-  padding: 6px 4px 6px 22px !important;
-  font-size: 12px !important;
-  height: 30px !important;
+  border-radius: 0 !important;
   color: #111 !important;
-  outline: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-shadow: none !important;
 }
 
-.hero-search-float .search-input-wrapper i {
-  position: absolute;
-  left: 1px;
-  color: #666;
-  font-size: 15px !important;
-  flex-shrink: 0;
-}
-
+/* Search button */
 .hero-search-float .filter-btn {
-  flex-shrink: 0;
-  height: 30px !important;
+  flex-shrink: 0 !important;
+  height: 28px !important;
   padding: 0 12px !important;
   background: var(--secondary-orange) !important;
-  border-radius: 18px !important;
+  border: none !important;
+  border-radius: 20px !important;
   color: #fff !important;
   font-size: 11px !important;
   font-weight: 700 !important;
-  border: none !important;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 3px 8px rgba(255,106,0,0.3);
-  transition: all 0.2s ease;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.30);
+  transition: background 0.2s ease;
 }
-
 .hero-search-float .filter-btn:hover  { background: #ff7f1a !important; }
 .hero-search-float .filter-btn:active { transform: scale(0.96); }
 
-/* Tablet (481-768px) */
+/* =====================
+   TABLET  (481–768px)
+   ===================== */
 @media (min-width: 481px) and (max-width: 768px) {
-  .home-hero-banner  { height: 200px; }
-  .hero-search-float { width: 48%; left: 16px; bottom: 16px; }
-  .hero-search-float .search-input  { font-size: 13px !important; height: 34px !important; }
-  .hero-search-float .filter-btn    { height: 34px !important; padding: 0 16px !important; font-size: 12px !important; }
+  .home-hero-banner {
+    height: 240px;
+  }
+  .hero-search-float {
+    width: 46% !important;
+    left: 18px !important;
+    bottom: 18px !important;
+    padding: 6px 6px 6px 14px !important;
+    gap: 8px;
+  }
+  .home-hero-banner .hero-search-float input.search-input {
+    height: 32px !important;
+    font-size: 12.5px !important;
+  }
+  .hero-search-float .filter-btn {
+    height: 32px !important;
+    padding: 0 14px !important;
+    font-size: 12px !important;
+  }
 }
 
-/* Desktop (769px+) */
+/* =====================
+   DESKTOP (769px+)
+   ===================== */
 @media (min-width: 769px) {
-  .hero-above-greeting      { margin-bottom: 10px; }
-  .hero-above-greeting-text { font-size: 22px; }
+  .hero-above-greeting-text { font-size: 20px; }
 
   .home-hero-banner {
     width: calc(100% + 64px);
     margin-left: -32px;
-    height: 320px;
+    height: 360px;
     margin-bottom: 24px;
   }
 
   .hero-search-float {
-    width: 42%;
-    left: 20px;
-    bottom: 20px;
-    padding: 6px 8px 6px 18px;
-    border-radius: 32px;
-    gap: 8px;
+    width: 40% !important;
+    left: 24px !important;
+    bottom: 24px !important;
+    padding: 7px 7px 7px 18px !important;
+    border-radius: 36px !important;
+    gap: 10px;
   }
 
-  .hero-search-float .search-input {
+  .home-hero-banner .hero-search-float input.search-input {
+    height: 36px !important;
     font-size: 13.5px !important;
-    height: 38px !important;
+    padding: 0 6px 0 26px !important;
+  }
+
+  .hero-search-float .search-input-wrapper .bx-search {
+    font-size: 18px !important;
   }
 
   .hero-search-float .filter-btn {
-    height: 38px !important;
+    height: 36px !important;
     padding: 0 20px !important;
-    border-radius: 22px !important;
+    border-radius: 24px !important;
     font-size: 13px !important;
   }
 }
