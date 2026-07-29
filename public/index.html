@@ -260,6 +260,7 @@
       padding: 4px;
       cursor: grab;
       user-select: none;
+      touch-action: pan-y;
       backface-visibility: hidden;
       transform: translate3d(0, 0, 0);
     }
@@ -2414,8 +2415,8 @@
       document.getElementById('rev-avg-number').innerText = avg.toFixed(1);
       document.getElementById('rev-total-number').innerText = totalReviews;
 
-      // Duplicate list to support seamless infinite looping carousel
-      const renderList = [...reviewsListMemory, ...reviewsListMemory];
+      // Duplicate list 3 times to support seamless infinite looping carousel
+      const renderList = [...reviewsListMemory, ...reviewsListMemory, ...reviewsListMemory];
 
       container.innerHTML = renderList.map((r, idx) => {
         const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
@@ -2483,51 +2484,88 @@
       clearTimeout(reviewResumeTimeout);
 
       let isDown = false;
-      let startX;
-      let scrollLeft;
+      let startX = 0;
+      let startY = 0;
+      let scrollLeftVal = 0;
+      let isScrollingY = false;
+      let isFirstMove = false;
+      let scrollTimeout = null;
 
-      // Stop ongoing programmatic smooth scrolls
       const stopProgrammaticScroll = () => {
         track.scrollTo({ left: track.scrollLeft, behavior: 'auto' });
       };
 
-      // Infinite scroll boundary reset inside scroll event handler
-      track.addEventListener('scroll', () => {
+      // Wrap scroll position safely when scrolling has settled (idle)
+      const handleScrollBoundary = () => {
         const cards = track.querySelectorAll('.review-card-premium');
         const N = reviewsListMemory.length;
-        if (N <= 1 || cards.length <= N) return;
+        if (N <= 1 || cards.length <= 2 * N) return;
 
         const singleSetWidth = cards[N].offsetLeft - cards[0].offsetLeft;
         if (singleSetWidth <= 0) return;
 
-        // Wrap scroll position safely to keep it in middle region [0.5 * singleSetWidth, 1.5 * singleSetWidth]
-        if (track.scrollLeft >= singleSetWidth * 1.5) {
+        if (track.scrollLeft >= singleSetWidth * 1.8) {
           track.scrollLeft -= singleSetWidth;
           if (isDown) {
-            // Adjust start position of drag to avoid scroll jump
-            startX -= singleSetWidth / 1.5; // Walk is scaled by 1.5
+            startX -= singleSetWidth;
           }
-        } else if (track.scrollLeft <= singleSetWidth * 0.5) {
+        } else if (track.scrollLeft <= singleSetWidth * 0.4) {
           track.scrollLeft += singleSetWidth;
           if (isDown) {
-            // Adjust start position of drag to avoid scroll jump
-            startX += singleSetWidth / 1.5;
+            startX += singleSetWidth;
           }
         }
+      };
+
+      // Debounced scroll listener to perform wrapping ONLY when scroll is idle
+      track.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          if (isDown || track.classList.contains('is-dragging')) return;
+          handleScrollBoundary();
+        }, 150);
       });
 
-      // Mouse drag scroll support for desktop
-      track.addEventListener('mousedown', (e) => {
+      // Mouse & Touch unified drag state functions
+      const dragStart = (x, y) => {
         isDown = true;
+        isScrollingY = false;
+        isFirstMove = true;
         track.classList.add('is-dragging');
         stopProgrammaticScroll();
-        startX = e.pageX - track.offsetLeft;
-        scrollLeft = track.scrollLeft;
+        startX = x;
+        startY = y;
+        scrollLeftVal = track.scrollLeft;
         clearInterval(reviewAutoSlideInterval);
         clearTimeout(reviewResumeTimeout);
-      });
+      };
 
-      track.addEventListener('mouseleave', () => {
+      const dragMove = (x, y, e) => {
+        if (!isDown) return;
+
+        const dx = x - startX;
+        const dy = y - startY;
+
+        if (isFirstMove) {
+          isFirstMove = false;
+          if (Math.abs(dy) > Math.abs(dx)) {
+            isScrollingY = true;
+            isDown = false;
+            track.classList.remove('is-dragging');
+            return;
+          }
+        }
+
+        if (isScrollingY) return;
+
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+
+        track.scrollLeft = scrollLeftVal - dx;
+      };
+
+      const dragEnd = () => {
         if (!isDown) return;
         isDown = false;
         track.classList.remove('is-dragging');
@@ -2535,41 +2573,35 @@
         reviewResumeTimeout = setTimeout(() => {
           startReviewAutoSlide(track);
         }, 3000);
-      });
+      };
 
-      track.addEventListener('mouseup', () => {
-        if (!isDown) return;
-        isDown = false;
-        track.classList.remove('is-dragging');
-        clearTimeout(reviewResumeTimeout);
-        reviewResumeTimeout = setTimeout(() => {
-          startReviewAutoSlide(track);
-        }, 3000);
-      });
+      // Use Pointer Events for unified touch/mouse/pen input
+      if (!track.hasReviewsCarouselListeners) {
+        track.hasReviewsCarouselListeners = true;
 
-      track.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - track.offsetLeft;
-        const walk = (x - startX) * 1.5;
-        track.scrollLeft = scrollLeft - walk;
-      });
+        track.addEventListener('pointerdown', (e) => {
+          track.setPointerCapture(e.pointerId);
+          dragStart(e.pageX, e.pageY);
+        });
 
-      // Touch events support for mobile
-      track.addEventListener('touchstart', () => {
-        track.classList.add('is-dragging');
-        stopProgrammaticScroll();
-        clearInterval(reviewAutoSlideInterval);
-        clearTimeout(reviewResumeTimeout);
-      }, { passive: true });
+        track.addEventListener('pointermove', (e) => {
+          dragMove(e.pageX, e.pageY, e);
+        });
 
-      track.addEventListener('touchend', () => {
-        track.classList.remove('is-dragging');
-        clearTimeout(reviewResumeTimeout);
-        reviewResumeTimeout = setTimeout(() => {
-          startReviewAutoSlide(track);
-        }, 3000);
-      }, { passive: true });
+        track.addEventListener('pointerup', (e) => {
+          try {
+            track.releasePointerCapture(e.pointerId);
+          } catch (err) {}
+          dragEnd();
+        });
+
+        track.addEventListener('pointercancel', (e) => {
+          try {
+            track.releasePointerCapture(e.pointerId);
+          } catch (err) {}
+          dragEnd();
+        });
+      }
 
       startReviewAutoSlide(track);
     }
@@ -2579,19 +2611,17 @@
       if (reviewsListMemory.length <= 1) return;
 
       reviewAutoSlideInterval = setInterval(() => {
-        // If user is currently dragging/interacting, skip auto slide step
         if (track.classList.contains('is-dragging')) return;
 
         const cards = track.querySelectorAll('.review-card-premium');
         const N = reviewsListMemory.length;
-        if (cards.length <= N) return;
+        if (cards.length <= 2 * N) return;
 
         const singleSetWidth = cards[N].offsetLeft - cards[0].offsetLeft;
         const cardWidth = cards[0].offsetWidth + 16; // Add gap (16px)
         
-        // Wrap scroll position before starting the smooth animation
         let targetScroll = track.scrollLeft + cardWidth;
-        if (targetScroll >= singleSetWidth * 1.5) {
+        if (targetScroll >= singleSetWidth * 1.8) {
           track.scrollLeft -= singleSetWidth;
           targetScroll = track.scrollLeft + cardWidth;
         }
