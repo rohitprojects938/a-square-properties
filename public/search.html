@@ -345,6 +345,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       setupFilterDrawer();
       parseUrlParams();
+      updateLocationUiStatus();
       await initMapSystem();
       loadSearchResults();
     });
@@ -611,33 +612,6 @@
       }
     }
 
-    // Fallback Data
-    const fallbackData = {
-      "Uttar Pradesh": {
-        "Lucknow": [
-          "Gomti Nagar",
-          "Indira Nagar",
-          "Aliganj",
-          "Hazratganj",
-          "Jankipuram",
-          "Alambagh",
-          "Rajajipuram",
-          "Ashiyana"
-        ],
-        "Noida": [
-          "Sector 62",
-          "Sector 15",
-          "Sector 18",
-          "Sector 22",
-          "Sector 137"
-        ],
-        "Kanpur": [
-          "Kalyanpur",
-          "Kakadeo",
-          "Swaroop Nagar",
-          "Civil Lines"
-        ]
-      },
     const areaCoordinates = {
       "Gomti Nagar": { lat: 26.8429, lng: 81.0187 },
       "Indira Nagar": { lat: 26.8652, lng: 80.9919 },
@@ -753,10 +727,7 @@
       }
     }
 
-    // On page DOMContentLoaded, initialize lucide icons and check location UI
-    document.addEventListener('DOMContentLoaded', () => {
-      updateLocationUiStatus();
-    });
+
 
     // Reset all filters
     function resetFilters() {
