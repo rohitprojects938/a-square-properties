@@ -260,7 +260,6 @@
       padding: 4px;
       cursor: grab;
       user-select: none;
-      touch-action: pan-y;
       backface-visibility: hidden;
       transform: translate3d(0, 0, 0);
     }
@@ -2606,25 +2605,25 @@
         dragStart(e.pageX, e.pageY);
       });
 
-      // Touch events (passive: false is REQUIRED to allow e.preventDefault() during drag)
-      track.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        dragStart(touch.pageX, touch.pageY);
+      // Touch events to pause/resume auto-slide on mobile (leaving swipe/momentum native)
+      track.addEventListener('touchstart', () => {
+        clearInterval(reviewAutoSlideInterval);
+        clearTimeout(reviewResumeTimeout);
       }, { passive: true });
 
-      track.addEventListener('touchmove', (e) => {
-        if (!isDown) return;
-        const touch = e.touches[0];
-        dragMove(touch.pageX, touch.pageY, e);
-      }, { passive: false });
-
       track.addEventListener('touchend', () => {
-        dragEnd();
-      });
+        clearTimeout(reviewResumeTimeout);
+        reviewResumeTimeout = setTimeout(() => {
+          startReviewAutoSlide(track);
+        }, 3000);
+      }, { passive: true });
 
       track.addEventListener('touchcancel', () => {
-        dragEnd();
-      });
+        clearTimeout(reviewResumeTimeout);
+        reviewResumeTimeout = setTimeout(() => {
+          startReviewAutoSlide(track);
+        }, 3000);
+      }, { passive: true });
 
       startReviewAutoSlide(track);
     }
