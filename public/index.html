@@ -1517,17 +1517,25 @@
         const verifiedBadge = p.is_verified ? `<span class="badge-verified" style="position:absolute; top:6px; left:6px; background:#25d366; color:white; font-size:8px; font-weight:700; padding:2px 4px; border-radius:4px; text-transform:uppercase; z-index:1;">Verified</span>` : '';
         
         let locationBadgeText = '';
-        if (p.distance !== undefined && p.distance !== null) {
-          const distKm = parseFloat(p.distance).toFixed(1);
+        const hasValidUserLoc = userLoc && typeof userLoc.lat === 'number' && typeof userLoc.lng === 'number' && !isNaN(userLoc.lat) && !isNaN(userLoc.lng);
+        const hasValidPropertyLoc = p.latitude !== undefined && p.latitude !== null && p.longitude !== undefined && p.longitude !== null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude));
+        
+        let validDistance = null;
+        if (hasValidUserLoc && hasValidPropertyLoc) {
+          if (p.distance !== undefined && p.distance !== null && !isNaN(parseFloat(p.distance))) {
+            validDistance = parseFloat(p.distance);
+          } else {
+            const R = 6371;
+            const dLat = (parseFloat(p.latitude) - userLoc.lat) * Math.PI / 180;
+            const dLon = (parseFloat(p.longitude) - userLoc.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(userLoc.lat*Math.PI/180)*Math.cos(parseFloat(p.latitude)*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+            validDistance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          }
+        }
+
+        if (isLocationBased && validDistance !== null && isFinite(validDistance) && validDistance > 0 && validDistance <= 100) {
+          const distKm = validDistance.toFixed(1);
           locationBadgeText = `<span class="distance-badge"><i class="bx bx-navigation"></i> ${distKm} km away</span>`;
-        } else if (userLoc && p.latitude && p.longitude) {
-          // Calculate distance client-side if server didn't return it
-          const R = 6371;
-          const dLat = (parseFloat(p.latitude) - userLoc.lat) * Math.PI / 180;
-          const dLon = (parseFloat(p.longitude) - userLoc.lng) * Math.PI / 180;
-          const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(userLoc.lat*Math.PI/180)*Math.cos(parseFloat(p.latitude)*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          locationBadgeText = `<span class="distance-badge"><i class="bx bx-navigation"></i> ${dist.toFixed(1)} km away</span>`;
         } else {
           locationBadgeText = `<span class="distance-badge"><i class="bx bx-map-pin"></i> ${p.city || 'Nearby'}</span>`;
         }

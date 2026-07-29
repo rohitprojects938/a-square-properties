@@ -806,6 +806,30 @@
       }
 
       result.data.forEach(p => {
+        const hasUserLoc = filterParams.lat !== undefined && filterParams.lng !== undefined && !isNaN(parseFloat(filterParams.lat)) && !isNaN(parseFloat(filterParams.lng));
+        const hasPropLoc = p.latitude !== undefined && p.latitude !== null && p.longitude !== undefined && p.longitude !== null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude));
+        
+        let showDistanceText = '';
+        if (hasUserLoc && hasPropLoc) {
+          let dist = null;
+          if (p.distance !== undefined && p.distance !== null && !isNaN(parseFloat(p.distance))) {
+            dist = parseFloat(p.distance);
+          } else {
+            // Client-side fallback calculation
+            const R = 6371;
+            const uLat = parseFloat(filterParams.lat);
+            const uLng = parseFloat(filterParams.lng);
+            const dLat = (parseFloat(p.latitude) - uLat) * Math.PI / 180;
+            const dLon = (parseFloat(p.longitude) - uLng) * Math.PI / 180;
+            const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(uLat*Math.PI/180)*Math.cos(parseFloat(p.latitude)*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+            dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          }
+
+          if (dist !== null && isFinite(dist) && dist > 0 && dist <= 100) {
+            showDistanceText = ` • <span style="font-weight:700; color:var(--secondary-orange);">${dist.toFixed(1)} km away</span>`;
+          }
+        }
+
         const card = document.createElement('a');
         card.href = `/details.html?id=${p.id}`;
         card.className = 'property-search-card';
@@ -829,8 +853,7 @@
             </div>
             <h4 style="font-size:13px; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</h4>
             <p style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:4px; margin-top:2px;">
-              <i data-lucide="map-pin"></i> ${p.city}
-              ${p.distance !== undefined && p.distance !== null ? ` • <span style="font-weight:700; color:var(--secondary-orange);">${parseFloat(p.distance).toFixed(1)} km away</span>` : ''}
+              <i data-lucide="map-pin"></i> ${p.city}${showDistanceText}
             </p>
             <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: 4px;">
               <span><i data-lucide="bed"></i> ${p.bedrooms} BHK</span>
