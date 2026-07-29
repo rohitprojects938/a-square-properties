@@ -368,10 +368,10 @@ async function getProperties(req, res) {
     }
 
     // Sort
-    let orderClause = 'ORDER BY p.id DESC';
+    let orderClause = 'ORDER BY id DESC';
     if (sort === 'price_low')  orderClause = 'ORDER BY price ASC';
     else if (sort === 'price_high') orderClause = 'ORDER BY price DESC';
-    else if (sort === 'featured')   orderClause = 'ORDER BY p.is_featured DESC, p.id DESC';
+    else if (sort === 'featured')   orderClause = 'ORDER BY is_featured DESC, id DESC';
     else if (sort === 'nearest' && lat && lng) orderClause = 'ORDER BY distance ASC';
 
     // Total count for pagination
@@ -391,6 +391,23 @@ async function getProperties(req, res) {
     });
   } catch (error) {
     console.error('Get properties error: ', error.message);
+
+    // Fallback: if nearby/GPS query failed, retry standard query without location parameters
+    if (lat || lng || radius || sort === 'nearest') {
+      console.log('🔄 Nearby search failed. Retrying fallback query without GPS coordinates...');
+      try {
+        req.query.lat = undefined;
+        req.query.lng = undefined;
+        req.query.radius = undefined;
+        if (req.query.sort === 'nearest') {
+          req.query.sort = 'newest';
+        }
+        return await getProperties(req, res);
+      } catch (fallbackError) {
+        console.error('⚠️ Fallback query retry failed:', fallbackError.message);
+      }
+    }
+
     res.status(500).json({ success: false, error: 'Server property search failure.' });
   }
 }

@@ -120,7 +120,8 @@
 
         <!-- Sorting Pill Container -->
         <div class="horizontal-scroll" style="margin-bottom: 8px; padding-bottom: 4px;">
-          <div class="category-pill active" onclick="setSort('newest', this)">Newest</div>
+          <div class="category-pill active" onclick="setSort('all', this)">All</div>
+          <div class="category-pill" onclick="setSort('newest', this)">Newest</div>
           <div class="category-pill" onclick="setSort('price_low', this)">Price Low to High</div>
           <div class="category-pill" onclick="setSort('price_high', this)">Price High to Low</div>
           <div class="category-pill" onclick="setSort('popular', this)">Popular</div>
@@ -335,7 +336,7 @@
   <script>
     let filterParams = {};
     let searchDebounceTimer = null;
-    let currentSort = 'newest';
+    let currentSort = 'all';
     let mapInstance = null;
     let mapMarkers = [];
     let googlePlacesService = null;
@@ -576,6 +577,15 @@
       document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
       currentSort = type;
+
+      if (type === 'all') {
+        // Clear GPS coordinates for 'All'
+        delete filterParams.lat;
+        delete filterParams.lng;
+        delete filterParams.radius;
+        updateLocationUiStatus();
+      }
+
       loadSearchResults();
     }
 
@@ -755,7 +765,79 @@
       document.getElementById('close-filter-btn').click();
     }
 
-    // Fetch and display properties from API (paginated)
+    // Render properties from result payload
+    function renderPropertyResults(result, resetPage) {
+      const container = document.getElementById('search-results-container');
+      if (resetPage) container.innerHTML = '';
+      const pagination = result.pagination || {};
+      currentTotalPages = pagination.totalPages || 1;
+      currentTotal = pagination.total || result.data.length;
+
+      // Update count bar
+      const countText = document.getElementById('results-count-text');
+      if (countText) {
+        const showing = Math.min(currentPage * PAGE_LIMIT, currentTotal);
+        countText.textContent = result.data.length === 0
+          ? 'No properties found'
+          : `Showing ${showing} of ${currentTotal} properties`;
+      }
+
+      if (result.data.length === 0 && resetPage) {
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:32px; grid-column:1/-1;">No properties match your search criteria.</p>';
+        document.getElementById('load-more-container').style.display = 'none';
+        updateMapMarkers([]);
+        return;
+      }
+
+      result.data.forEach(p => {
+        const card = document.createElement('a');
+        card.href = `/details.html?id=${p.id}`;
+        card.className = 'property-search-card';
+        card.innerHTML = `
+          <div style="position: relative;">
+            <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80'}" alt="${p.title}" style="width:100%; height:160px; object-fit:cover; display:block;" loading="lazy">
+            <div style="position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px;">
+              ${p.is_featured ? '<span style="background:#8B0000; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">★ Featured</span>' : ''}
+              ${p.is_verified ? '<span style="background:#16A34A; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">✓ Verified</span>' : ''}
+              ${p.price >= 15000000 ? '<span style="background:#FF6A00; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">Premium</span>' : ''}
+            </div>
+            <div style="position: absolute; top: 10px; right: 10px;">
+              <button class="favorite-btn" onclick="event.preventDefault(); toggleFavorite(${p.id}, this)" style="width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer;"><i data-lucide="heart" style="width:14px; height:14px;"></i></button>
+            </div>
+            <div class="price-tag" style="position: absolute; bottom: 10px; left: 10px; background: #111111; color: white; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 700;">₹${formatPrice(p.price)}</div>
+          </div>
+          <div class="property-search-info">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:9px; color:var(--secondary-orange); font-weight:700; text-transform:uppercase;">${p.listing_type}</span>
+              <span style="font-size:10px; color:var(--text-muted);">${p.category}</span>
+            </div>
+            <h4 style="font-size:13px; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</h4>
+            <p style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:4px; margin-top:2px;"><i data-lucide="map-pin"></i> ${p.city}</p>
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: 4px;">
+              <span><i data-lucide="bed"></i> ${p.bedrooms} BHK</span>
+              <span><i data-lucide="bath"></i> ${p.bathrooms || 2} Baths</span>
+              <span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      updateMapMarkers(result.data);
+      if (window.lucide) window.lucide.createIcons();
+
+      // Show Load More if more pages exist
+      const lmCont = document.getElementById('load-more-container');
+      const lmInfo = document.getElementById('load-more-info');
+      if (pagination.hasMore) {
+        lmCont.style.display = 'block';
+        if (lmInfo) lmInfo.textContent = `Page ${currentPage} of ${currentTotalPages} • ${currentTotal} total listings`;
+      } else {
+        lmCont.style.display = 'none';
+      }
+    }
+
+    // Fetch and display properties from API with multi-stage fallback retry loop
     async function loadSearchResults(resetPage = true) {
       if (resetPage) currentPage = 1;
       const container = document.getElementById('search-results-container');
@@ -769,81 +851,62 @@
         document.getElementById('results-count-text').textContent = 'Searching...';
       }
 
-      const queryParams = new URLSearchParams({ ...filterParams, sort: currentSort, page: currentPage, limit: PAGE_LIMIT });
+      // Configure sequential retry fallback levels
+      const attempts = [];
 
-      try {
-        const result = await apiRequest(`/api/properties?${queryParams.toString()}`);
-        if (result.success) {
-          if (resetPage) container.innerHTML = '';
-          const pagination = result.pagination || {};
-          currentTotalPages = pagination.totalPages || 1;
-          currentTotal = pagination.total || result.data.length;
+      // Attempt 1: Current requested query parameters
+      attempts.push({
+        params: { ...filterParams, sort: currentSort, page: currentPage, limit: PAGE_LIMIT },
+        name: 'Requested query'
+      });
 
-          // Update count bar
-          const countText = document.getElementById('results-count-text');
-          if (countText) {
-            const showing = Math.min(currentPage * PAGE_LIMIT, currentTotal);
-            countText.textContent = result.data.length === 0
-              ? 'No properties found'
-              : `Showing ${showing} of ${currentTotal} properties`;
+      // Attempt 2: If GPS is used, fallback: clear GPS and retry with remaining filter selections
+      if (filterParams.lat || filterParams.lng) {
+        const nonGpsParams = { ...filterParams, sort: 'newest', page: currentPage, limit: PAGE_LIMIT };
+        delete nonGpsParams.lat;
+        delete nonGpsParams.lng;
+        delete nonGpsParams.radius;
+        attempts.push({
+          params: nonGpsParams,
+          name: 'Non-GPS query fallback'
+        });
+      }
+
+      // Attempt 3: If specific filters are used (like category or city), fallback: clear everything to newest
+      if (Object.keys(filterParams).length > 0) {
+        attempts.push({
+          params: { sort: 'newest', page: currentPage, limit: PAGE_LIMIT },
+          name: 'Latest listings query fallback'
+        });
+      }
+
+      // Attempt 4: Absolute minimum fallback: All listings without sort
+      attempts.push({
+        params: { page: currentPage, limit: PAGE_LIMIT },
+        name: 'Bare minimum query fallback'
+      });
+
+      let success = false;
+
+      for (const attempt of attempts) {
+        try {
+          const queryParams = new URLSearchParams(attempt.params);
+          const result = await apiRequest(`/api/properties?${queryParams.toString()}`);
+          if (result && result.success) {
+            success = true;
+            renderPropertyResults(result, resetPage);
+            break;
           }
-
-          if (result.data.length === 0 && resetPage) {
-            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:32px; grid-column:1/-1;">No properties match your search criteria.</p>';
-            document.getElementById('load-more-container').style.display = 'none';
-            updateMapMarkers([]);
-            return;
-          }
-
-          result.data.forEach(p => {
-            const card = document.createElement('a');
-            card.href = `/details.html?id=${p.id}`;
-            card.className = 'property-search-card';
-            card.innerHTML = `
-              <div style="position: relative;">
-                <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=80'}" alt="${p.title}" style="width:100%; height:160px; object-fit:cover; display:block;" loading="lazy">
-                <div style="position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px;">
-                  ${p.is_featured ? '<span style="background:#8B0000; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">★ Featured</span>' : ''}
-                  ${p.is_verified ? '<span style="background:#16A34A; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">✓ Verified</span>' : ''}
-                  ${p.price >= 15000000 ? '<span style="background:#FF6A00; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700;">Premium</span>' : ''}
-                </div>
-                <div style="position: absolute; top: 10px; right: 10px;">
-                  <button class="favorite-btn" onclick="event.preventDefault(); toggleFavorite(${p.id}, this)" style="width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer;"><i data-lucide="heart" style="width:14px; height:14px;"></i></button>
-                </div>
-                <div class="price-tag" style="position: absolute; bottom: 10px; left: 10px; background: #111111; color: white; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 700;">₹${formatPrice(p.price)}</div>
-              </div>
-              <div class="property-search-info">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:9px; color:var(--secondary-orange); font-weight:700; text-transform:uppercase;">${p.listing_type}</span>
-                  <span style="font-size:10px; color:var(--text-muted);">${p.category}</span>
-                </div>
-                <h4 style="font-size:13px; font-weight:700; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</h4>
-                <p style="font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:4px; margin-top:2px;"><i data-lucide="map-pin"></i> ${p.city}</p>
-                <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: 4px;">
-                  <span><i data-lucide="bed"></i> ${p.bedrooms} BHK</span>
-                  <span><i data-lucide="bath"></i> ${p.bathrooms || 2} Baths</span>
-                  <span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>
-                </div>
-              </div>
-            `;
-            container.appendChild(card);
-          });
-
-          updateMapMarkers(result.data);
-          if (window.lucide) window.lucide.createIcons();
-
-          // Show Load More if more pages exist
-          const lmCont = document.getElementById('load-more-container');
-          const lmInfo = document.getElementById('load-more-info');
-          if (pagination.hasMore) {
-            lmCont.style.display = 'block';
-            if (lmInfo) lmInfo.textContent = `Page ${currentPage} of ${currentTotalPages} • ${currentTotal} total listings`;
-          } else {
-            lmCont.style.display = 'none';
-          }
+        } catch (err) {
+          console.warn(`⚠️ Search fallback stage "${attempt.name}" failed:`, err.message);
         }
-      } catch (err) {
-        container.innerHTML = `<p style="color:var(--primary-red); text-align:center; grid-column:1/-1;">Error: ${err.message}</p>`;
+      }
+
+      if (!success) {
+        console.error('❌ All property loading attempts failed.');
+        container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px; padding:32px; grid-column:1/-1;">No properties found.</p>';
+        document.getElementById('results-count-text').textContent = 'No properties found';
+        updateMapMarkers([]);
       }
     }
 
