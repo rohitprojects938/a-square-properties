@@ -182,6 +182,12 @@ async function rateService(req, res) {
       return res.status(404).json({ success: false, error: 'Service not found.' });
     }
 
+    const [[existingRating]] = await db.query(
+      'SELECT id FROM service_ratings WHERE user_id = ? AND service_id = ?',
+      [userId, serviceId]
+    );
+    const isUpdate = !!existingRating;
+
     await db.query(
       `INSERT INTO service_ratings (user_id, service_id, rating, review)
        VALUES (?, ?, ?, ?)
@@ -189,7 +195,8 @@ async function rateService(req, res) {
       [userId, serviceId, parseInt(rating), cleanReview]
     );
 
-    res.status(200).json({ success: true, message: 'Rating and review saved successfully!' });
+    const message = isUpdate ? 'Rating updated successfully' : 'Rating submitted successfully';
+    res.status(200).json({ success: true, message });
   } catch (error) {
     console.error('Rate service error:', error.message);
     res.status(500).json({ success: false, error: 'Failed to save rating.' });

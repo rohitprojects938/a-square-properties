@@ -260,6 +260,13 @@
       padding: 4px;
       cursor: grab;
       user-select: none;
+      backface-visibility: hidden;
+      transform: translate3d(0, 0, 0);
+    }
+    .reviews-carousel-track.is-dragging {
+      scroll-snap-type: none !important;
+      scroll-behavior: auto !important;
+      cursor: grabbing;
     }
     .reviews-carousel-track:active {
       cursor: grabbing;
@@ -277,14 +284,18 @@
       box-shadow: 0 4px 12px rgba(139, 92, 26, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      height: 220px;
+      box-sizing: border-box;
       position: relative;
       transition: transform 0.2s ease;
-      box-sizing: border-box;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
     }
     @media (min-width: 768px) {
       .review-card-premium {
         flex: 0 0 45%;
+        height: 220px;
       }
     }
     .review-card-header {
@@ -339,6 +350,23 @@
       line-height: 1.5;
       font-style: italic;
       margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .review-more-link {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--secondary-orange);
+      cursor: pointer;
+      transition: opacity 0.2s;
+      user-select: none;
+    }
+    .review-more-link:hover {
+      opacity: 0.8;
+      text-decoration: underline;
     }
     .review-card-date {
       font-size: 10px;
@@ -1208,6 +1236,19 @@
       </div>
     </div>
 
+    <!-- Full Review View Modal -->
+    <div class="service-modal-overlay" id="review-view-modal-overlay" onclick="if(event.target === this) closeReviewViewModal();" style="z-index: 14000;">
+      <div class="service-modal" style="max-width: 440px; border-radius: 20px 20px 0 0; overflow: hidden; height: auto; max-height: 85vh;">
+        <div class="service-modal-header" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+          <h4 style="font-size: 15px; font-weight: 800; color: var(--text-dark); margin: 0;">Customer Review</h4>
+          <button onclick="closeReviewViewModal()" style="background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 4px;"><i class="bx bx-x"></i></button>
+        </div>
+        <div class="service-modal-body" id="review-view-modal-body" style="padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+          <!-- Content populated dynamically -->
+        </div>
+      </div>
+    </div>
+
     <!-- Service Details Modal -->
     <div class="service-modal-overlay" id="service-details-modal-overlay" onclick="if(event.target === this) closeServiceDetailsModal();" style="z-index: 12000;">
       <div class="service-modal" style="max-width: 500px; border-radius: 20px; overflow: hidden; height: 90vh;">
@@ -1923,14 +1964,24 @@
     };
 
     function highlightRatingStars(rating) {
-      document.querySelectorAll('#rate-star-selector i').forEach(star => {
-        const index = parseInt(star.getAttribute('data-index'));
-        if (index <= rating) {
-          star.className = 'bx bxs-star';
-          star.style.color = '#ffa500';
+      document.querySelectorAll('#rate-star-selector svg, #rate-star-selector i').forEach((star, idx) => {
+        const index = idx + 1;
+        if (star.tagName.toLowerCase() === 'svg') {
+          if (index <= rating) {
+            star.style.fill = '#ffa500';
+            star.style.stroke = '#ffa500';
+          } else {
+            star.style.fill = 'none';
+            star.style.stroke = '#cbd5e1';
+          }
         } else {
-          star.className = 'bx bx-star';
-          star.style.color = '#cbd5e1';
+          if (index <= rating) {
+            star.className = 'bx bxs-star';
+            star.style.color = '#ffa500';
+          } else {
+            star.className = 'bx bx-star';
+            star.style.color = '#cbd5e1';
+          }
         }
       });
     }
@@ -2048,6 +2099,14 @@
           document.getElementById('sd-rate-form').style.display = 'block';
           document.getElementById('sd-login-to-rate').style.display = 'none';
           document.getElementById('rate-value').value = '0';
+          
+          // Dynamically bind click events to stars (handles Lucide SVGs)
+          const stars = document.querySelectorAll('#rate-star-selector svg, #rate-star-selector i');
+          stars.forEach((star, idx) => {
+            star.onclick = () => setRateStarValue(idx + 1);
+            star.style.cursor = 'pointer';
+          });
+
           highlightRatingStars(0);
         } else {
           document.getElementById('sd-rate-form').style.display = 'none';
@@ -2091,16 +2150,22 @@
 
     window.submitServiceRating = async function(e) {
       e.preventDefault();
+      const form = document.getElementById('sd-rate-form');
+      const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
       const rating = parseInt(document.getElementById('rate-value').value);
 
       if (rating === 0) {
-        return alert('Please select a star rating.');
+        return alert('Please select a rating.');
       }
 
       try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+        }
         const res = await apiRequest(`/api/services/${selectedServiceForRating}/ratings`, 'POST', { rating });
         if (res.success) {
-          alert('Rating submitted successfully!');
+          alert(res.message || 'Rating submitted successfully!');
           loadServiceReviewsList(selectedServiceForRating);
           
           if (window.loadHomeServices) window.loadHomeServices();
@@ -2116,6 +2181,11 @@
         }
       } catch(err) {
         alert(err.message || 'Failed to submit review.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Rating';
+        }
       }
     };
 
@@ -2230,6 +2300,7 @@
     }
 
     let reviewAutoSlideInterval = null;
+    let reviewResumeTimeout = null;
     let reviewsListMemory = [];
 
     window.handleReviewPhotoChange = function(e) {
@@ -2273,6 +2344,58 @@
       }
     }
 
+    window.openReviewViewModal = function(idx) {
+      const r = reviewsListMemory[idx];
+      if (!r) return;
+
+      const modalBody = document.getElementById('review-view-modal-body');
+      if (!modalBody) return;
+
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      const dateStr = new Date(r.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const cityStr = r.city ? r.city : 'Verified User';
+
+      let avatarHtml = '';
+      if (r.profile_photo) {
+        avatarHtml = `<img src="${r.profile_photo}" alt="${r.name}" style="width:100%; height:100%; object-fit:cover;">`;
+      } else {
+        avatarHtml = r.name.charAt(0).toUpperCase();
+      }
+
+      modalBody.innerHTML = `
+        <div class="review-card-header" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 4px;">
+          <div class="review-card-user-info">
+            <div class="review-card-avatar" style="width:48px; height:48px; font-size:18px;">${avatarHtml}</div>
+            <div class="review-card-meta">
+              <h5 class="review-card-name" style="font-size:14.5px;">${r.name}</h5>
+              <span class="review-card-city" style="font-size:11.5px;">${cityStr}</span>
+            </div>
+          </div>
+          <span class="review-card-rating" style="font-size:14px;">${stars}</span>
+        </div>
+        <div class="review-card-text" style="font-size:13px; line-height:1.6; color:#334155; font-style:italic; display:block; -webkit-line-clamp:unset; overflow:visible; max-height:none;">
+          "${r.review_text}"
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:12px;">
+          <span class="review-card-date" style="font-size:11px; margin-top:0;">Published on ${dateStr}</span>
+        </div>
+      `;
+
+      const overlay = document.getElementById('review-view-modal-overlay');
+      if (overlay) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    };
+
+    window.closeReviewViewModal = function() {
+      const overlay = document.getElementById('review-view-modal-overlay');
+      if (overlay) {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    };
+
     function renderReviewsCarousel() {
       const container = document.getElementById('reviews-carousel-container');
       if (!container) return;
@@ -2301,13 +2424,15 @@
         
         let avatarHtml = '';
         if (r.profile_photo) {
-          avatarHtml = `<img src="${r.profile_photo}" alt="${r.name}" style="width:100%; height:100%; object-fit:cover;">`;
+          avatarHtml = `<img src="${r.profile_photo}" alt="${r.name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;">`;
         } else {
           avatarHtml = r.name.charAt(0).toUpperCase();
         }
 
+        const originalIndex = idx % totalReviews;
+
         return `
-          <div class="review-card-premium" data-index="${idx % totalReviews}">
+          <div class="review-card-premium" data-index="${idx}">
             <div class="review-card-header">
               <div class="review-card-user-info">
                 <div class="review-card-avatar">${avatarHtml}</div>
@@ -2319,51 +2444,107 @@
               <span class="review-card-rating">${stars}</span>
             </div>
             <p class="review-card-text">"${r.review_text}"</p>
-            <span class="review-card-date">${dateStr}</span>
+            <div class="review-card-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+              <span class="review-more-link" onclick="openReviewViewModal(${originalIndex})" style="visibility:hidden;">View More</span>
+              <span class="review-card-date" style="margin-top:0; align-self:auto;">${dateStr}</span>
+            </div>
           </div>
         `;
       }).join('');
+
+      // Check text clamping and show View More button if text overflows
+      requestAnimationFrame(() => {
+        const cards = container.querySelectorAll('.review-card-premium');
+        cards.forEach((card) => {
+          const textEl = card.querySelector('.review-card-text');
+          const viewMoreBtn = card.querySelector('.review-more-link');
+          if (textEl && viewMoreBtn) {
+            if (textEl.scrollHeight > textEl.clientHeight) {
+              viewMoreBtn.style.visibility = 'visible';
+            }
+          }
+        });
+        
+        // Setup starting scroll position to support scrolling left
+        const cardsArr = container.querySelectorAll('.review-card-premium');
+        if (cardsArr.length > totalReviews && cardsArr[totalReviews]) {
+          const singleSetWidth = cardsArr[totalReviews].offsetLeft - cardsArr[0].offsetLeft;
+          if (singleSetWidth > 0) {
+            container.scrollLeft = singleSetWidth;
+          }
+        }
+      });
 
       setupReviewsCarouselInteractions(container);
     }
 
     function setupReviewsCarouselInteractions(track) {
       clearInterval(reviewAutoSlideInterval);
+      clearTimeout(reviewResumeTimeout);
 
       let isDown = false;
       let startX;
       let scrollLeft;
 
-      // Infinite scroll boundary reset
+      // Stop ongoing programmatic smooth scrolls
+      const stopProgrammaticScroll = () => {
+        track.scrollTo({ left: track.scrollLeft, behavior: 'auto' });
+      };
+
+      // Infinite scroll boundary reset inside scroll event handler
       track.addEventListener('scroll', () => {
-        const firstSetWidth = track.scrollWidth / 2;
-        // Small buffer to prevent visual flickering
-        if (track.scrollLeft >= firstSetWidth - 2) {
-          track.scrollLeft = 0;
-        } else if (track.scrollLeft <= 0) {
-          track.scrollLeft = firstSetWidth - 2;
+        const cards = track.querySelectorAll('.review-card-premium');
+        const N = reviewsListMemory.length;
+        if (N <= 1 || cards.length <= N) return;
+
+        const singleSetWidth = cards[N].offsetLeft - cards[0].offsetLeft;
+        if (singleSetWidth <= 0) return;
+
+        // Wrap scroll position safely to keep it in middle region [0.5 * singleSetWidth, 1.5 * singleSetWidth]
+        if (track.scrollLeft >= singleSetWidth * 1.5) {
+          track.scrollLeft -= singleSetWidth;
+          if (isDown) {
+            // Adjust start position of drag to avoid scroll jump
+            startX -= singleSetWidth / 1.5; // Walk is scaled by 1.5
+          }
+        } else if (track.scrollLeft <= singleSetWidth * 0.5) {
+          track.scrollLeft += singleSetWidth;
+          if (isDown) {
+            // Adjust start position of drag to avoid scroll jump
+            startX += singleSetWidth / 1.5;
+          }
         }
       });
 
       // Mouse drag scroll support for desktop
       track.addEventListener('mousedown', (e) => {
         isDown = true;
-        track.style.cursor = 'grabbing';
+        track.classList.add('is-dragging');
+        stopProgrammaticScroll();
         startX = e.pageX - track.offsetLeft;
         scrollLeft = track.scrollLeft;
         clearInterval(reviewAutoSlideInterval);
+        clearTimeout(reviewResumeTimeout);
       });
 
       track.addEventListener('mouseleave', () => {
+        if (!isDown) return;
         isDown = false;
-        track.style.cursor = 'grab';
-        startReviewAutoSlide(track);
+        track.classList.remove('is-dragging');
+        clearTimeout(reviewResumeTimeout);
+        reviewResumeTimeout = setTimeout(() => {
+          startReviewAutoSlide(track);
+        }, 3000);
       });
 
       track.addEventListener('mouseup', () => {
+        if (!isDown) return;
         isDown = false;
-        track.style.cursor = 'grab';
-        startReviewAutoSlide(track);
+        track.classList.remove('is-dragging');
+        clearTimeout(reviewResumeTimeout);
+        reviewResumeTimeout = setTimeout(() => {
+          startReviewAutoSlide(track);
+        }, 3000);
       });
 
       track.addEventListener('mousemove', (e) => {
@@ -2374,13 +2555,20 @@
         track.scrollLeft = scrollLeft - walk;
       });
 
-      // Touch events also suspend/resume auto-slide
+      // Touch events support for mobile
       track.addEventListener('touchstart', () => {
+        track.classList.add('is-dragging');
+        stopProgrammaticScroll();
         clearInterval(reviewAutoSlideInterval);
+        clearTimeout(reviewResumeTimeout);
       }, { passive: true });
 
       track.addEventListener('touchend', () => {
-        startReviewAutoSlide(track);
+        track.classList.remove('is-dragging');
+        clearTimeout(reviewResumeTimeout);
+        reviewResumeTimeout = setTimeout(() => {
+          startReviewAutoSlide(track);
+        }, 3000);
       }, { passive: true });
 
       startReviewAutoSlide(track);
@@ -2391,11 +2579,23 @@
       if (reviewsListMemory.length <= 1) return;
 
       reviewAutoSlideInterval = setInterval(() => {
+        // If user is currently dragging/interacting, skip auto slide step
+        if (track.classList.contains('is-dragging')) return;
+
         const cards = track.querySelectorAll('.review-card-premium');
-        if (cards.length === 0) return;
+        const N = reviewsListMemory.length;
+        if (cards.length <= N) return;
+
+        const singleSetWidth = cards[N].offsetLeft - cards[0].offsetLeft;
         const cardWidth = cards[0].offsetWidth + 16; // Add gap (16px)
         
+        // Wrap scroll position before starting the smooth animation
         let targetScroll = track.scrollLeft + cardWidth;
+        if (targetScroll >= singleSetWidth * 1.5) {
+          track.scrollLeft -= singleSetWidth;
+          targetScroll = track.scrollLeft + cardWidth;
+        }
+
         track.scrollTo({
           left: targetScroll,
           behavior: 'smooth'

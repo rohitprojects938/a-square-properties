@@ -1095,7 +1095,17 @@ async function executeMock(sql, params = []) {
   if (normalizedSql.includes('service_ratings') || normalizedSql.includes('from service_ratings')) {
     if (normalizedSql.startsWith('select')) {
       let list = mockDb.service_ratings || [];
-      if (normalizedSql.includes('service_id = ?')) {
+      if (normalizedSql.includes('user_id = ?') && normalizedSql.includes('service_id = ?')) {
+        let uid, sid;
+        if (normalizedSql.indexOf('user_id') < normalizedSql.indexOf('service_id')) {
+          uid = parseInt(params[0]);
+          sid = parseInt(params[1]);
+        } else {
+          sid = parseInt(params[0]);
+          uid = parseInt(params[1]);
+        }
+        list = list.filter(r => r.user_id === uid && r.service_id === sid);
+      } else if (normalizedSql.includes('service_id = ?')) {
         const sid = parseInt(params[0]);
         list = list.filter(r => r.service_id === sid);
       }

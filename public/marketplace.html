@@ -881,14 +881,24 @@
     };
 
     function highlightRatingStars(rating) {
-      document.querySelectorAll('#rate-star-selector i').forEach(star => {
-        const index = parseInt(star.getAttribute('data-index'));
-        if (index <= rating) {
-          star.className = 'bx bxs-star';
-          star.style.color = '#ffa500';
+      document.querySelectorAll('#rate-star-selector svg, #rate-star-selector i').forEach((star, idx) => {
+        const index = idx + 1;
+        if (star.tagName.toLowerCase() === 'svg') {
+          if (index <= rating) {
+            star.style.fill = '#ffa500';
+            star.style.stroke = '#ffa500';
+          } else {
+            star.style.fill = 'none';
+            star.style.stroke = '#cbd5e1';
+          }
         } else {
-          star.className = 'bx bx-star';
-          star.style.color = '#cbd5e1';
+          if (index <= rating) {
+            star.className = 'bx bxs-star';
+            star.style.color = '#ffa500';
+          } else {
+            star.className = 'bx bx-star';
+            star.style.color = '#cbd5e1';
+          }
         }
       });
     }
@@ -1005,6 +1015,14 @@
           document.getElementById('sd-rate-form').style.display = 'block';
           document.getElementById('sd-login-to-rate').style.display = 'none';
           document.getElementById('rate-value').value = '0';
+          
+          // Dynamically bind click events to stars (handles Lucide SVGs)
+          const stars = document.querySelectorAll('#rate-star-selector svg, #rate-star-selector i');
+          stars.forEach((star, idx) => {
+            star.onclick = () => setRateStarValue(idx + 1);
+            star.style.cursor = 'pointer';
+          });
+
           highlightRatingStars(0);
         } else {
           document.getElementById('sd-rate-form').style.display = 'none';
@@ -1049,16 +1067,22 @@
 
     window.submitServiceRating = async function(e) {
       e.preventDefault();
+      const form = document.getElementById('sd-rate-form');
+      const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
       const rating = parseInt(document.getElementById('rate-value').value);
 
       if (rating === 0) {
-        return alert('Please select a star rating.');
+        return alert('Please select a rating.');
       }
 
       try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+        }
         const res = await apiRequest(`/api/services/${selectedServiceForRating}/ratings`, 'POST', { rating });
         if (res.success) {
-          alert('Rating submitted successfully!');
+          alert(res.message || 'Rating submitted successfully!');
           loadServiceReviewsList(selectedServiceForRating);
           
           if (window.loadServicesFiltered) window.loadServicesFiltered(currentCategory || 'all');
@@ -1074,6 +1098,11 @@
         }
       } catch(err) {
         alert(err.message || 'Failed to submit review.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Rating';
+        }
       }
     };
 
