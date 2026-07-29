@@ -476,17 +476,20 @@ async function executeMock(sql, params = []) {
     const latRegex = /radians\(([0-9.-]+)\)/g;
     const latMatch = latRegex.exec(sql);
     const lngMatch = latRegex.exec(sql);
-    if (latMatch && lngMatch && normalizedSql.includes('distance <=')) {
+    if (latMatch && lngMatch) {
       const latVal = parseFloat(latMatch[1]);
       const lngVal = parseFloat(lngMatch[1]);
-      const radiusVal = parseFloat(params[paramIdx]);
-      paramIdx++;
       list = list.map(p => {
         const dLat = (parseFloat(p.latitude||0) - latVal) * Math.PI / 180;
         const dLon = (parseFloat(p.longitude||0) - lngVal) * Math.PI / 180;
         const a = Math.sin(dLat/2)**2 + Math.cos(latVal*Math.PI/180) * Math.cos(parseFloat(p.latitude||0)*Math.PI/180) * Math.sin(dLon/2)**2;
         return { ...p, distance: 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) };
-      }).filter(p => p.distance <= radiusVal);
+      });
+      if (normalizedSql.includes('distance <=')) {
+        const radiusVal = parseFloat(params[paramIdx]);
+        paramIdx++;
+        list = list.filter(p => p.distance <= radiusVal);
+      }
     }
 
     // Sort

@@ -360,29 +360,80 @@ async function getProperties(req, res) {
       ${whereStr}
     `;
 
-    // GPS Haversine radius
-    if (lat && lng && radius) {
-      const pLat = parseFloat(lat), pLng = parseFloat(lng);
-      baseSql = `SELECT *, (6371 * acos(cos(radians(${pLat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${pLng})) + sin(radians(${pLat})) * sin(radians(latitude)))) AS distance FROM (${baseSql}) as gps_filtered HAVING distance <= ?`;
-      params.push(parseFloat(radius));
-    }
-
     // Sort
     let orderClause = 'ORDER BY id DESC';
+    if (lat && lng) {
+      orderClause = 'ORDER BY distance ASC'; // default sorting for location-based recommendations
+    }
     if (sort === 'price_low')  orderClause = 'ORDER BY price ASC';
     else if (sort === 'price_high') orderClause = 'ORDER BY price DESC';
     else if (sort === 'featured')   orderClause = 'ORDER BY is_featured DESC, id DESC';
     else if (sort === 'nearest' && lat && lng) orderClause = 'ORDER BY distance ASC';
 
-    // Total count for pagination
-    const countSql = `SELECT COUNT(*) as total FROM (${baseSql} ${orderClause}) as count_q`;
-    const [countRows] = await db.query(countSql, [...params]);
+    let countRows = [{ total: 0 }];
+    let results = [];
+
+    // GPS Haversine radius search with expanding fallback thresholds
+    if (lat && lng && radius) {
+      const pLat = parseFloat(lat), pLng = parseFloat(lng);
+      const initialRadius = parseFloat(radius);
+      const baseRadii = [3, 5, 10, 20, 50];
+      
+      const uniqueRadii = [initialRadius];
+      baseRadii.forEach(r => {
+        if (r > initialRadius && !uniqueRadii.includes(r)) {
+          uniqueRadii.push(r);
+        }
+      });
+      uniqueRadii.push(null); // unlimited distance fallback
+
+      console.log(`🔍 Nearby search fallback sequence: ${uniqueRadii.join(' -> ')}`);
+
+      for (let i = 0; i < uniqueRadii.length; i++) {
+        const currentRad = uniqueRadii[i];
+        let currentBaseSql = baseSql;
+        let currentParams = [...params];
+
+        if (currentRad !== null) {
+          currentBaseSql = `SELECT *, (6371 * acos(cos(radians(${pLat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${pLng})) + sin(radians(${pLat})) * sin(radians(latitude)))) AS distance FROM (${baseSql}) as gps_filtered HAVING distance <= ?`;
+          currentParams.push(currentRad);
+        } else {
+          currentBaseSql = `SELECT *, (6371 * acos(cos(radians(${pLat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${pLng})) + sin(radians(${pLat})) * sin(radians(latitude)))) AS distance FROM (${baseSql}) as gps_filtered`;
+        }
+
+        const currentCountSql = `SELECT COUNT(*) as total FROM (${currentBaseSql} ${orderClause}) as count_q`;
+        const [cRows] = await db.query(currentCountSql, currentParams);
+        const countTotal = cRows[0] ? (cRows[0].total || 0) : 0;
+
+        if (countTotal > 0 || currentRad === null) {
+          countRows = cRows;
+          const currentPaginatedSql = `${currentBaseSql} ${orderClause} LIMIT ? OFFSET ?`;
+          const [resRows] = await db.query(currentPaginatedSql, [...currentParams, limitNum, offset]);
+          results = resRows;
+          break;
+        }
+      }
+    } else {
+      // Standard search: compute distance column without filtering radius if lat/lng is active
+      let countBaseSql = baseSql;
+      let countParams = [...params];
+
+      if (lat && lng) {
+        const pLat = parseFloat(lat), pLng = parseFloat(lng);
+        countBaseSql = `SELECT *, (6371 * acos(cos(radians(${pLat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${pLng})) + sin(radians(${pLat})) * sin(radians(latitude)))) AS distance FROM (${baseSql}) as gps_filtered`;
+      }
+
+      const countSql = `SELECT COUNT(*) as total FROM (${countBaseSql} ${orderClause}) as count_q`;
+      const [cRows] = await db.query(countSql, countParams);
+      countRows = cRows;
+
+      const paginatedSql = `${countBaseSql} ${orderClause} LIMIT ? OFFSET ?`;
+      const [resRows] = await db.query(paginatedSql, [...countParams, limitNum, offset]);
+      results = resRows;
+    }
+
     const total = countRows[0] ? (countRows[0].total || 0) : 0;
     const totalPages = Math.ceil(total / limitNum);
-
-    // Paginated data
-    const paginatedSql = `${baseSql} ${orderClause} LIMIT ? OFFSET ?`;
-    const [results] = await db.query(paginatedSql, [...params, limitNum, offset]);
 
     res.status(200).json({
       success: true,
