@@ -217,19 +217,57 @@
             <option value="unfurnished">Unfurnished</option>
           </select>
         </div>
-      </div>
-
-        <!-- Update My Location button -->
-        <div class="form-group" style="margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-          <label class="form-label" style="font-size: 11px; color: var(--text-muted);">Your Location</label>
-          <button id="update-location-btn" onclick="updateMyLocation()" style="width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid var(--secondary-orange); background: rgba(255,106,0,0.06); color: var(--secondary-orange); font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,106,0,0.12)'" onmouseout="this.style.background='rgba(255,106,0,0.06)'">
-            <i data-lucide="map-pin" style="width:16px;height:16px;"></i>
-            <span id="update-location-label">📍 Update My Location</span>
+        <!-- Location Section -->
+        <div class="form-group" style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1.5px solid var(--border-color);">
+          <label class="form-label" style="font-weight: 700;">Location Sharing</label>
+          <button id="btn-use-current-location" onclick="handleUseCurrentLocation(event)" style="width: 100%; height: 44px; border-radius: 12px; border: none; background: var(--secondary-orange); color: white; cursor: pointer; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: opacity 0.2s; box-sizing: border-box;">
+            <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i>
+            <span id="btn-use-current-location-text">📍 Use Current Location</span>
           </button>
-          <p id="location-status-text" style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 6px;"></p>
-        </div>
+          
+          <!-- Location Status -->
+          <div id="loc-status-block" style="margin-top: 10px; font-family: 'Outfit', sans-serif;">
+            <div style="font-weight: 800; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; gap: 4px;">
+              📍 <span id="loc-status-header">Location not set</span>
+            </div>
+            <div id="loc-status-subheader" style="font-size: 12px; color: var(--text-muted); margin-top: 2px; padding-left: 16px; font-weight: 500;">
+              Tap above to enable location.
+            </div>
+          </div>
 
-      </div>
+          <!-- Fallback Manual Area Selection -->
+          <div id="manual-location-fallback" style="display: none; margin-top: 16px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
+            <label class="form-label" style="font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; display: block;">Or Choose Your Area Manually</label>
+            
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-size: 11px; color: var(--text-muted);">State</label>
+              <select id="fallback-state" class="form-input" onchange="onFallbackStateChange()">
+                <option value="">Select State</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Telangana">Telangana</option>
+              </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" style="font-size: 11px; color: var(--text-muted);">City</label>
+              <select id="fallback-city" class="form-input" onchange="onFallbackCityChange()" disabled>
+                <option value="">Select City</option>
+              </select>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label class="form-label" style="font-size: 11px; color: var(--text-muted);">Area / Locality</label>
+              <select id="fallback-area" class="form-input" onchange="onFallbackAreaChange()" disabled>
+                <option value="">Select Area / Locality</option>
+              </select>
+            </div>
+            
+            <button id="btn-save-manual-loc" class="btn-primary" onclick="saveManualLocation()" style="width: 100%; height: 40px; font-weight: 700; font-size: 13px; border: none; border-radius: 8px; color: white; background: var(--secondary-orange); cursor: pointer;" disabled>
+              Save Selected Location
+            </button>
+          </div>
+        </div>
       <div class="filter-footer">
         <button class="btn-secondary" style="flex:1;" onclick="resetFilters()">Reset</button>
         <button class="btn-primary" style="flex:2;" onclick="applyFilters()">Apply Filters</button>
@@ -287,7 +325,7 @@
 
   </div>
 
-  <script src="/js/main.v147.js"></script>
+  <script src="/js/main.v148.js"></script>
   <script>
     let filterParams = {};
     let searchDebounceTimer = null;
@@ -567,76 +605,228 @@
       }
     }
 
-    // Manual "📍 Update My Location" handler
-    async function updateMyLocation() {
-      const btn = document.getElementById('update-location-btn');
-      const label = document.getElementById('update-location-label');
-      const statusText = document.getElementById('location-status-text');
+    // Fallback Data
+    const fallbackData = {
+      "Uttar Pradesh": {
+        "Lucknow": [
+          "Gomti Nagar",
+          "Indira Nagar",
+          "Aliganj",
+          "Hazratganj",
+          "Jankipuram",
+          "Alambagh",
+          "Rajajipuram",
+          "Ashiyana"
+        ],
+        "Noida": [
+          "Sector 62",
+          "Sector 15",
+          "Sector 18",
+          "Sector 22",
+          "Sector 137"
+        ],
+        "Kanpur": [
+          "Kalyanpur",
+          "Kakadeo",
+          "Swaroop Nagar",
+          "Civil Lines"
+        ]
+      },
+      "Delhi": {
+        "New Delhi": [
+          "Connaught Place",
+          "Saket",
+          "Karol Bagh",
+          "Dwarka",
+          "Vasant Kunj",
+          "Rohini",
+          "Okhla"
+        ]
+      },
+      "Telangana": {
+        "Hyderabad": [
+          "Jubilee Hills",
+          "Banjara Hills",
+          "Gachibowli",
+          "Madhapur",
+          "Kondapur",
+          "Kukatpally"
+        ]
+      }
+    };
 
-      if (btn) btn.disabled = true;
-      if (label) label.textContent = '⏳ Detecting location...';
-      if (statusText) statusText.textContent = '';
+    const areaCoordinates = {
+      "Gomti Nagar": { lat: 26.8429, lng: 81.0187 },
+      "Indira Nagar": { lat: 26.8652, lng: 80.9919 },
+      "Aliganj": { lat: 26.8856, lng: 80.9388 },
+      "Hazratganj": { lat: 26.8467, lng: 80.9462 },
+      "Jankipuram": { lat: 26.9167, lng: 80.9500 },
+      "Alambagh": { lat: 26.8041, lng: 80.9017 },
+      "Rajajipuram": { lat: 26.8378, lng: 80.8879 },
+      "Ashiyana": { lat: 26.7856, lng: 80.9210 },
+      "Sector 62": { lat: 28.6219, lng: 77.3639 },
+      "Sector 15": { lat: 28.5772, lng: 77.3117 },
+      "Sector 18": { lat: 28.5707, lng: 77.3261 },
+      "Sector 22": { lat: 28.5901, lng: 77.3452 },
+      "Sector 137": { lat: 28.5033, lng: 77.4006 },
+      "Kalyanpur": { lat: 26.5025, lng: 80.2577 },
+      "Kakadeo": { lat: 26.4784, lng: 80.3015 },
+      "Swaroop Nagar": { lat: 26.4764, lng: 80.3220 },
+      "Civil Lines": { lat: 26.4727, lng: 80.3541 },
+      "Connaught Place": { lat: 28.6304, lng: 77.2177 },
+      "Saket": { lat: 28.5244, lng: 77.2066 },
+      "Karol Bagh": { lat: 28.6441, lng: 77.1873 },
+      "Dwarka": { lat: 28.5921, lng: 77.0460 },
+      "Vasant Kunj": { lat: 28.5387, lng: 77.1624 },
+      "Rohini": { lat: 28.7161, lng: 77.1171 },
+      "Okhla": { lat: 28.5283, lng: 77.2741 },
+      "Jubilee Hills": { lat: 17.4320, lng: 78.4020 },
+      "Banjara Hills": { lat: 17.4176, lng: 78.4323 },
+      "Gachibowli": { lat: 17.4401, lng: 78.3489 },
+      "Madhapur": { lat: 17.4483, lng: 78.3915 },
+      "Kondapur": { lat: 17.4622, lng: 78.3568 },
+      "Kukatpally": { lat: 17.4841, lng: 78.3889 }
+    };
 
-      try {
-        if (window.LocationManager) {
-          await window.LocationManager.updateManually(
-            (locData) => {
-              // Update filter params so results refresh with actual GPS nearby sort
-              filterParams.lat    = locData.lat;
-              filterParams.lng    = locData.lng;
-              filterParams.radius = 25;
-              currentSort = 'nearest';
+    function updateLocationUiStatus() {
+      const headerText = document.getElementById('loc-status-header');
+      const subheaderText = document.getElementById('loc-status-subheader');
+      if (!headerText || !subheaderText) return;
 
-              // Update sort pill UI
-              document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
-              const nearestPill = Array.from(document.querySelectorAll('.category-pill')).find(p => p.textContent.includes('Near'));
-              if (nearestPill) nearestPill.classList.add('active');
-
-              const cityLabel = locData.city || locData.area || '';
-              if (label) label.textContent = '📍 Update My Location';
-              if (statusText) statusText.textContent = cityLabel ? `📌 ${cityLabel}` : '📌 Location updated';
-              if (btn) btn.disabled = false;
-              if (window.lucide) window.lucide.createIcons();
-              showToast('📍 Location updated' + (cityLabel ? ': ' + cityLabel : '') + '. Showing nearest listings.', 'success');
-              loadSearchResults();
-
-              // Close filter drawer after successful update
-              document.getElementById('filter-drawer')?.classList.remove('active');
-              document.getElementById('filter-overlay')?.classList.remove('active');
-            },
-            (errMsg) => {
-              if (label) label.textContent = '📍 Update My Location';
-              if (statusText) statusText.textContent = '⚠️ Could not get location';
-              if (btn) btn.disabled = false;
-              showToast('Unable to detect location. Please try again.', 'error');
-            }
-          );
+      if (window.LocationManager) {
+        const loc = window.LocationManager.getStoredLocation();
+        const perm = window.LocationManager.getPermission();
+        if (perm === 'granted' && loc) {
+          headerText.textContent = 'Current Location';
+          subheaderText.textContent = (loc.area || '') + (loc.city ? (loc.area ? ', ' : '') + loc.city : '');
         } else {
-          // Fallback without LocationManager
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              filterParams.lat    = pos.coords.latitude;
-              filterParams.lng    = pos.coords.longitude;
-              filterParams.radius = 25;
-              currentSort = 'nearest';
-              if (label) label.textContent = '📍 Update My Location';
-              if (statusText) statusText.textContent = '📌 Location updated';
-              if (btn) btn.disabled = false;
-              showToast('📍 Location updated. Showing nearest listings.', 'success');
-              loadSearchResults();
-            },
-            () => {
-              if (label) label.textContent = '📍 Update My Location';
-              if (statusText) statusText.textContent = '⚠️ Could not get location';
-              if (btn) btn.disabled = false;
-              showToast('Unable to detect location.', 'error');
-            }
-          );
+          headerText.textContent = 'Location not set';
+          subheaderText.textContent = 'Tap above to enable location.';
         }
-      } catch (e) {
-        if (label) label.textContent = '📍 Update My Location';
-        if (btn) btn.disabled = false;
-        showToast('Location update failed: ' + e.message, 'error');
+      }
+    }
+
+    async function handleUseCurrentLocation(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      const btn = document.getElementById('btn-use-current-location');
+      const btnText = document.getElementById('btn-use-current-location-text');
+      
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.textContent = '⏳ Detecting location...';
+
+      if (window.LocationManager) {
+        await window.LocationManager.updateManually(
+          (locData) => {
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = '📍 Use Current Location';
+            
+            // Set params & refresh search
+            filterParams.lat = locData.lat;
+            filterParams.lng = locData.lng;
+            filterParams.radius = 25;
+            currentSort = 'nearest';
+            
+            updateLocationUiStatus();
+            document.getElementById('manual-location-fallback').style.display = 'none';
+
+            // Update pills
+            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+            const nearestPill = Array.from(document.querySelectorAll('.category-pill')).find(p => p.textContent.includes('Near') || p.textContent.includes('Popular'));
+            if (nearestPill) nearestPill.classList.add('active');
+
+            showToast('Location updated successfully.', 'success');
+            loadSearchResults();
+            
+            // Close drawer
+            document.getElementById('filter-drawer')?.classList.remove('active');
+            document.getElementById('filter-overlay')?.classList.remove('active');
+          },
+          (err) => {
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = '📍 Use Current Location';
+            showToast('GPS unavailable. Please select your area manually below.', 'error');
+            document.getElementById('manual-location-fallback').style.display = 'block';
+          }
+        );
+      }
+    }
+
+    function onFallbackStateChange() {
+      const stateSel = document.getElementById('fallback-state');
+      const citySel = document.getElementById('fallback-city');
+      const areaSel = document.getElementById('fallback-area');
+      const saveBtn = document.getElementById('btn-save-manual-loc');
+      
+      citySel.innerHTML = '<option value="">Select City</option>';
+      areaSel.innerHTML = '<option value="">Select Area / Locality</option>';
+      citySel.disabled = true;
+      areaSel.disabled = true;
+      saveBtn.disabled = true;
+
+      const stateVal = stateSel.value;
+      if (stateVal && fallbackData[stateVal]) {
+        citySel.disabled = false;
+        Object.keys(fallbackData[stateVal]).forEach(city => {
+          const opt = document.createElement('option');
+          opt.value = city;
+          opt.textContent = city;
+          citySel.appendChild(opt);
+        });
+      }
+    }
+
+    function onFallbackCityChange() {
+      const stateSel = document.getElementById('fallback-state');
+      const citySel = document.getElementById('fallback-city');
+      const areaSel = document.getElementById('fallback-area');
+      const saveBtn = document.getElementById('btn-save-manual-loc');
+      
+      areaSel.innerHTML = '<option value="">Select Area / Locality</option>';
+      areaSel.disabled = true;
+      saveBtn.disabled = true;
+
+      const stateVal = stateSel.value;
+      const cityVal = citySel.value;
+      if (stateVal && cityVal && fallbackData[stateVal][cityVal]) {
+        areaSel.disabled = false;
+        fallbackData[stateVal][cityVal].forEach(area => {
+          const opt = document.createElement('option');
+          opt.value = area;
+          opt.textContent = area;
+          areaSel.appendChild(opt);
+        });
+      }
+    }
+
+    function onFallbackAreaChange() {
+      const areaSel = document.getElementById('fallback-area');
+      const saveBtn = document.getElementById('btn-save-manual-loc');
+      saveBtn.disabled = !areaSel.value;
+    }
+
+    function saveManualLocation() {
+      const stateVal = document.getElementById('fallback-state').value;
+      const cityVal = document.getElementById('fallback-city').value;
+      const areaVal = document.getElementById('fallback-area').value;
+
+      if (!stateVal || !cityVal || !areaVal) return;
+
+      const coords = areaCoordinates[areaVal] || { lat: 26.8467, lng: 80.9462 }; // Default Lucknow
+      if (window.LocationManager) {
+        const locData = window.LocationManager.saveManualLocation(stateVal, cityVal, areaVal, coords);
+        
+        filterParams.lat = locData.lat;
+        filterParams.lng = locData.lng;
+        filterParams.radius = 25;
+        currentSort = 'nearest';
+
+        updateLocationUiStatus();
+        showToast('Location updated successfully.', 'success');
+        loadSearchResults();
+
+        // Close drawer
+        document.getElementById('filter-drawer')?.classList.remove('active');
+        document.getElementById('filter-overlay')?.classList.remove('active');
       }
     }
 
@@ -645,19 +835,7 @@
       const openBtn = document.getElementById('open-filter-btn');
       if (openBtn) {
         openBtn.addEventListener('click', () => {
-          const statusText = document.getElementById('location-status-text');
-          if (statusText && window.LocationManager) {
-            const loc = window.LocationManager.getStoredLocation();
-            const perm = window.LocationManager.getPermission();
-            if (perm === 'granted' && loc) {
-              const label = loc.city || loc.area || '';
-              statusText.textContent = label ? `📌 ${label}` : '📌 Location set';
-            } else if (perm === 'denied') {
-              statusText.textContent = 'Location access denied';
-            } else {
-              statusText.textContent = 'No location set yet';
-            }
-          }
+          updateLocationUiStatus();
           if (window.lucide) window.lucide.createIcons();
         });
       }
