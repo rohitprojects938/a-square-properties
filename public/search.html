@@ -218,6 +218,18 @@
           </select>
         </div>
       </div>
+
+        <!-- Update My Location button -->
+        <div class="form-group" style="margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+          <label class="form-label" style="font-size: 11px; color: var(--text-muted);">Your Location</label>
+          <button id="update-location-btn" onclick="updateMyLocation()" style="width: 100%; padding: 12px; border-radius: 10px; border: 1.5px solid var(--secondary-orange); background: rgba(255,106,0,0.06); color: var(--secondary-orange); font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,106,0,0.12)'" onmouseout="this.style.background='rgba(255,106,0,0.06)'">
+            <i data-lucide="map-pin" style="width:16px;height:16px;"></i>
+            <span id="update-location-label">📍 Update My Location</span>
+          </button>
+          <p id="location-status-text" style="font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 6px;"></p>
+        </div>
+
+      </div>
       <div class="filter-footer">
         <button class="btn-secondary" style="flex:1;" onclick="resetFilters()">Reset</button>
         <button class="btn-primary" style="flex:2;" onclick="applyFilters()">Apply Filters</button>
@@ -275,7 +287,7 @@
 
   </div>
 
-  <script src="/js/main.v146.js"></script>
+  <script src="/js/main.v147.js"></script>
   <script>
     let filterParams = {};
     let searchDebounceTimer = null;
@@ -543,7 +555,7 @@
       }, 400);
     }
 
-    // GPS location
+    // GPS location (legacy – used by URL ?gps=1)
     function triggerGPS() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
@@ -554,6 +566,102 @@
         }, () => alert('Unable to retrieve GPS location.'));
       }
     }
+
+    // Manual "📍 Update My Location" handler
+    async function updateMyLocation() {
+      const btn = document.getElementById('update-location-btn');
+      const label = document.getElementById('update-location-label');
+      const statusText = document.getElementById('location-status-text');
+
+      if (btn) btn.disabled = true;
+      if (label) label.textContent = '⏳ Detecting location...';
+      if (statusText) statusText.textContent = '';
+
+      try {
+        if (window.LocationManager) {
+          await window.LocationManager.updateManually(
+            (locData) => {
+              // Update filter params so results refresh with actual GPS nearby sort
+              filterParams.lat    = locData.lat;
+              filterParams.lng    = locData.lng;
+              filterParams.radius = 25;
+              currentSort = 'nearest';
+
+              // Update sort pill UI
+              document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+              const nearestPill = Array.from(document.querySelectorAll('.category-pill')).find(p => p.textContent.includes('Near'));
+              if (nearestPill) nearestPill.classList.add('active');
+
+              const cityLabel = locData.city || locData.area || '';
+              if (label) label.textContent = '📍 Update My Location';
+              if (statusText) statusText.textContent = cityLabel ? `📌 ${cityLabel}` : '📌 Location updated';
+              if (btn) btn.disabled = false;
+              if (window.lucide) window.lucide.createIcons();
+              showToast('📍 Location updated' + (cityLabel ? ': ' + cityLabel : '') + '. Showing nearest listings.', 'success');
+              loadSearchResults();
+
+              // Close filter drawer after successful update
+              document.getElementById('filter-drawer')?.classList.remove('active');
+              document.getElementById('filter-overlay')?.classList.remove('active');
+            },
+            (errMsg) => {
+              if (label) label.textContent = '📍 Update My Location';
+              if (statusText) statusText.textContent = '⚠️ Could not get location';
+              if (btn) btn.disabled = false;
+              showToast('Unable to detect location. Please try again.', 'error');
+            }
+          );
+        } else {
+          // Fallback without LocationManager
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              filterParams.lat    = pos.coords.latitude;
+              filterParams.lng    = pos.coords.longitude;
+              filterParams.radius = 25;
+              currentSort = 'nearest';
+              if (label) label.textContent = '📍 Update My Location';
+              if (statusText) statusText.textContent = '📌 Location updated';
+              if (btn) btn.disabled = false;
+              showToast('📍 Location updated. Showing nearest listings.', 'success');
+              loadSearchResults();
+            },
+            () => {
+              if (label) label.textContent = '📍 Update My Location';
+              if (statusText) statusText.textContent = '⚠️ Could not get location';
+              if (btn) btn.disabled = false;
+              showToast('Unable to detect location.', 'error');
+            }
+          );
+        }
+      } catch (e) {
+        if (label) label.textContent = '📍 Update My Location';
+        if (btn) btn.disabled = false;
+        showToast('Location update failed: ' + e.message, 'error');
+      }
+    }
+
+    // On filter drawer open, show currently stored location
+    document.addEventListener('DOMContentLoaded', () => {
+      const openBtn = document.getElementById('open-filter-btn');
+      if (openBtn) {
+        openBtn.addEventListener('click', () => {
+          const statusText = document.getElementById('location-status-text');
+          if (statusText && window.LocationManager) {
+            const loc = window.LocationManager.getStoredLocation();
+            const perm = window.LocationManager.getPermission();
+            if (perm === 'granted' && loc) {
+              const label = loc.city || loc.area || '';
+              statusText.textContent = label ? `📌 ${label}` : '📌 Location set';
+            } else if (perm === 'denied') {
+              statusText.textContent = 'Location access denied';
+            } else {
+              statusText.textContent = 'No location set yet';
+            }
+          }
+          if (window.lucide) window.lucide.createIcons();
+        });
+      }
+    });
 
     // Reset all filters
     function resetFilters() {

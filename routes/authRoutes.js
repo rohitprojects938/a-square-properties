@@ -18,5 +18,7 @@ router.post('/logout', authController.logout);
 // Protected routes (JWT authentication applied)
 router.get('/profile', authenticateJWT, requireAuth, authController.getProfile);
 router.put('/profile', authenticateJWT, requireAuth, upload.fields([{ name: 'profile_picture', maxCount: 1 }]), updateProfileRules, checkValidation, authController.updateProfile);
+router.put('/location', authenticateJWT, requireAuth, authController.updateUserLocation);
 
 module.exports = router;
+

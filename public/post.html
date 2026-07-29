@@ -309,7 +309,7 @@
     </div>
   </div>
 
-  <script src="/js/main.v146.js"></script>
+  <script src="/js/main.v147.js"></script>
   <script>
     let currentWizardStep = 1;
     let leafMap = null;
@@ -363,21 +363,83 @@
 
     function initPostMap() {
       if (leafMap) return;
-      
-      const startLat = 17.432;
-      const startLng = 78.402;
-      
+
+      // Try to center on user's known GPS location for better UX
+      let startLat = 17.432;
+      let startLng = 78.402;
+
+      if (window.LocationManager) {
+        const storedLoc = window.LocationManager.getStoredLocation();
+        if (storedLoc && storedLoc.lat && storedLoc.lng) {
+          startLat = storedLoc.lat;
+          startLng = storedLoc.lng;
+        }
+      }
+
+      // Also use any already-entered lat/lng (e.g., when editing an existing property)
+      const existingLat = parseFloat(document.getElementById('post-lat').value);
+      const existingLng = parseFloat(document.getElementById('post-lng').value);
+      if (!isNaN(existingLat) && !isNaN(existingLng) && existingLat !== 17.432) {
+        startLat = existingLat;
+        startLng = existingLng;
+      }
+
       leafMap = L.map('picker-map').setView([startLat, startLng], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(leafMap);
-      
+
       leafMarker = L.marker([startLat, startLng], { draggable: true }).addTo(leafMap);
-      
+
       leafMarker.on('dragend', function() {
         const pos = leafMarker.getLatLng();
-        document.getElementById('post-lat').value = pos.lat;
-        document.getElementById('post-lng').value = pos.lng;
+        document.getElementById('post-lat').value = pos.lat.toFixed(7);
+        document.getElementById('post-lng').value = pos.lng.toFixed(7);
       });
+
+      // Set initial hidden field values
+      document.getElementById('post-lat').value = startLat.toFixed(7);
+      document.getElementById('post-lng').value = startLng.toFixed(7);
     }
+
+    // Auto-geocode: fills lat/lng from address when user leaves city or pincode fields
+    let geocodeDebounceTimer = null;
+    async function autoGeocodeAddress() {
+      clearTimeout(geocodeDebounceTimer);
+      geocodeDebounceTimer = setTimeout(async () => {
+        const address = document.getElementById('post-address')?.value?.trim() || '';
+        const city    = document.getElementById('post-city')?.value?.trim() || '';
+        const pincode = document.getElementById('post-pincode')?.value?.trim() || '';
+
+        // Only attempt if we have at least city or pincode
+        if (!city && !pincode) return;
+
+        const query = [address, city, pincode, 'India'].filter(Boolean).join(', ');
+
+        if (window.LocationManager) {
+          const coords = await window.LocationManager.geocodeAddress(query);
+          if (coords && coords.lat && coords.lng) {
+            document.getElementById('post-lat').value = coords.lat.toFixed(7);
+            document.getElementById('post-lng').value = coords.lng.toFixed(7);
+
+            // Move the map marker to the geocoded location
+            if (leafMap && leafMarker) {
+              leafMap.setView([coords.lat, coords.lng], 15);
+              leafMarker.setLatLng([coords.lat, coords.lng]);
+            }
+          }
+        }
+      }, 800);
+    }
+
+    // Attach auto-geocoding to address, city, and pincode fields
+    document.addEventListener('DOMContentLoaded', () => {
+      const fields = ['post-address', 'post-city', 'post-pincode'];
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('blur', autoGeocodeAddress);
+        }
+      });
+    });
 
     let selectedImages = []; // Array of { file: File, previewUrl: String, existingUrl: String }
 

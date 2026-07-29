@@ -71,6 +71,16 @@ async function initializeDatabase() {
     await addColumnIfNotExist('properties', 'status', "ALTER TABLE properties ADD COLUMN status VARCHAR(50) DEFAULT 'active';");
     await addColumnIfNotExist('properties', 'contact_phone', "ALTER TABLE properties ADD COLUMN contact_phone VARCHAR(50) DEFAULT NULL;");
 
+    // User location columns — populated by LocationManager after GPS permission is granted
+    await addColumnIfNotExist('users', 'location_permission', "ALTER TABLE users ADD COLUMN location_permission ENUM('granted','denied') DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'location_lat', "ALTER TABLE users ADD COLUMN location_lat DECIMAL(10,8) DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'location_lng', "ALTER TABLE users ADD COLUMN location_lng DECIMAL(11,8) DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'location_city', "ALTER TABLE users ADD COLUMN location_city VARCHAR(100) DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'location_state', "ALTER TABLE users ADD COLUMN location_state VARCHAR(100) DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'location_area', "ALTER TABLE users ADD COLUMN location_area VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'location_pincode', "ALTER TABLE users ADD COLUMN location_pincode VARCHAR(20) DEFAULT NULL;");
+    await addColumnIfNotExist('users', 'location_updated_at', "ALTER TABLE users ADD COLUMN location_updated_at TIMESTAMP NULL DEFAULT NULL;");
+
     try {
       await db.query("ALTER TABLE properties MODIFY COLUMN category ENUM('independent_house', 'house', 'apartment', 'villa', 'pg', 'commercial', 'plot', 'farmhouse') NOT NULL;");
       await db.query("ALTER TABLE properties MODIFY COLUMN category_type ENUM('new', 'resale', 'house') DEFAULT 'new';");

@@ -595,6 +595,67 @@ function getAuthConfig(req, res) {
   });
 }
 
+// Save user's location (GPS + reverse-geocoded data) to database
+async function updateUserLocation(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Not authenticated.' });
+  }
+
+  const { permission, lat, lng, city, state, area, pincode } = req.body;
+
+  if (!permission || !['granted', 'denied'].includes(permission)) {
+    return res.status(400).json({ success: false, error: 'Invalid permission value. Must be granted or denied.' });
+  }
+
+  try {
+    if (permission === 'denied') {
+      await db.query(
+        'UPDATE users SET location_permission = ?, location_updated_at = NOW() WHERE id = ?',
+        ['denied', req.user.id]
+      );
+      return res.status(200).json({ success: true, message: 'Location preference saved as denied.' });
+    }
+
+    // Validate coordinates when granting
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+    if (isNaN(parsedLat) || isNaN(parsedLng)) {
+      return res.status(400).json({ success: false, error: 'Valid latitude and longitude are required when granting location.' });
+    }
+
+    await db.query(
+      `UPDATE users SET
+        location_permission = 'granted',
+        location_lat = ?,
+        location_lng = ?,
+        location_city = ?,
+        location_state = ?,
+        location_area = ?,
+        location_pincode = ?,
+        location_updated_at = NOW()
+      WHERE id = ?`,
+      [
+        parsedLat,
+        parsedLng,
+        city || null,
+        state || null,
+        area || null,
+        pincode || null,
+        req.user.id
+      ]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Location updated successfully.',
+      location: { lat: parsedLat, lng: parsedLng, city, state, area, pincode }
+    });
+  } catch (error) {
+    console.error('Update user location error:', error.message);
+    res.status(500).json({ success: false, error: 'Failed to save location.' });
+  }
+}
+
 module.exports = {
   getAuthConfig,
   register,
@@ -604,5 +665,7 @@ module.exports = {
   googleLogin,
   logout,
   getProfile,
-  updateProfile
+  updateProfile,
+  updateUserLocation
 };
+
