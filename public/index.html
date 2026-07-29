@@ -2575,33 +2575,56 @@
         }, 3000);
       };
 
-      // Use Pointer Events for unified touch/mouse/pen input
-      if (!track.hasReviewsCarouselListeners) {
-        track.hasReviewsCarouselListeners = true;
-
-        track.addEventListener('pointerdown', (e) => {
-          track.setPointerCapture(e.pointerId);
-          dragStart(e.pageX, e.pageY);
+      // Bind Mouse Events safely using single window listener
+      if (!window.hasReviewsMouseListeners) {
+        window.hasReviewsMouseListeners = true;
+        
+        window.addEventListener('mousemove', (e) => {
+          const activeTrack = document.querySelector('.reviews-carousel-track.is-dragging');
+          if (activeTrack && typeof activeTrack.handleMouseMove === 'function') {
+            activeTrack.handleMouseMove(e);
+          }
         });
 
-        track.addEventListener('pointermove', (e) => {
-          dragMove(e.pageX, e.pageY, e);
-        });
-
-        track.addEventListener('pointerup', (e) => {
-          try {
-            track.releasePointerCapture(e.pointerId);
-          } catch (err) {}
-          dragEnd();
-        });
-
-        track.addEventListener('pointercancel', (e) => {
-          try {
-            track.releasePointerCapture(e.pointerId);
-          } catch (err) {}
-          dragEnd();
+        window.addEventListener('mouseup', () => {
+          const activeTrack = document.querySelector('.reviews-carousel-track.is-dragging');
+          if (activeTrack && typeof activeTrack.handleMouseUp === 'function') {
+            activeTrack.handleMouseUp();
+          }
         });
       }
+
+      // Track-local handler references
+      track.handleMouseMove = (e) => {
+        dragMove(e.pageX, e.pageY, e);
+      };
+      track.handleMouseUp = () => {
+        dragEnd();
+      };
+
+      track.addEventListener('mousedown', (e) => {
+        dragStart(e.pageX, e.pageY);
+      });
+
+      // Touch events (passive: false is REQUIRED to allow e.preventDefault() during drag)
+      track.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        dragStart(touch.pageX, touch.pageY);
+      }, { passive: true });
+
+      track.addEventListener('touchmove', (e) => {
+        if (!isDown) return;
+        const touch = e.touches[0];
+        dragMove(touch.pageX, touch.pageY, e);
+      }, { passive: false });
+
+      track.addEventListener('touchend', () => {
+        dragEnd();
+      });
+
+      track.addEventListener('touchcancel', () => {
+        dragEnd();
+      });
 
       startReviewAutoSlide(track);
     }
