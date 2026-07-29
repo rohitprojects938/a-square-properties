@@ -81,6 +81,13 @@
       flex-direction: column;
       gap: 6px;
     }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spin-icon {
+      animation: spin 1s linear infinite;
+    }
   </style>
 </head>
 <body>
@@ -97,10 +104,21 @@
       
       <!-- Left Column (Search results) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
-        <!-- Search Input -->
-        <div class="search-input-wrapper" style="margin-bottom: 8px;">
-          <i class="bx bx-search"></i>
-          <input type="text" id="search-query" class="search-input" placeholder="Enter city, locality or zipcode..." oninput="debounceSearch()">
+        <!-- Search Input Row -->
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px; width: 100%;">
+          <div class="search-input-wrapper" style="flex: 1; margin-bottom: 0;">
+            <i data-lucide="search"></i>
+            <input type="text" id="search-query" class="search-input" placeholder="Enter city, locality or zipcode..." oninput="debounceSearch()">
+          </div>
+          <button id="gps-search-btn" onclick="handleUseCurrentLocation(event)" style="width: 44px; height: 44px; border-radius: 12px; border: none; background: #111111; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; flex-shrink: 0;" title="Use Current Location" onmouseover="this.style.background='#333333'" onmouseout="this.style.background='#111111'">
+            <i data-lucide="map-pin" style="width: 20px; height: 20px;"></i>
+          </button>
+        </div>
+
+        <!-- Location Status Indicator -->
+        <div id="loc-status-block" style="font-family: 'Outfit', sans-serif; font-size: 11.5px; display: flex; align-items: center; gap: 4px; padding: 2px 4px; color: var(--text-muted); margin-bottom: 8px;">
+          <i data-lucide="map-pin" style="width: 12px; height: 12px; color: var(--secondary-orange);"></i>
+          <span id="loc-status-header" style="font-weight: 700;">Location not set</span> - <span id="loc-status-subheader">Tap icon to use GPS</span>
         </div>
 
         <!-- Sorting Pill Container -->
@@ -217,57 +235,7 @@
             <option value="unfurnished">Unfurnished</option>
           </select>
         </div>
-        <!-- Location Section -->
-        <div class="form-group" style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1.5px solid var(--border-color);">
-          <label class="form-label" style="font-weight: 700;">Location Sharing</label>
-          <button id="btn-use-current-location" onclick="handleUseCurrentLocation(event)" style="width: 100%; height: 44px; border-radius: 12px; border: none; background: var(--secondary-orange); color: white; cursor: pointer; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; transition: opacity 0.2s; box-sizing: border-box;">
-            <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i>
-            <span id="btn-use-current-location-text">📍 Use Current Location</span>
-          </button>
-          
-          <!-- Location Status -->
-          <div id="loc-status-block" style="margin-top: 10px; font-family: 'Outfit', sans-serif;">
-            <div style="font-weight: 800; font-size: 13px; color: var(--text-dark); display: flex; align-items: center; gap: 4px;">
-              📍 <span id="loc-status-header">Location not set</span>
-            </div>
-            <div id="loc-status-subheader" style="font-size: 12px; color: var(--text-muted); margin-top: 2px; padding-left: 16px; font-weight: 500;">
-              Tap above to enable location.
-            </div>
-          </div>
-
-          <!-- Fallback Manual Area Selection -->
-          <div id="manual-location-fallback" style="display: none; margin-top: 16px; border-top: 1px dashed var(--border-color); padding-top: 16px;">
-            <label class="form-label" style="font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; display: block;">Or Choose Your Area Manually</label>
-            
-            <div class="form-group" style="margin-bottom: 10px;">
-              <label class="form-label" style="font-size: 11px; color: var(--text-muted);">State</label>
-              <select id="fallback-state" class="form-input" onchange="onFallbackStateChange()">
-                <option value="">Select State</option>
-                <option value="Uttar Pradesh">Uttar Pradesh</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Telangana">Telangana</option>
-              </select>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 10px;">
-              <label class="form-label" style="font-size: 11px; color: var(--text-muted);">City</label>
-              <select id="fallback-city" class="form-input" onchange="onFallbackCityChange()" disabled>
-                <option value="">Select City</option>
-              </select>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 12px;">
-              <label class="form-label" style="font-size: 11px; color: var(--text-muted);">Area / Locality</label>
-              <select id="fallback-area" class="form-input" onchange="onFallbackAreaChange()" disabled>
-                <option value="">Select Area / Locality</option>
-              </select>
-            </div>
-            
-            <button id="btn-save-manual-loc" class="btn-primary" onclick="saveManualLocation()" style="width: 100%; height: 40px; font-weight: 700; font-size: 13px; border: none; border-radius: 8px; color: white; background: var(--secondary-orange); cursor: pointer;" disabled>
-              Save Selected Location
-            </button>
-          </div>
-        </div>
+      </div>
       <div class="filter-footer">
         <button class="btn-secondary" style="flex:1;" onclick="resetFilters()">Reset</button>
         <button class="btn-primary" style="flex:2;" onclick="applyFilters()">Apply Filters</button>
@@ -605,7 +573,7 @@
       }
     }
 
-    // Fallback Data
+    // Fallback Data (Uttar Pradesh only)
     const fallbackData = {
       "Uttar Pradesh": {
         "Lucknow": [
@@ -631,27 +599,6 @@
           "Swaroop Nagar",
           "Civil Lines"
         ]
-      },
-      "Delhi": {
-        "New Delhi": [
-          "Connaught Place",
-          "Saket",
-          "Karol Bagh",
-          "Dwarka",
-          "Vasant Kunj",
-          "Rohini",
-          "Okhla"
-        ]
-      },
-      "Telangana": {
-        "Hyderabad": [
-          "Jubilee Hills",
-          "Banjara Hills",
-          "Gachibowli",
-          "Madhapur",
-          "Kondapur",
-          "Kukatpally"
-        ]
       }
     };
 
@@ -672,20 +619,7 @@
       "Kalyanpur": { lat: 26.5025, lng: 80.2577 },
       "Kakadeo": { lat: 26.4784, lng: 80.3015 },
       "Swaroop Nagar": { lat: 26.4764, lng: 80.3220 },
-      "Civil Lines": { lat: 26.4727, lng: 80.3541 },
-      "Connaught Place": { lat: 28.6304, lng: 77.2177 },
-      "Saket": { lat: 28.5244, lng: 77.2066 },
-      "Karol Bagh": { lat: 28.6441, lng: 77.1873 },
-      "Dwarka": { lat: 28.5921, lng: 77.0460 },
-      "Vasant Kunj": { lat: 28.5387, lng: 77.1624 },
-      "Rohini": { lat: 28.7161, lng: 77.1171 },
-      "Okhla": { lat: 28.5283, lng: 77.2741 },
-      "Jubilee Hills": { lat: 17.4320, lng: 78.4020 },
-      "Banjara Hills": { lat: 17.4176, lng: 78.4323 },
-      "Gachibowli": { lat: 17.4401, lng: 78.3489 },
-      "Madhapur": { lat: 17.4483, lng: 78.3915 },
-      "Kondapur": { lat: 17.4622, lng: 78.3568 },
-      "Kukatpally": { lat: 17.4841, lng: 78.3889 }
+      "Civil Lines": { lat: 26.4727, lng: 80.3541 }
     };
 
     function updateLocationUiStatus() {
@@ -697,28 +631,33 @@
         const loc = window.LocationManager.getStoredLocation();
         const perm = window.LocationManager.getPermission();
         if (perm === 'granted' && loc) {
-          headerText.textContent = 'Current Location';
-          subheaderText.textContent = (loc.area || '') + (loc.city ? (loc.area ? ', ' : '') + loc.city : '');
+          headerText.textContent = 'Current Location: ' + (loc.area || loc.city || 'Set');
+          subheaderText.textContent = 'Tap icon to update GPS';
         } else {
           headerText.textContent = 'Location not set';
-          subheaderText.textContent = 'Tap above to enable location.';
+          subheaderText.textContent = 'Tap icon to use GPS';
         }
       }
     }
 
     async function handleUseCurrentLocation(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
-      const btn = document.getElementById('btn-use-current-location');
-      const btnText = document.getElementById('btn-use-current-location-text');
+      const btn = document.getElementById('gps-search-btn');
       
-      if (btn) btn.disabled = true;
-      if (btnText) btnText.textContent = '⏳ Detecting location...';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin-icon" style="width: 20px; height: 20px;"></i>';
+        if (window.lucide) window.lucide.createIcons();
+      }
 
       if (window.LocationManager) {
         await window.LocationManager.updateManually(
           (locData) => {
-            if (btn) btn.disabled = false;
-            if (btnText) btnText.textContent = '📍 Use Current Location';
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = '<i data-lucide="map-pin" style="width: 20px; height: 20px;"></i>';
+              if (window.lucide) window.lucide.createIcons();
+            }
             
             // Set params & refresh search
             filterParams.lat = locData.lat;
@@ -727,7 +666,7 @@
             currentSort = 'nearest';
             
             updateLocationUiStatus();
-            document.getElementById('manual-location-fallback').style.display = 'none';
+            closeManualLocationModal();
 
             // Update pills
             document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
@@ -736,18 +675,41 @@
 
             showToast('Location updated successfully.', 'success');
             loadSearchResults();
-            
-            // Close drawer
-            document.getElementById('filter-drawer')?.classList.remove('active');
-            document.getElementById('filter-overlay')?.classList.remove('active');
           },
           (err) => {
-            if (btn) btn.disabled = false;
-            if (btnText) btnText.textContent = '📍 Use Current Location';
-            showToast('GPS unavailable. Please select your area manually below.', 'error');
-            document.getElementById('manual-location-fallback').style.display = 'block';
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = '<i data-lucide="map-pin" style="width: 20px; height: 20px;"></i>';
+              if (window.lucide) window.lucide.createIcons();
+            }
+            showToast('GPS unavailable. Please select your area manually.', 'error');
+            openManualLocationModal();
           }
         );
+      } else {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="map-pin" style="width: 20px; height: 20px;"></i>';
+          if (window.lucide) window.lucide.createIcons();
+        }
+      }
+    }
+
+    function openManualLocationModal() {
+      const modal = document.getElementById('manual-location-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        // Reset state dropdown to blank
+        document.getElementById('fallback-state').value = '';
+        onFallbackStateChange();
+      }
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function closeManualLocationModal() {
+      const modal = document.getElementById('manual-location-modal');
+      if (modal) {
+        modal.style.display = 'none';
       }
     }
 
@@ -821,24 +783,22 @@
         currentSort = 'nearest';
 
         updateLocationUiStatus();
+        closeManualLocationModal();
+        
+        // Update pills
+        document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        const nearestPill = Array.from(document.querySelectorAll('.category-pill')).find(p => p.textContent.includes('Near') || p.textContent.includes('Popular'));
+        if (nearestPill) nearestPill.classList.add('active');
+
         showToast('Location updated successfully.', 'success');
         loadSearchResults();
-
-        // Close drawer
-        document.getElementById('filter-drawer')?.classList.remove('active');
-        document.getElementById('filter-overlay')?.classList.remove('active');
       }
     }
 
-    // On filter drawer open, show currently stored location
+    // Show currently stored location on load
     document.addEventListener('DOMContentLoaded', () => {
-      const openBtn = document.getElementById('open-filter-btn');
-      if (openBtn) {
-        openBtn.addEventListener('click', () => {
-          updateLocationUiStatus();
-          if (window.lucide) window.lucide.createIcons();
-        });
-      }
+      updateLocationUiStatus();
+      if (window.lucide) window.lucide.createIcons();
     });
 
     // Reset all filters
@@ -973,6 +933,46 @@
       if (num >= 100000) return (num / 100000).toFixed(1) + ' L';
       return num.toLocaleString('en-IN');
     }
+    <!-- Manual Location Modal -->
+    <div class="service-modal-overlay" id="manual-location-modal" onclick="if(event.target === this) closeManualLocationModal();" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 15000; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+      <div class="service-modal" style="background: white; width: 100%; max-width: 400px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; flex-direction: column; font-family: 'Outfit', sans-serif;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+          <h4 style="font-size: 15px; font-weight: 800; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="map-pin" style="width: 18px; height: 18px; color: var(--secondary-orange);"></i> Choose Your Area
+          </h4>
+          <button onclick="closeManualLocationModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 4px;"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+        </div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box;">
+          <p style="font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.4;">GPS location is currently unavailable. Please select your area manually below to find properties near you.</p>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">State</label>
+            <select id="fallback-state" class="form-input" onchange="onFallbackStateChange()" style="width: 100%; box-sizing: border-box;">
+              <option value="">Select State</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+            </select>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">City</label>
+            <select id="fallback-city" class="form-input" onchange="onFallbackCityChange()" disabled style="width: 100%; box-sizing: border-box;">
+              <option value="">Select City</option>
+            </select>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 700;">Area / Locality</label>
+            <select id="fallback-area" class="form-input" onchange="onFallbackAreaChange()" disabled style="width: 100%; box-sizing: border-box;">
+              <option value="">Select Area / Locality</option>
+            </select>
+          </div>
+          
+          <button id="btn-save-manual-loc" class="btn-primary" onclick="saveManualLocation()" style="width: 100%; height: 44px; font-weight: 700; font-size: 13.5px; border: none; border-radius: 12px; color: white; background: var(--secondary-orange); cursor: pointer; margin-top: 6px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;" disabled>
+            Save Selected Location
+          </button>
+        </div>
+      </div>
+    </div>
   </script>
 </body>
 </html>
