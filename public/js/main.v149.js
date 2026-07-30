@@ -1208,3 +1208,19 @@ async function registerServiceWorker() {
     });
   }
 }
+
+// Unified global event delegation for favorite/save buttons across all pages
+document.addEventListener('click', function(e) {
+  // Find nearest favorite/save button in target's click path
+  const btn = e.target.closest('.favorite-btn, .feed-fav-btn');
+  if (btn) {
+    // Prevent default anchor navigation/button behaviors and bubbling
+    e.preventDefault();
+    e.stopPropagation();
+
+    const pid = btn.getAttribute('data-pid');
+    if (pid && window.toggleFavorite) {
+      window.toggleFavorite(pid, btn);
+    }
+  }
+});

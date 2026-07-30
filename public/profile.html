@@ -583,7 +583,7 @@
               <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Location: ${s.city} • ₹${s.price.toLocaleString()}</p>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
-              <button class="favorite-btn active" data-pid="${s.id}" onclick="toggleFavorite(${s.id}, this)" style="border:none; background:rgba(255,59,48,0.12); cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; border-radius:50%; width:28px; height:28px;"><i class="bx bxs-heart" style="font-size:16px; color:#ff3b30;"></i></button>
+              <button class="favorite-btn active" data-pid="${s.id}" style="border:none; background:rgba(255,59,48,0.12); cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; border-radius:50%; width:28px; height:28px;"><i class="bx bxs-heart" style="font-size:16px; color:#ff3b30;"></i></button>
               <a href="/details.html?id=${s.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px; text-decoration:none;">View</a>
             </div>
           `;

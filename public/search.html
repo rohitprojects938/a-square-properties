@@ -855,7 +855,7 @@
               ${p.price >= 15000000 ? '<span style="background:#FF6A00; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700; width:fit-content;">Premium</span>' : ''}
             </div>
             <div style="position: absolute; top: 10px; right: 10px;">
-              <button class="favorite-btn" data-pid="${p.id}" onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(${p.id}, this)" style="width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer;"><i data-lucide="heart" style="width:14px; height:14px;"></i></button>
+              <button class="favorite-btn" data-pid="${p.id}" style="width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center; cursor:pointer;"><i data-lucide="heart" style="width:14px; height:14px;"></i></button>
             </div>
             <div class="price-tag" style="position: absolute; bottom: 10px; left: 10px; background: #111111; color: white; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: 700;">₹${formatPrice(p.price)}</div>
           </div>

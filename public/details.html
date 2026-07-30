@@ -701,13 +701,7 @@
       }
     }
 
-    document.getElementById('details-fav-btn').addEventListener('click', async function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (propertyId && window.toggleFavorite) {
-        await window.toggleFavorite(propertyId, this);
-      }
-    });
+
 
 
     // Share action — uses Web Share API with full property details; falls back to clipboard
