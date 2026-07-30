@@ -810,7 +810,6 @@ window.setFavBtnState = function(btn, saved) {
 
   if (saved) {
     btn.classList.add('active');
-    btn.style.setProperty('background', 'rgba(255,59,48,0.12)', 'important');
     // Handle Lucide SVG icon
     const svg = btn.querySelector('svg');
     if (svg) {
@@ -825,7 +824,6 @@ window.setFavBtnState = function(btn, saved) {
     }
   } else {
     btn.classList.remove('active');
-    btn.style.removeProperty('background');
     // Handle Lucide SVG icon
     const svg = btn.querySelector('svg');
     if (svg) {
@@ -894,7 +892,7 @@ window._hydrateFavButtons = function() {
   });
 };
 
-// Global Shared Favorite Toggle Helper — ONE implementation for ALL pages
+// Global toggleFavorite declared function for maximum inline compatibility
 window.toggleFavorite = async function(pid, btn) {
   // Redirect guests to login
   if (!localStorage.getItem('token')) {
@@ -922,9 +920,9 @@ window.toggleFavorite = async function(pid, btn) {
       // Sync all matching buttons on the page
       window.syncFavButtons(pid, result.saved);
       if (result.saved) {
-        showToast('Property saved! ❤️', 'success');
+        showToast('✅ Property saved successfully', 'success');
       } else {
-        showToast('Removed from saved.', 'success');
+        showToast('✅ Property removed from saved properties', 'success');
       }
     } else {
       // Revert optimistic update on failure
@@ -933,12 +931,19 @@ window.toggleFavorite = async function(pid, btn) {
   } catch(err) {
     // Revert optimistic update on error
     window.setFavBtnState(btn, wasAlreadySaved);
+    console.error('Failed to toggle favorite:', err);
     showToast(err.message || 'Server error saving property.', 'error');
   } finally {
     btn.disabled = false;
     btn.classList.remove('fav-pending');
   }
 };
+
+function toggleFavorite(pid, btn) {
+  if (window.toggleFavorite) {
+    return window.toggleFavorite(pid, btn);
+  }
+}
 
 // Centralized API Request Helper with JWT token injection
 async function apiRequest(url, method = 'GET', body = null, isMultipart = false) {
