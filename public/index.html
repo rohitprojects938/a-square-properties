@@ -1378,8 +1378,8 @@
     }
 
     // Fetch a specific section from the server (paginated)
-    async function fetchSection(params, limit = 8) {
-      const qs = new URLSearchParams({ ...params, limit }).toString();
+    async function fetchSection(params, limit = 8, page = 1) {
+      const qs = new URLSearchParams({ ...params, limit, page }).toString();
       return apiRequest(`/api/properties?${qs}`);
     }
 
@@ -1446,10 +1446,22 @@
       } catch(e) { console.warn('Recent failed:', e.message); }
     }
 
+    let popularPage = 1;
+    const popularLimit = 15;
+    let popularLoading = false;
+    let popularHasMore = true;
+    let popularSearchParams = null;
+
     async function loadPopularNearYou() {
       const container = document.getElementById('popular-near-you-list');
       if (!container) return;
       container.innerHTML = '<p style="font-size:12px; color:var(--text-muted); padding:16px;">Loading popular properties near you...</p>';
+
+      // Reset popular state
+      popularPage = 1;
+      popularLoading = false;
+      popularHasMore = true;
+      popularSearchParams = null;
 
       // Use LocationManager for clean cached location access
       const loc = window.LocationManager ? window.LocationManager.getStoredLocation() : null;
@@ -1458,9 +1470,12 @@
       if (loc && loc.lat && loc.lng) {
         try {
           // Use Haversine-sorted nearest results (server already handles widening fallback automatically)
-          const result = await fetchSection({ lat: loc.lat, lng: loc.lng, radius: 3, sort: 'nearest' }, 8);
+          popularSearchParams = { lat: loc.lat, lng: loc.lng, radius: 3, sort: 'nearest' };
+          const result = await fetchSection(popularSearchParams, popularLimit, popularPage);
           if (result.success && result.data && result.data.length > 0) {
-            renderPopularNearYou(result.data, true, loc);
+            renderPopularNearYou(result.data, true, loc, false);
+            popularHasMore = result.pagination ? result.pagination.hasMore : (result.data.length === popularLimit);
+            setupPopularScrollListener(container, loc, true);
             return;
           }
         } catch (e) {
@@ -1475,29 +1490,43 @@
       const container = document.getElementById('popular-near-you-list');
       if (!container) return;
 
+      // Reset popular state
+      popularPage = 1;
+      popularLoading = false;
+      popularHasMore = true;
+
       // Fallback 1: Recently Added Properties (page 1, newest)
       try {
-        const r1 = await fetchSection({ sort: 'newest' }, 8);
+        popularSearchParams = { sort: 'newest' };
+        const r1 = await fetchSection(popularSearchParams, popularLimit, popularPage);
         if (r1.success && r1.data && r1.data.length > 0) {
-          renderPopularNearYou(r1.data, false, null);
+          renderPopularNearYou(r1.data, false, null, false);
+          popularHasMore = r1.pagination ? r1.pagination.hasMore : (r1.data.length === popularLimit);
+          setupPopularScrollListener(container, null, false);
           return;
         }
       } catch (e) { console.warn('Fallback 1 failed:', e.message); }
 
       // Fallback 2: Latest Active Listings
       try {
-        const r2 = await fetchSection({}, 8);
+        popularSearchParams = {};
+        const r2 = await fetchSection(popularSearchParams, popularLimit, popularPage);
         if (r2.success && r2.data && r2.data.length > 0) {
-          renderPopularNearYou(r2.data, false, null);
+          renderPopularNearYou(r2.data, false, null, false);
+          popularHasMore = r2.pagination ? r2.pagination.hasMore : (r2.data.length === popularLimit);
+          setupPopularScrollListener(container, null, false);
           return;
         }
       } catch (e) { console.warn('Fallback 2 failed:', e.message); }
 
       // Fallback 3: Featured Listings
       try {
-        const r3 = await fetchSection({ is_featured: true }, 8);
+        popularSearchParams = { is_featured: true };
+        const r3 = await fetchSection(popularSearchParams, popularLimit, popularPage);
         if (r3.success && r3.data && r3.data.length > 0) {
-          renderPopularNearYou(r3.data, false, null);
+          renderPopularNearYou(r3.data, false, null, false);
+          popularHasMore = r3.pagination ? r3.pagination.hasMore : (r3.data.length === popularLimit);
+          setupPopularScrollListener(container, null, false);
           return;
         }
       } catch (e) { console.warn('Fallback 3 failed:', e.message); }
@@ -1505,58 +1534,136 @@
       container.innerHTML = '<p style="font-size:12px; color:var(--text-muted); padding:16px;">No popular properties found.</p>';
     }
 
-    function renderPopularNearYou(data, isLocationBased = false, userLoc = null) {
+    function setupPopularScrollListener(container, userLoc, isLocationBased) {
+      // Remove previous listener by replacing element with clone to prevent leaks
+      const newContainer = container.cloneNode(true);
+      container.parentNode.replaceChild(newContainer, container);
+
+      newContainer.addEventListener('scroll', () => {
+        const scrollLeft = newContainer.scrollLeft;
+        const scrollWidth = newContainer.scrollWidth;
+        const clientWidth = newContainer.clientWidth;
+
+        if (scrollWidth - scrollLeft - clientWidth < 150) {
+          loadMorePopularNearYou(newContainer, userLoc, isLocationBased);
+        }
+      }, { passive: true });
+    }
+
+    async function loadMorePopularNearYou(container, userLoc, isLocationBased) {
+      if (popularLoading || !popularHasMore || !popularSearchParams) return;
+      popularLoading = true;
+
+      try {
+        popularPage++;
+        const result = await fetchSection(popularSearchParams, popularLimit, popularPage);
+        if (result.success && result.data && result.data.length > 0) {
+          renderPopularNearYou(result.data, isLocationBased, userLoc, true);
+          popularHasMore = result.pagination ? result.pagination.hasMore : (result.data.length === popularLimit);
+        } else {
+          popularHasMore = false;
+        }
+      } catch (e) {
+        console.warn('Failed to load more popular properties:', e.message);
+        popularPage--; // revert page index
+      } finally {
+        popularLoading = false;
+      }
+    }
+
+    function renderPopularNearYou(data, isLocationBased = false, userLoc = null, append = false) {
       const container = document.getElementById('popular-near-you-list');
       if (!container) return;
-      if (data.length === 0) {
+
+      if (!append && data.length === 0) {
         container.innerHTML = '<p style="font-size:12px; color:var(--text-muted); padding:16px;">No popular properties near you.</p>';
         return;
       }
-      container.innerHTML = data.map(p => {
-        const image = p.cover_image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80';
-        const verifiedBadge = p.is_verified ? `<span class="badge-verified" style="position:absolute; top:6px; left:6px; background:#25d366; color:white; font-size:8px; font-weight:700; padding:2px 4px; border-radius:4px; text-transform:uppercase; z-index:1;">Verified</span>` : '';
-        
-        let locationBadgeText = '';
-        const hasValidUserLoc = userLoc && typeof userLoc.lat === 'number' && typeof userLoc.lng === 'number' && !isNaN(userLoc.lat) && !isNaN(userLoc.lng);
-        const hasValidPropertyLoc = p.latitude !== undefined && p.latitude !== null && p.longitude !== undefined && p.longitude !== null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude));
-        
-        let validDistance = null;
-        if (hasValidUserLoc && hasValidPropertyLoc) {
-          if (p.distance !== undefined && p.distance !== null && !isNaN(parseFloat(p.distance))) {
-            validDistance = parseFloat(p.distance);
-          } else {
-            const R = 6371;
-            const dLat = (parseFloat(p.latitude) - userLoc.lat) * Math.PI / 180;
-            const dLon = (parseFloat(p.longitude) - userLoc.lng) * Math.PI / 180;
-            const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(userLoc.lat*Math.PI/180)*Math.cos(parseFloat(p.latitude)*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-            validDistance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+      // Check existing IDs to prevent duplicates
+      let existingIds = new Set();
+      if (append) {
+        const cards = container.querySelectorAll('.popular-card');
+        cards.forEach(card => {
+          const hrefAttr = card.getAttribute('onclick') || '';
+          const match = hrefAttr.match(/id=(\d+)/);
+          if (match) {
+            existingIds.add(parseInt(match[1], 10));
           }
-        }
+        });
+      }
 
-        if (isLocationBased && validDistance !== null && isFinite(validDistance) && validDistance > 0 && validDistance <= 100) {
-          const distKm = validDistance.toFixed(1);
-          locationBadgeText = `<span class="distance-badge"><i class="bx bx-navigation"></i> ${distKm} km away</span>`;
-        } else {
-          locationBadgeText = `<span class="distance-badge"><i class="bx bx-map-pin"></i> ${p.city || 'Nearby'}</span>`;
-        }
+      const cardsHtml = data
+        .filter(p => !existingIds.has(p.id))
+        .map(p => {
+          const image = p.cover_image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80';
+          const verifiedBadge = p.is_verified ? `<span class="badge-verified" style="position:absolute; top:6px; left:6px; background:#25d366; color:white; font-size:8px; font-weight:700; padding:2px 4px; border-radius:4px; text-transform:uppercase; z-index:1;">Verified</span>` : '';
+          
+          // Premium Rent/Sale type badge dynamically formatted from listing_type (supporting future types)
+          const typeUpper = (p.listing_type || '').toUpperCase();
+          let typeBadgeColor = '#475569'; // Premium Slate color fallback for future database types
+          if (typeUpper === 'RENT') {
+            typeBadgeColor = '#25d366'; // Green
+          } else if (typeUpper === 'LEASE') {
+            typeBadgeColor = '#FF9F0A'; // Orange
+          } else if (typeUpper === 'SALE') {
+            typeBadgeColor = '#0071e3'; // Blue
+          }
+          const typeBadge = `<span class="badge-type" style="position:absolute; top:6px; right:6px; background:${typeBadgeColor}; color:white; font-size:8px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase; z-index:1;">FOR ${typeUpper}</span>`;
 
-        return `
-          <div class="popular-card" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer; position:relative;">
-            <div style="position:relative; width:100%; aspect-ratio:1/1; background:#f5f6f8; overflow:hidden;">
-              <img src="${image}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&amp;fit=crop&amp;w=600&amp;q=80';" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
-              ${verifiedBadge}
-              <span style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.7); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px;">₹${formatPrice(p.price)}</span>
-            </div>
-            <div style="padding:6px; display:flex; flex-direction:column; gap:4px; flex:1; justify-content:space-between;">
-              <div>
-                <div style="font-size:10px; font-weight:700; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${p.title}</div>
-                <div style="font-size:9px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; margin-top:2px;"><i class="bx bx-map" style="font-size:9px;"></i> ${p.address || p.city}</div>
+          let locationBadgeText = '';
+          const hasValidUserLoc = userLoc && typeof userLoc.lat === 'number' && typeof userLoc.lng === 'number' && !isNaN(userLoc.lat) && !isNaN(userLoc.lng);
+          const hasValidPropertyLoc = p.latitude !== undefined && p.latitude !== null && p.longitude !== undefined && p.longitude !== null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude));
+          
+          let validDistance = null;
+          if (hasValidUserLoc && hasValidPropertyLoc) {
+            if (p.distance !== undefined && p.distance !== null && !isNaN(parseFloat(p.distance))) {
+              validDistance = parseFloat(p.distance);
+            } else {
+              const R = 6371;
+              const dLat = (parseFloat(p.latitude) - userLoc.lat) * Math.PI / 180;
+              const dLon = (parseFloat(p.longitude) - userLoc.lng) * Math.PI / 180;
+              const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(userLoc.lat*Math.PI/180)*Math.cos(parseFloat(p.latitude)*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+              validDistance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            }
+          }
+
+          if (isLocationBased && validDistance !== null && isFinite(validDistance) && validDistance > 0 && validDistance <= 100) {
+            const distKm = validDistance.toFixed(1);
+            locationBadgeText = `<span class="distance-badge"><i class="bx bx-navigation"></i> ${distKm} km away</span>`;
+          } else {
+            locationBadgeText = `<span class="distance-badge"><i class="bx bx-map-pin"></i> ${p.city || 'Nearby'}</span>`;
+          }
+
+          return `
+            <div class="popular-card" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer; position:relative;">
+              <div style="position:relative; width:100%; aspect-ratio:1/1; background:#f5f6f8; overflow:hidden;">
+                <img src="${image}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&amp;fit=crop&amp;w=600&amp;q=80';" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
+                ${verifiedBadge}
+                ${typeBadge}
+                <span style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.7); color:white; font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px;">₹${formatPrice(p.price)}</span>
               </div>
-              ${locationBadgeText}
+              <div style="padding:6px; display:flex; flex-direction:column; gap:4px; flex:1; justify-content:space-between;">
+                <div>
+                  <div style="font-size:10px; font-weight:700; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${p.title}</div>
+                  <div style="font-size:9px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; margin-top:2px;"><i class="bx bx-map" style="font-size:9px;"></i> ${p.address || p.city}</div>
+                </div>
+                ${locationBadgeText}
+              </div>
             </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+
+      if (append) {
+        // Remove loading placeholder text if present
+        const placeholder = container.querySelector('p');
+        if (placeholder && placeholder.innerText.includes('Loading')) {
+          placeholder.remove();
+        }
+        container.insertAdjacentHTML('beforeend', cardsHtml);
+      } else {
+        container.innerHTML = cardsHtml;
+      }
     }
 
     // --- Special Offers Section Loader & Carousel Slider ---

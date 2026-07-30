@@ -103,6 +103,20 @@
       padding: 16px;
       margin-top: 20px;
     }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .shimmer {
+      background: linear-gradient(90deg, #f0f2f5 25%, #e6e8eb 50%, #f0f2f5 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite linear;
+    }
+    .skeleton-block {
+      height: 16px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
@@ -116,15 +130,90 @@
       <i class="bx bx-heart"></i>
     </button>
 
+    <!-- Skeleton loader container -->
+    <div class="app-content" id="details-skeleton-container" style="padding: 0; padding-bottom: 96px;">
+      <!-- Image slider skeleton -->
+      <div class="shimmer" style="width:100%; height:240px; background:#f0f2f5;"></div>
+      <!-- Thumbnails row skeleton -->
+      <div style="display:flex; gap:8px; padding:16px;">
+        <div class="shimmer" style="width:60px; height:60px; border-radius:6px;"></div>
+        <div class="shimmer" style="width:60px; height:60px; border-radius:6px;"></div>
+        <div class="shimmer" style="width:60px; height:60px; border-radius:6px;"></div>
+      </div>
+      <!-- Details info skeleton -->
+      <div style="padding: 16px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+          <div style="flex:1; margin-right: 16px;">
+            <div class="shimmer skeleton-block" style="width:75%; height:24px;"></div>
+            <div class="shimmer skeleton-block" style="width:45%; height:14px; margin-top:8px;"></div>
+          </div>
+          <div class="shimmer skeleton-block" style="width:80px; height:26px;"></div>
+        </div>
+        <!-- RERA Approved badge skeleton -->
+        <div class="shimmer skeleton-block" style="width:120px; height:24px; border-radius:12px; margin-bottom:24px;"></div>
+        <!-- Specs grid skeleton -->
+        <div class="shimmer skeleton-block" style="width:150px; height:18px; margin-bottom:12px;"></div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin: 16px 0;">
+          <div style="background:#f5f6f8; border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="shimmer" style="width:24px; height:24px; border-radius:50%;"></div>
+            <div class="shimmer skeleton-block" style="width:40px; height:10px; margin:0;"></div>
+            <div class="shimmer skeleton-block" style="width:30px; height:12px; margin:0;"></div>
+          </div>
+          <div style="background:#f5f6f8; border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="shimmer" style="width:24px; height:24px; border-radius:50%;"></div>
+            <div class="shimmer skeleton-block" style="width:40px; height:10px; margin:0;"></div>
+            <div class="shimmer skeleton-block" style="width:30px; height:12px; margin:0;"></div>
+          </div>
+          <div style="background:#f5f6f8; border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="shimmer" style="width:24px; height:24px; border-radius:50%;"></div>
+            <div class="shimmer skeleton-block" style="width:40px; height:10px; margin:0;"></div>
+            <div class="shimmer skeleton-block" style="width:30px; height:12px; margin:0;"></div>
+          </div>
+          <div style="background:#f5f6f8; border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="shimmer" style="width:24px; height:24px; border-radius:50%;"></div>
+            <div class="shimmer skeleton-block" style="width:40px; height:10px; margin:0;"></div>
+            <div class="shimmer skeleton-block" style="width:30px; height:12px; margin:0;"></div>
+          </div>
+          <div style="background:#f5f6f8; border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="shimmer" style="width:24px; height:24px; border-radius:50%;"></div>
+            <div class="shimmer skeleton-block" style="width:40px; height:10px; margin:0;"></div>
+            <div class="shimmer skeleton-block" style="width:30px; height:12px; margin:0;"></div>
+          </div>
+          <div style="background:#f5f6f8; border-radius:12px; padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div class="shimmer" style="width:24px; height:24px; border-radius:50%;"></div>
+            <div class="shimmer skeleton-block" style="width:40px; height:10px; margin:0;"></div>
+            <div class="shimmer skeleton-block" style="width:30px; height:12px; margin:0;"></div>
+          </div>
+        </div>
+        <!-- Description skeleton -->
+        <div class="shimmer skeleton-block" style="width:100px; height:18px; margin-top:20px; margin-bottom:12px;"></div>
+        <div class="shimmer skeleton-block" style="width:100%; height:12px;"></div>
+        <div class="shimmer skeleton-block" style="width:95%; height:12px;"></div>
+        <div class="shimmer skeleton-block" style="width:60%; height:12px;"></div>
+      </div>
+    </div>
+
+    <!-- Error container -->
+    <div class="app-content" id="details-error-container" style="display:none; padding:32px 16px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; font-family:'Outfit', sans-serif;">
+      <div style="background:#fff0f0; border-radius:50%; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:16px;">
+        <i class="bx bx-error-alt" style="font-size:40px; color:#ff3b30;"></i>
+      </div>
+      <h3 style="font-size:20px; font-weight:700; color:#1a1a1a;" id="error-title">Server property details failure</h3>
+      <p style="font-size:14px; color:#666; margin:8px 0 24px 0; max-width:280px;" id="error-msg">We encountered an issue fetching property details. Please try again.</p>
+      <button class="btn-primary" id="retry-btn" style="padding:12px 32px; border-radius:24px; font-weight:700; border:none; color:white; cursor:pointer; background:var(--primary-red); display:inline-flex; align-items:center; gap:8px; box-shadow:var(--soft-shadow);">
+        <i class="bx bx-refresh" style="font-size:20px;"></i> Retry Connection
+      </button>
+      <a href="/index.html" id="back-home-btn" style="margin-top:16px; font-size:14px; color:var(--text-muted); text-decoration:none; font-weight:600; display:none;">Back to Homepage</a>
+    </div>
+
     <!-- Details App Content Scroll -->
-    <!-- Details App Content Scroll -->
-    <div class="app-content">
+    <div class="app-content" id="details-content-wrapper" style="display:none;">
       
       <!-- Left Column (Property Details) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Image slider -->
         <div class="slider-container" id="details-image-slider" style="position:relative; aspect-ratio:16/9; overflow:hidden;">
-          <img class="slider-img" id="slider-img-target" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" style="width:100%; height:100%; object-fit:cover; transition: opacity 0.2s ease;">
+          <img class="slider-img" id="slider-img-target" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22450%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23f0f2f5%22%2F%3E%3C%2Fsvg%3E" style="width:100%; height:100%; object-fit:cover; transition: opacity 0.2s ease;">
           
           <button type="button" onclick="navigateDetailsImage(-1)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;"><i class="bx bx-chevron-left" style="font-size:24px;"></i></button>
           <button type="button" onclick="navigateDetailsImage(1)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;"><i class="bx bx-chevron-right" style="font-size:24px;"></i></button>
@@ -210,7 +299,7 @@
           <!-- Owner card profile summary -->
           <div class="owner-card">
             <div style="display:flex; align-items:center; gap:12px;">
-              <img id="owner-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80" style="width:48px; height:48px; border-radius:50%; object-fit:cover;">
+              <img id="owner-avatar" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2224%22%20r%3D%2224%22%20fill%3D%22%23e2e8f0%22%2F%3E%3C%2Fsvg%3E" style="width:48px; height:48px; border-radius:50%; object-fit:cover;">
               <div>
                 <h4 id="owner-name">Manoj Soni</h4>
                 <p style="font-size:11px; color:var(--text-muted);" id="owner-tag">Premium Builder</p>
@@ -247,7 +336,7 @@
     </div>
 
     <!-- Contact Sticky Action Bar -->
-    <div class="action-bar-sticky">
+    <div class="action-bar-sticky" id="details-action-bar" style="display:none;">
       <!-- Call Owner -->
       <a href="#" class="action-circle-btn" style="background:#0071e3;" id="call-action-btn">
         <i class="bx bxs-phone"></i>
@@ -321,15 +410,39 @@
       }
     }
 
+    let retryAttempted = false;
+
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       propertyId = urlParams.get('id');
       if (propertyId) {
         loadPropertyDetails();
+      } else {
+        document.getElementById('details-skeleton-container').style.display = 'none';
+        const errContainer = document.getElementById('details-error-container');
+        errContainer.style.display = 'flex';
+        document.getElementById('error-title').innerText = 'Property Not Found';
+        document.getElementById('error-msg').innerText = 'Invalid property ID or missing parameters.';
+        document.getElementById('retry-btn').style.display = 'none';
+        document.getElementById('back-home-btn').style.display = 'inline-block';
+      }
+
+      const retryBtn = document.getElementById('retry-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          retryAttempted = false;
+          loadPropertyDetails();
+        });
       }
     });
 
     async function loadPropertyDetails() {
+      // Clear previous error state
+      document.getElementById('details-skeleton-container').style.display = 'block';
+      document.getElementById('details-content-wrapper').style.display = 'none';
+      document.getElementById('details-action-bar').style.display = 'none';
+      document.getElementById('details-error-container').style.display = 'none';
+
       try {
         const result = await apiRequest(`/api/properties/${propertyId}`);
         if (result.success) {
@@ -406,9 +519,70 @@
 
           // Setup desktop widgets
           setupDesktopWidgets();
+
+          // Preload the cover image to prevent image flicker
+          const coverImgUrl = propertyDetails.images && propertyDetails.images[0] ? propertyDetails.images[0].image_url : null;
+          if (coverImgUrl) {
+            const tempImg = new Image();
+            tempImg.src = window.SafeRender.safeImageUrl(coverImgUrl);
+            
+            const showContent = () => {
+              document.getElementById('details-skeleton-container').style.display = 'none';
+              document.getElementById('details-content-wrapper').style.display = 'flex';
+              document.getElementById('details-action-bar').style.display = 'flex';
+            };
+            
+            const timeoutId = setTimeout(showContent, 600); // Max wait of 600ms
+            tempImg.onload = () => {
+              clearTimeout(timeoutId);
+              showContent();
+            };
+            tempImg.onerror = () => {
+              clearTimeout(timeoutId);
+              showContent();
+            };
+          } else {
+            document.getElementById('details-skeleton-container').style.display = 'none';
+            document.getElementById('details-content-wrapper').style.display = 'flex';
+            document.getElementById('details-action-bar').style.display = 'flex';
+          }
         }
       } catch (err) {
-        alert(err.message);
+        console.error('Error fetching property details:', err);
+        
+        // Auto-retry exactly once only on 500, 502, 503, or network connectivity/timeout errors
+        const status = err.status;
+        const isRetryable = !status || status === 500 || status === 502 || status === 503 || err.message.toLowerCase().includes('timeout') || err.message.toLowerCase().includes('failed to fetch');
+        
+        if (!retryAttempted && isRetryable) {
+          retryAttempted = true;
+          console.log('🔄 Server or network issue detected. Retrying automatically once in 1.5 seconds...');
+          setTimeout(loadPropertyDetails, 1500);
+          return;
+        }
+
+        // Hide skeleton
+        document.getElementById('details-skeleton-container').style.display = 'none';
+        
+        const errContainer = document.getElementById('details-error-container');
+        const errTitle = document.getElementById('error-title');
+        const errMsg = document.getElementById('error-msg');
+        const retryBtnEl = document.getElementById('retry-btn');
+        const backHomeBtn = document.getElementById('back-home-btn');
+        
+        errContainer.style.display = 'flex';
+        
+        if (err.status === 404 || err.message.toLowerCase().includes('not found')) {
+          errTitle.innerText = 'Property Not Found';
+          errMsg.innerText = 'The property you are looking for does not exist or has been removed.';
+          retryBtnEl.style.display = 'none';
+          backHomeBtn.style.display = 'inline-block';
+        } else {
+          errTitle.innerText = 'Server details failure';
+          errMsg.innerText = err.message || 'We encountered an issue fetching property details. Please try again.';
+          retryBtnEl.style.display = 'inline-flex';
+          backHomeBtn.style.display = 'none';
+        }
       }
     }
 

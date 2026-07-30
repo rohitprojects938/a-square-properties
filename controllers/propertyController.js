@@ -466,6 +466,11 @@ async function getProperties(req, res) {
 // Get single property details
 async function getPropertyById(req, res) {
   const { id } = req.params;
+  const propertyId = parseInt(id, 10);
+
+  if (isNaN(propertyId) || propertyId <= 0) {
+    return res.status(404).json({ success: false, error: 'Property not found.' });
+  }
 
   try {
     const [properties] = await db.query(
@@ -473,7 +478,7 @@ async function getPropertyById(req, res) {
        FROM properties p 
        JOIN users u ON p.user_id = u.id 
        WHERE p.id = ?`,
-      [id]
+      [propertyId]
     );
 
     if (properties.length === 0) {
@@ -482,20 +487,30 @@ async function getPropertyById(req, res) {
 
     const property = properties[0];
 
-    // Increment views counter
-    await db.query('INSERT INTO property_views (user_id, property_id) VALUES (?, ?)', [req.user ? req.user.id : null, id]);
+    // Increment views counter (non-critical, wrapped in try-catch to prevent foreign key or deadlock crashes)
+    try {
+      const viewerId = (req.user && req.user.id) ? req.user.id : null;
+      await db.query('INSERT INTO property_views (user_id, property_id) VALUES (?, ?)', [viewerId, propertyId]);
+    } catch (viewError) {
+      console.warn('⚠️ Failed to record property view (user_id may not exist):', viewError.message);
+      try {
+        await db.query('INSERT INTO property_views (user_id, property_id) VALUES (NULL, ?)', [propertyId]);
+      } catch (anonError) {
+        console.error('❌ Failed to record anonymous property view:', anonError.message);
+      }
+    }
 
     // Fetch images and videos
-    const [images] = await db.query('SELECT * FROM property_images WHERE property_id = ? ORDER BY sort_order ASC, id ASC', [id]);
-    const [videos] = await db.query('SELECT * FROM property_videos WHERE property_id = ?', [id]);
-    const [reviews] = await db.query('SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.property_id = ? ORDER BY r.id DESC', [id]);
+    const [images] = await db.query('SELECT * FROM property_images WHERE property_id = ? ORDER BY sort_order ASC, id ASC', [propertyId]);
+    const [videos] = await db.query('SELECT * FROM property_videos WHERE property_id = ?', [propertyId]);
+    const [reviews] = await db.query('SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.property_id = ? ORDER BY r.id DESC', [propertyId]);
 
     // Fetch similar properties in same city/category
     const [similar] = await db.query(
       `SELECT p.*, (SELECT image_url FROM property_images WHERE property_id = p.id AND is_cover = 1 LIMIT 1) as cover_image 
        FROM properties p 
        WHERE p.city = ? AND p.category = ? AND p.id != ? AND p.approval_status = 'approved' LIMIT 4`,
-      [property.city, property.category, id]
+      [property.city, property.category, propertyId]
     );
 
     res.status(200).json({
