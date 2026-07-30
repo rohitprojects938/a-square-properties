@@ -1061,6 +1061,51 @@
     <div class="adm-toast-msg" id="adm-toast-msg">Successfully performed.</div>
   </div>
 
+  <!-- Edit Reel Modal -->
+  <div class="adm-modal-overlay" id="edit-reel-modal">
+    <div class="adm-modal">
+      <div class="adm-modal-header">
+        <div class="adm-modal-title">Edit Property Reel</div>
+        <button class="adm-modal-close" onclick="closeModal('edit-reel-modal')">×</button>
+      </div>
+      <form id="edit-reel-form" onsubmit="saveAdminReelEdit(event)">
+        <div class="adm-form-group">
+          <label class="adm-form-label">Caption</label>
+          <input type="text" id="edit-reel-caption" class="adm-form-input" required>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Description (Optional)</label>
+          <textarea id="edit-reel-description" class="adm-form-textarea" rows="3" placeholder="Additional details..."></textarea>
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Thumbnail URL (Optional)</label>
+          <input type="url" id="edit-reel-thumbnail" class="adm-form-input" placeholder="e.g. https://...">
+        </div>
+        <div class="adm-form-group">
+          <label class="adm-form-label">Visibility Status</label>
+          <select id="edit-reel-status" class="adm-form-select">
+            <option value="active">Active (Public)</option>
+            <option value="hidden">Hidden (Private)</option>
+          </select>
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary" style="width:100%;">Save Reel Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Reel Modal -->
+  <div class="adm-modal-overlay" id="view-reel-modal">
+    <div class="adm-modal" style="max-width: 400px; background: #000;">
+      <div class="adm-modal-header" style="border-bottom: 1px solid #333;">
+        <div class="adm-modal-title" style="color: #fff;" id="view-reel-title">Play Reel</div>
+        <button class="adm-modal-close" style="color: #fff;" onclick="closeAdminReelPlayer()">×</button>
+      </div>
+      <div style="padding: 10px; display: flex; justify-content: center; align-items: center; background: #000;">
+        <video id="admin-reel-player" controls autoplay style="width: 100%; max-height: 500px; border-radius: 8px;"></video>
+      </div>
+    </div>
+  </div>
+
   <script src="/js/main.v149.js"></script>
   <script src="/js/admin.v146.js"></script>
   <script>

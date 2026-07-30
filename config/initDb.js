@@ -81,11 +81,26 @@ async function initializeDatabase() {
     await addColumnIfNotExist('users', 'location_pincode', "ALTER TABLE users ADD COLUMN location_pincode VARCHAR(20) DEFAULT NULL;");
     await addColumnIfNotExist('users', 'location_updated_at', "ALTER TABLE users ADD COLUMN location_updated_at TIMESTAMP NULL DEFAULT NULL;");
 
+    // Public user profile bio column
+    await addColumnIfNotExist('users', 'bio', "ALTER TABLE users ADD COLUMN bio TEXT DEFAULT NULL;");
+
+    // Reels extended details columns
+    await addColumnIfNotExist('reels', 'description', "ALTER TABLE reels ADD COLUMN description TEXT DEFAULT NULL;");
+    await addColumnIfNotExist('reels', 'thumbnail_url', "ALTER TABLE reels ADD COLUMN thumbnail_url VARCHAR(255) DEFAULT NULL;");
+    await addColumnIfNotExist('reels', 'status', "ALTER TABLE reels ADD COLUMN status VARCHAR(50) DEFAULT 'active';");
+
     try {
       await db.query("ALTER TABLE properties MODIFY COLUMN category ENUM('independent_house', 'house', 'apartment', 'villa', 'pg', 'commercial', 'plot', 'farmhouse') NOT NULL;");
       await db.query("ALTER TABLE properties MODIFY COLUMN category_type ENUM('new', 'resale', 'house') DEFAULT 'new';");
     } catch(err) {
       console.log('⚠️ Enum alter warning:', err.message);
+    }
+
+    try {
+      await db.query("ALTER TABLE properties MODIFY COLUMN area_sqft INT DEFAULT NULL;");
+      console.log('✅ MySQL Migration: Make area_sqft nullable (optional)');
+    } catch(err) {
+      console.log('⚠️ area_sqft alter warning:', err.message);
     }
 
     // Blog table schema alignment — admin controller uses these columns

@@ -869,7 +869,7 @@
             <div style="display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 6px; margin-top: 4px;">
               <span><i data-lucide="bed"></i> ${p.bedrooms} BHK</span>
               <span><i data-lucide="bath"></i> ${p.bathrooms || 2} Baths</span>
-              <span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>
+              ${p.area_sqft && !isNaN(p.area_sqft) && Number(p.area_sqft) > 0 ? `<span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>` : ''}
             </div>
           </div>
         `;

@@ -153,4 +153,57 @@ router.get('/settings', async (req, res) => {
   }
 });
 
+// 5. Get public profile of a user by ID
+router.get('/users/:id/profile', async (req, res) => {
+  const { id } = req.params;
+  const userId = parseInt(id, 10);
+  if (isNaN(userId) || userId <= 0) {
+    return res.status(400).json({ success: false, error: 'Invalid user ID.' });
+  }
+
+  try {
+    // 1. Fetch user detail (exclude sensitive fields)
+    const [users] = await db.query(
+      "SELECT id, name, role, profile_photo, profile_picture, bio, created_at FROM users WHERE id = ?",
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, error: 'User not found.' });
+    }
+
+    const user = users[0];
+
+    // 2. Fetch user's listings (approved & active properties)
+    const [properties] = await db.query(
+      `SELECT p.*, (SELECT image_url FROM property_images WHERE property_id = p.id AND is_cover = 1 LIMIT 1) as cover_image 
+       FROM properties p 
+       WHERE p.user_id = ? AND p.approval_status = 'approved' AND p.is_hidden = 0`,
+      [userId]
+    );
+
+    // 3. Fetch user's reels
+    const [reels] = await db.query(
+      "SELECT * FROM reels WHERE user_id = ? AND approval_status = 'approved'",
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        profile_photo: user.profile_photo || user.profile_picture || null,
+        bio: user.bio || `Real Estate ${user.role || 'Broker'}`
+      },
+      properties,
+      reels
+    });
+  } catch (err) {
+    console.error('Error fetching public user profile:', err);
+    res.status(500).json({ success: false, error: 'Server profile details failure.' });
+  }
+});
+
 module.exports = router;

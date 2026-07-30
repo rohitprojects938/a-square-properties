@@ -749,6 +749,15 @@ function showToast(message, type = 'success') {
     document.body.appendChild(container);
   }
 
+  // Check if a toast with the exact same message already exists
+  const existingToasts = container.querySelectorAll('.toast');
+  for (const existingToast of existingToasts) {
+    const span = existingToast.querySelector('span');
+    if (span && span.innerText === message) {
+      return; // Do not duplicate or stack identical toasts
+    }
+  }
+
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   
@@ -778,6 +787,55 @@ window.alert = function(msg) {
 };
 
 window.showToast = showToast;
+
+// Global Shared Favorite Toggle Helper
+window.toggleFavorite = async function(pid, btn) {
+  if (!localStorage.getItem('token')) {
+    alert('Please login to save properties.');
+    window.location.href = '/login.html';
+    return;
+  }
+
+  if (btn.disabled || btn.classList.contains('pending')) {
+    return;
+  }
+
+  btn.disabled = true;
+  btn.classList.add('pending');
+
+  try {
+    const result = await apiRequest(`/api/properties/${pid}/save`, 'POST');
+    if (result.success) {
+      const icon = btn.querySelector('i') || btn.querySelector('svg');
+      if (result.saved) {
+        btn.classList.add('active');
+        if (icon) {
+          icon.className = 'bx bxs-heart';
+          if (icon.tagName.toLowerCase() === 'svg') {
+            icon.style.fill = '#ff3b30';
+            icon.style.stroke = '#ff3b30';
+          }
+        }
+        alert('Property saved!');
+      } else {
+        btn.classList.remove('active');
+        if (icon) {
+          icon.className = 'bx bx-heart';
+          if (icon.tagName.toLowerCase() === 'svg') {
+            icon.style.fill = 'none';
+            icon.style.stroke = 'currentColor';
+          }
+        }
+        alert('Property removed.');
+      }
+    }
+  } catch(err) {
+    alert(err.message || 'Server error saving property.');
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('pending');
+  }
+};
 
 // Centralized API Request Helper with JWT token injection
 async function apiRequest(url, method = 'GET', body = null, isMultipart = false) {

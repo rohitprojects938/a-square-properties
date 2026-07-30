@@ -1414,7 +1414,7 @@
             <div class="property-card-location"><i data-lucide="map-pin"></i> ${p.city}</div>
             <div class="property-card-specs">
               <span><i data-lucide="bed"></i> ${p.bedrooms} BHK</span>
-              <span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>
+              ${p.area_sqft && !isNaN(p.area_sqft) && Number(p.area_sqft) > 0 ? `<span><i data-lucide="ruler"></i> ${p.area_sqft} sqft</span>` : ''}
             </div>
           </div>
         `;
@@ -1853,31 +1853,7 @@
       renderPropertyList(recentProps, 'continue-browsing-list');
     }
 
-    // Toggle saved favorites
-    async function toggleFavorite(pid, btn) {
-      if (!localStorage.getItem('token')) {
-        return alert('Please login to save properties.');
-      }
-      try {
-        const result = await apiRequest(`/api/properties/${pid}/save`, 'POST');
-        if (result.success) {
-          const icon = btn.querySelector('i');
-          if (result.saved) {
-            btn.classList.add('active');
-            icon.className = 'bx bxs-heart';
-            alert('Property saved!');
-          } else {
-            btn.classList.remove('active');
-            icon.className = 'bx bx-heart';
-            alert('Property removed.');
-          }
-        }
-      } catch(err) {
-        alert(err.message);
-      }
-    }
-
-    // Format currency price nicely (e.g. 1.5 Cr or 85 L)
+     // Format currency price nicely (e.g. 1.5 Cr or 85 L)
     function formatPrice(num) {
       const n = parseFloat(num);
       if (!num || isNaN(n)) return 'N/A';
@@ -3023,11 +2999,25 @@
 
       properties.forEach(p => {
         const image = p.cover_image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80';
+        
+        const typeUpper = (p.listing_type || '').toUpperCase();
+        let typeBadgeColor = '#475569';
+        if (typeUpper === 'RENT') {
+          typeBadgeColor = '#25d366';
+        } else if (typeUpper === 'LEASE') {
+          typeBadgeColor = '#FF9F0A';
+        } else if (typeUpper === 'SALE') {
+          typeBadgeColor = '#0071e3';
+        }
+
         const card = document.createElement('div');
         card.className = 'feed-card';
         card.innerHTML = `
-          <div class="feed-img-container" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer;">
+          <div class="feed-img-container" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer; position: relative;">
             <img src="${image}" class="feed-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&amp;fit=crop&amp;w=600&amp;q=80';" loading="lazy">
+            <div style="position: absolute; top: 10px; left: 10px; z-index: 2;">
+              <span style="background:${typeBadgeColor}; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700; text-transform:uppercase;">FOR ${typeUpper}</span>
+            </div>
             <button class="feed-fav-btn" onclick="event.stopPropagation(); toggleFavorite(${p.id}, this)">
               <i class="bx bx-heart" style="font-size:14px;"></i>
             </button>

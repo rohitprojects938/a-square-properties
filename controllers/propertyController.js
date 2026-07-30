@@ -43,9 +43,6 @@ async function createProperty(req, res) {
     if (parsedPrice === null) {
       return res.status(400).json({ success: false, error: 'Invalid or missing value for field: price' });
     }
-    if (parsedArea === null) {
-      return res.status(400).json({ success: false, error: 'Invalid or missing value for field: area_sqft' });
-    }
 
     // 2. Insert property details
     const [result] = await db.query(
@@ -152,9 +149,6 @@ async function updateProperty(req, res) {
     const parsedArea = safeInt(area_sqft, null);
     if (parsedPrice === null) {
       return res.status(400).json({ success: false, error: 'Invalid or missing value for field: price' });
-    }
-    if (parsedArea === null) {
-      return res.status(400).json({ success: false, error: 'Invalid or missing value for field: area_sqft' });
     }
 
     // 2. Update text fields in properties table
@@ -548,7 +542,13 @@ async function toggleSaveProperty(req, res) {
       return res.status(200).json({ success: true, saved: true, message: 'Property saved successfully!' });
     }
   } catch (error) {
-    console.error('Toggle save property error: ', error.message);
+    console.error('Toggle save property error: ', error);
+    
+    // Gracefully handle duplicate keys (already saved)
+    if (error.code === 'ER_DUP_ENTRY' || (error.message && (error.message.includes('Duplicate entry') || error.message.includes('unique_user_property')))) {
+      return res.status(200).json({ success: true, saved: true, message: 'Already Saved' });
+    }
+    
     res.status(500).json({ success: false, error: 'Server error saving property.' });
   }
 }
@@ -900,7 +900,7 @@ async function updateReel(req, res) {
     return res.status(401).json({ success: false, error: 'Unauthorized.' });
   }
   const { id } = req.params;
-  const { caption } = req.body;
+  const { caption, description, thumbnail_url, status } = req.body;
   try {
     let rows;
     if (db.isMock()) {
@@ -919,9 +919,17 @@ async function updateReel(req, res) {
 
     if (db.isMock()) {
       const match = (db.mockDb.reels || []).find(r => r.id == id);
-      if (match) match.caption = caption || '';
+      if (match) {
+        if (caption !== undefined) match.caption = caption || '';
+        if (description !== undefined) match.description = description || '';
+        if (thumbnail_url !== undefined) match.thumbnail_url = thumbnail_url || '';
+        if (status !== undefined) match.status = status || 'active';
+      }
     } else {
-      await db.query('UPDATE reels SET caption = ? WHERE id = ?', [caption || '', id]);
+      await db.query(
+        'UPDATE reels SET caption = ?, description = ?, thumbnail_url = ?, status = ? WHERE id = ?',
+        [caption || '', description || null, thumbnail_url || null, status || 'active', id]
+      );
     }
     res.status(200).json({ success: true, message: 'Reel updated successfully.' });
   } catch (error) {

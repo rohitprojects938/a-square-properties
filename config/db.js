@@ -612,7 +612,14 @@ async function executeMock(sql, params = []) {
     return [{ affectedRows: before - mockDb.property_images.length }];
   }
   if (normalizedSql.startsWith('delete from saved_properties')) {
-    const pid = parseInt(params[0]);
+    if (normalizedSql.includes('user_id = ?') && normalizedSql.includes('property_id = ?')) {
+      const uid = parseInt(params[0], 10);
+      const pid = parseInt(params[1], 10);
+      const before = mockDb.saved_properties.length;
+      mockDb.saved_properties = mockDb.saved_properties.filter(s => !(s.user_id === uid && s.property_id === pid));
+      return [{ affectedRows: before - mockDb.saved_properties.length }];
+    }
+    const pid = parseInt(params[0], 10);
     const before = mockDb.saved_properties.length;
     mockDb.saved_properties = mockDb.saved_properties.filter(s => s.property_id !== pid);
     return [{ affectedRows: before - mockDb.saved_properties.length }];
@@ -696,7 +703,15 @@ async function executeMock(sql, params = []) {
     }
     // SELECT reels with JOIN users
     if (normalizedSql.startsWith('select') && (normalizedSql.includes('from reels') || normalizedSql.includes('reels r'))) {
-      const reelsList = mockDb.reels
+      let reelsList = mockDb.reels;
+      
+      // Filter by user_id if present
+      if (normalizedSql.includes('user_id = ?') || normalizedSql.includes('r.user_id = ?')) {
+        const uid = parseInt(params[0], 10);
+        reelsList = reelsList.filter(r => r.user_id === uid);
+      }
+      
+      reelsList = reelsList
         .filter(r => r.approval_status === 'approved')
         .map(r => {
           const creator = mockDb.users.find(u => u.id === r.user_id);
@@ -768,7 +783,13 @@ async function executeMock(sql, params = []) {
   }
 
   if (normalizedSql.startsWith('select') && normalizedSql.includes('saved_properties')) {
-    const uid = params[0];
+    if (normalizedSql.includes('user_id = ?') && normalizedSql.includes('property_id = ?')) {
+      const uid = parseInt(params[0], 10);
+      const pid = parseInt(params[1], 10);
+      const matches = mockDb.saved_properties.filter(s => s.user_id === uid && s.property_id === pid);
+      return [matches];
+    }
+    const uid = parseInt(params[0], 10);
     const savedIds = mockDb.saved_properties.filter(s => s.user_id === uid).map(s => s.property_id);
     const properties = mockDb.properties.filter(p => savedIds.includes(p.id));
     return [properties];

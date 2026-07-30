@@ -106,7 +106,7 @@ const propertyRules = [
     .withMessage('Valid property category is required.'),
   body('listing_type').isIn(['sale', 'rent', 'lease']).withMessage('Valid listing type is required.'),
   body('price').isNumeric().withMessage('Price must be a number.'),
-  body('area_sqft').isInt({ min: 1 }).withMessage('Area must be a positive integer.'),
+  body('area_sqft').optional({ checkFalsy: true }).isInt({ min: 1 }).withMessage('Area must be a positive integer.'),
   body('address').notEmpty().withMessage('Address is required.').trim(),
   body('city').notEmpty().withMessage('City is required.').trim(),
   body('state').notEmpty().withMessage('State is required.').trim(),

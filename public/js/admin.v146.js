@@ -1095,25 +1095,31 @@ async function loadReelsTable(page = 1) {
     if (!body) return;
 
     if (reelsList.length === 0) {
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--adm-muted);">No vertical reels submitted yet.</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--adm-muted);">No vertical reels submitted yet.</td></tr>';
       return;
     }
 
-    body.innerHTML = reelsList.map(r => `
-      <tr>
-        <td>#${r.id}</td>
-        <td><a href="${r.video_url}" target="_blank" style="color:var(--adm-accent); font-weight:600;">View Video 🔗</a></td>
-        <td>${r.owner_name || 'Owner'}</td>
-        <td>${r.caption}</td>
-        <td><span class="adm-badge ${r.approval_status === 'approved' ? 'badge-green' : (r.approval_status === 'pending' ? 'badge-amber' : 'badge-red')}">${r.approval_status}</span></td>
-        <td>
-          <div class="adm-actions">
-            <button class="adm-btn adm-btn-success adm-btn-sm" onclick="decideReel(${r.id}, 'approved')">Approve</button>
-            <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="decideReel(${r.id}, 'rejected')">Reject</button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
+    body.innerHTML = reelsList.map(r => {
+      const cleanCaption = r.caption ? r.caption.replace(/'/g, "\\'") : '';
+      return `
+        <tr>
+          <td>#${r.id}</td>
+          <td><a href="${r.video_url}" target="_blank" style="color:var(--adm-accent); font-weight:600;">View Video 🔗</a></td>
+          <td>${r.owner_name || 'Owner'}</td>
+          <td>${r.caption || ''}</td>
+          <td><span class="adm-badge ${r.approval_status === 'approved' ? 'badge-green' : (r.approval_status === 'pending' ? 'badge-amber' : 'badge-red')}">${r.approval_status}</span></td>
+          <td>
+            <div class="adm-actions" style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="adm-btn adm-btn-success adm-btn-sm" onclick="decideReel(${r.id}, 'approved')">Approve</button>
+              <button class="adm-btn adm-btn-danger adm-btn-sm" onclick="decideReel(${r.id}, 'rejected')">Reject</button>
+              <button class="adm-btn adm-btn-ghost adm-btn-sm" style="border: 1px solid var(--adm-border);" onclick="viewReelModal('${r.video_url}', '${cleanCaption}')">View</button>
+              <button class="adm-btn adm-btn-ghost adm-btn-sm" style="border: 1px solid var(--adm-border);" onclick="editReelModal(${r.id})">Edit</button>
+              <button class="adm-btn adm-btn-sm" style="background:#dc2626; color:#fff; border:none;" onclick="deleteReel(${r.id})">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 }
 
@@ -1121,6 +1127,76 @@ window.decideReel = async (rid, state) => {
   const res = await apiRequest('/api/admin/reel/status', 'POST', { reelId: rid, status: state });
   if (res.success) {
     showToast(`Reel listing status set to ${state}.`);
+    loadReelsTable();
+  }
+};
+
+window.viewReelModal = (videoUrl, caption) => {
+  const player = document.getElementById('admin-reel-player');
+  if (player) {
+    player.src = videoUrl;
+    player.load();
+    player.play().catch(() => {});
+  }
+  const title = document.getElementById('view-reel-title');
+  if (title) {
+    title.textContent = caption || 'Play Reel';
+  }
+  openModal('view-reel-modal');
+};
+
+window.closeAdminReelPlayer = () => {
+  const player = document.getElementById('admin-reel-player');
+  if (player) {
+    player.pause();
+  }
+  closeModal('view-reel-modal');
+};
+
+window.editReelModal = (rid) => {
+  const r = reelsList.find(item => item.id === rid);
+  if (!r) return;
+
+  const form = document.getElementById('edit-reel-form');
+  if (form) form.setAttribute('data-id', rid);
+
+  document.getElementById('edit-reel-caption').value = r.caption || '';
+  document.getElementById('edit-reel-description').value = r.description || '';
+  document.getElementById('edit-reel-thumbnail').value = r.thumbnail_url || '';
+  document.getElementById('edit-reel-status').value = r.status || 'active';
+
+  openModal('edit-reel-modal');
+};
+
+window.saveAdminReelEdit = async (e) => {
+  e.preventDefault();
+  const form = document.getElementById('edit-reel-form');
+  const rid = form.getAttribute('data-id');
+
+  const caption = document.getElementById('edit-reel-caption').value.trim();
+  const description = document.getElementById('edit-reel-description').value.trim();
+  const thumbnail_url = document.getElementById('edit-reel-thumbnail').value.trim();
+  const status = document.getElementById('edit-reel-status').value;
+
+  const res = await apiRequest(`/api/properties/feed/reels/${rid}`, 'PUT', {
+    caption, description, thumbnail_url, status
+  });
+
+  if (res.success) {
+    showToast('Reel updated successfully.');
+    closeModal('edit-reel-modal');
+    loadReelsTable();
+  }
+};
+
+window.deleteReel = async (rid) => {
+  if (!confirm('Are you sure you want to delete this reel? Deleting will remove the record and its video content permanently.')) {
+    return;
+  }
+
+  const res = await apiRequest(`/api/properties/feed/reels/${rid}`, 'DELETE');
+  if (res.success) {
+    showToast('Reel deleted successfully.');
     loadReelsTable();
   }
 };

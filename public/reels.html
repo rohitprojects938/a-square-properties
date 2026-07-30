@@ -388,7 +388,7 @@
 
           <!-- Description info -->
           <div class="reel-info">
-            <div class="reel-creator">
+            <div class="reel-creator" onclick="window.location.href='/profile.html?id=${r.user_id}'" style="cursor: pointer;">
               ${window.AvatarSystem.renderHtml({ name: r.creator_name, profile_photo: r.creator_pic }, 'reel-creator-img')}
               <span class="reel-creator-name">${r.creator_name}</span>
             </div>
