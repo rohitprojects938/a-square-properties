@@ -776,23 +776,38 @@ async function executeMock(sql, params = []) {
   }
 
   // 11. SAVED PROPERTIES
-  if (normalizedSql.startsWith('insert into saved_properties')) {
-    const newSave = { id: mockDb.saved_properties.length + 1, user_id: params[0], property_id: params[1] };
-    mockDb.saved_properties.push(newSave);
-    return [{ insertId: newSave.id }];
-  }
-
-  if (normalizedSql.startsWith('select') && normalizedSql.includes('saved_properties')) {
-    if (normalizedSql.includes('user_id = ?') && normalizedSql.includes('property_id = ?')) {
-      const uid = parseInt(params[0], 10);
-      const pid = parseInt(params[1], 10);
-      const matches = mockDb.saved_properties.filter(s => s.user_id === uid && s.property_id === pid);
-      return [matches];
+  if (normalizedSql.includes('saved_properties')) {
+    if (normalizedSql.startsWith('insert')) {
+      const newSave = { id: mockDb.saved_properties.length + 1, user_id: params[0], property_id: params[1] };
+      mockDb.saved_properties.push(newSave);
+      return [{ insertId: newSave.id }];
     }
-    const uid = parseInt(params[0], 10);
-    const savedIds = mockDb.saved_properties.filter(s => s.user_id === uid).map(s => s.property_id);
-    const properties = mockDb.properties.filter(p => savedIds.includes(p.id));
-    return [properties];
+    if (normalizedSql.startsWith('delete')) {
+      if (normalizedSql.includes('user_id = ?') && normalizedSql.includes('property_id = ?')) {
+        const uid = parseInt(params[0], 10);
+        const pid = parseInt(params[1], 10);
+        const prevLen = mockDb.saved_properties.length;
+        mockDb.saved_properties = mockDb.saved_properties.filter(s => !(s.user_id === uid && s.property_id === pid));
+        return [{ affectedRows: prevLen - mockDb.saved_properties.length }];
+      } else if (normalizedSql.includes('property_id = ?')) {
+        const pid = parseInt(params[0], 10);
+        const prevLen = mockDb.saved_properties.length;
+        mockDb.saved_properties = mockDb.saved_properties.filter(s => s.property_id !== pid);
+        return [{ affectedRows: prevLen - mockDb.saved_properties.length }];
+      }
+    }
+    if (normalizedSql.startsWith('select')) {
+      if (normalizedSql.includes('user_id = ?') && normalizedSql.includes('property_id = ?')) {
+        const uid = parseInt(params[0], 10);
+        const pid = parseInt(params[1], 10);
+        const matches = mockDb.saved_properties.filter(s => s.user_id === uid && s.property_id === pid);
+        return [matches];
+      }
+      const uid = parseInt(params[0], 10);
+      const savedIds = mockDb.saved_properties.filter(s => s.user_id === uid).map(s => s.property_id);
+      const properties = mockDb.properties.filter(p => savedIds.includes(p.id));
+      return [properties];
+    }
   }
 
   // 12. ADMIN STATS & COUNT COUNTERS

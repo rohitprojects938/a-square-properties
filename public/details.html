@@ -415,6 +415,9 @@
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       propertyId = urlParams.get('id');
+      if (window.loadSavedIds) {
+        window.loadSavedIds();
+      }
       if (propertyId) {
         loadPropertyDetails();
       } else {
@@ -689,44 +692,20 @@
 
     // Toggle and read favorites status
     async function checkFavStatus() {
-      const user = localStorage.getItem('user');
-      if (user && propertyDetails) {
-        // Toggle active heart colors if saved in client list
+      const favBtn = document.getElementById('details-fav-btn');
+      if (favBtn && propertyDetails) {
+        favBtn.setAttribute('data-pid', propertyDetails.id);
+        if (window._hydrateFavButtons) {
+          window._hydrateFavButtons();
+        }
       }
     }
 
-    document.getElementById('details-fav-btn').addEventListener('click', async function() {
-      if (!localStorage.getItem('token')) {
-        alert('Please login to save properties.');
-        window.location.href = '/login.html';
-        return;
-      }
-      const btn = this;
-      if (btn.disabled || btn.classList.contains('pending')) {
-        return;
-      }
-      btn.disabled = true;
-      btn.classList.add('pending');
-
-      try {
-        const result = await apiRequest(`/api/properties/${propertyId}/save`, 'POST');
-        if (result.success) {
-          const icon = btn.querySelector('i');
-          if (result.saved) {
-            btn.classList.add('active');
-            if (icon) icon.className = 'bx bxs-heart';
-            alert('Listing saved successfully!');
-          } else {
-            btn.classList.remove('active');
-            if (icon) icon.className = 'bx bx-heart';
-            alert('Listing removed from saved.');
-          }
-        }
-      } catch (err) {
-        alert(err.message || 'Server error saving property.');
-      } finally {
-        btn.disabled = false;
-        btn.classList.remove('pending');
+    document.getElementById('details-fav-btn').addEventListener('click', async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (propertyId && window.toggleFavorite) {
+        await window.toggleFavorite(propertyId, this);
       }
     });
 

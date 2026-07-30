@@ -788,52 +788,155 @@ window.alert = function(msg) {
 
 window.showToast = showToast;
 
-// Global Shared Favorite Toggle Helper
+// ─────────────────────────────────────────────
+//  GLOBAL SAVED PROPERTY STATE (shared across all pages)
+// ─────────────────────────────────────────────
+
+// In-memory Set of saved property IDs for instant UI sync
+window.savedPropertyIds = new Set();
+
+// Apply saved/unsaved visual state to a heart button
+// Works for both Lucide SVG icons and Boxicons <i> elements
+window.setFavBtnState = function(btn, saved) {
+  if (!btn) return;
+  const pid = btn.getAttribute('data-pid');
+  if (pid) {
+    if (saved) {
+      window.savedPropertyIds.add(Number(pid));
+    } else {
+      window.savedPropertyIds.delete(Number(pid));
+    }
+  }
+
+  if (saved) {
+    btn.classList.add('active');
+    btn.style.setProperty('background', 'rgba(255,59,48,0.12)', 'important');
+    // Handle Lucide SVG icon
+    const svg = btn.querySelector('svg');
+    if (svg) {
+      svg.style.fill = '#ff3b30';
+      svg.style.stroke = '#ff3b30';
+    }
+    // Handle Boxicons <i> element
+    const bxIcon = btn.querySelector('i.bx');
+    if (bxIcon) {
+      bxIcon.className = 'bx bxs-heart';
+      bxIcon.style.color = '#ff3b30';
+    }
+  } else {
+    btn.classList.remove('active');
+    btn.style.removeProperty('background');
+    // Handle Lucide SVG icon
+    const svg = btn.querySelector('svg');
+    if (svg) {
+      svg.style.fill = 'none';
+      svg.style.stroke = '#1a1a1a';
+    }
+    // Handle Boxicons <i> element
+    const bxIcon = btn.querySelector('i.bx');
+    if (bxIcon) {
+      bxIcon.className = 'bx bx-heart';
+      bxIcon.style.color = '#1a1a1a';
+    }
+  }
+};
+
+// Apply saved state to ALL heart buttons currently in the DOM for a given property ID
+window.syncFavButtons = function(pid, saved) {
+  pid = Number(pid);
+  if (saved) {
+    window.savedPropertyIds.add(pid);
+  } else {
+    window.savedPropertyIds.delete(pid);
+  }
+  // Store in localStorage so other pages pick it up
+  try {
+    localStorage.setItem('savedPropertyIds', JSON.stringify([...window.savedPropertyIds]));
+  } catch(e) {}
+  // Update all matching heart buttons on the current page
+  document.querySelectorAll(`[data-pid="${pid}"]`).forEach(btn => {
+    window.setFavBtnState(btn, saved);
+  });
+};
+
+// Load saved property IDs from API and hydrate all heart buttons on page
+window.loadSavedIds = async function() {
+  if (!localStorage.getItem('token')) return;
+  try {
+    // Optimistically restore from localStorage cache first (instant)
+    try {
+      const cached = localStorage.getItem('savedPropertyIds');
+      if (cached) {
+        const ids = JSON.parse(cached);
+        window.savedPropertyIds = new Set(ids.map(Number));
+        window._hydrateFavButtons();
+      }
+    } catch(e) {}
+
+    // Then fetch fresh from server
+    const result = await apiRequest('/api/auth/profile');
+    if (result.success && result.saved) {
+      const freshIds = result.saved.map(p => Number(p.id));
+      window.savedPropertyIds = new Set(freshIds);
+      localStorage.setItem('savedPropertyIds', JSON.stringify(freshIds));
+      window._hydrateFavButtons();
+    }
+  } catch(e) {
+    // Silent fail — not critical
+  }
+};
+
+// Hydrate all heart buttons currently in the DOM
+window._hydrateFavButtons = function() {
+  document.querySelectorAll('[data-pid]').forEach(btn => {
+    const pid = Number(btn.getAttribute('data-pid'));
+    window.setFavBtnState(btn, window.savedPropertyIds.has(pid));
+  });
+};
+
+// Global Shared Favorite Toggle Helper — ONE implementation for ALL pages
 window.toggleFavorite = async function(pid, btn) {
+  // Redirect guests to login
   if (!localStorage.getItem('token')) {
     alert('Please login to save properties.');
     window.location.href = '/login.html';
     return;
   }
 
-  if (btn.disabled || btn.classList.contains('pending')) {
+  // Prevent double-tap / rapid clicks
+  if (btn.disabled || btn.classList.contains('fav-pending')) {
     return;
   }
 
+  pid = Number(pid);
+
+  // Optimistic UI update (instant feedback before server responds)
+  const wasAlreadySaved = window.savedPropertyIds.has(pid);
   btn.disabled = true;
-  btn.classList.add('pending');
+  btn.classList.add('fav-pending');
+  window.setFavBtnState(btn, !wasAlreadySaved);
 
   try {
     const result = await apiRequest(`/api/properties/${pid}/save`, 'POST');
     if (result.success) {
-      const icon = btn.querySelector('i') || btn.querySelector('svg');
+      // Sync all matching buttons on the page
+      window.syncFavButtons(pid, result.saved);
       if (result.saved) {
-        btn.classList.add('active');
-        if (icon) {
-          icon.className = 'bx bxs-heart';
-          if (icon.tagName.toLowerCase() === 'svg') {
-            icon.style.fill = '#ff3b30';
-            icon.style.stroke = '#ff3b30';
-          }
-        }
-        alert('Property saved!');
+        showToast('Property saved! ❤️', 'success');
       } else {
-        btn.classList.remove('active');
-        if (icon) {
-          icon.className = 'bx bx-heart';
-          if (icon.tagName.toLowerCase() === 'svg') {
-            icon.style.fill = 'none';
-            icon.style.stroke = 'currentColor';
-          }
-        }
-        alert('Property removed.');
+        showToast('Removed from saved.', 'success');
       }
+    } else {
+      // Revert optimistic update on failure
+      window.setFavBtnState(btn, wasAlreadySaved);
     }
   } catch(err) {
-    alert(err.message || 'Server error saving property.');
+    // Revert optimistic update on error
+    window.setFavBtnState(btn, wasAlreadySaved);
+    showToast(err.message || 'Server error saving property.', 'error');
   } finally {
     btn.disabled = false;
-    btn.classList.remove('pending');
+    btn.classList.remove('fav-pending');
   }
 };
 

@@ -582,11 +582,42 @@
               <h4 style="font-size:13px; font-weight:700;">${s.title}</h4>
               <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Location: ${s.city} • ₹${s.price.toLocaleString()}</p>
             </div>
-            <a href="/details.html?id=${s.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px;">View</a>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="favorite-btn active" data-pid="${s.id}" onclick="toggleFavorite(${s.id}, this)" style="border:none; background:rgba(255,59,48,0.12); cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center; border-radius:50%; width:28px; height:28px;"><i class="bx bxs-heart" style="font-size:16px; color:#ff3b30;"></i></button>
+              <a href="/details.html?id=${s.id}" class="btn-secondary" style="padding: 6px 12px; font-size:11px; text-decoration:none;">View</a>
+            </div>
           `;
           savedCont.appendChild(row);
         });
       }
+
+      // Override syncFavButtons to dynamically remove bookmark row with smooth transition on profile page
+      const originalSyncFavButtons = window.syncFavButtons;
+      window.syncFavButtons = function(pid, saved) {
+        if (originalSyncFavButtons) originalSyncFavButtons(pid, saved);
+        if (!saved) {
+          const btn = document.querySelector(`#saved-properties-container [data-pid="${pid}"]`);
+          if (btn) {
+            const row = btn.closest('.invoice-card');
+            if (row) {
+              row.style.transition = 'all 0.3s ease';
+              row.style.opacity = '0';
+              setTimeout(() => {
+                row.remove();
+                const container = document.getElementById('saved-properties-container');
+                if (container && container.children.length === 0) {
+                  container.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">No bookmarked properties.</p>';
+                }
+                const countEl = document.getElementById('buyer-saved-count');
+                if (countEl) {
+                  const currentCount = parseInt(countEl.innerText) || 0;
+                  countEl.innerText = Math.max(0, currentCount - 1);
+                }
+              }, 300);
+            }
+          }
+        }
+      };
 
       // Populate scheduled visits list
       const visitCont = document.getElementById('visits-container');
