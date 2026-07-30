@@ -528,8 +528,8 @@
             
             const showContent = () => {
               document.getElementById('details-skeleton-container').style.display = 'none';
-              document.getElementById('details-content-wrapper').style.display = 'flex';
-              document.getElementById('details-action-bar').style.display = 'flex';
+              document.getElementById('details-content-wrapper').style.display = '';
+              document.getElementById('details-action-bar').style.display = '';
             };
             
             const timeoutId = setTimeout(showContent, 600); // Max wait of 600ms
@@ -543,8 +543,8 @@
             };
           } else {
             document.getElementById('details-skeleton-container').style.display = 'none';
-            document.getElementById('details-content-wrapper').style.display = 'flex';
-            document.getElementById('details-action-bar').style.display = 'flex';
+            document.getElementById('details-content-wrapper').style.display = '';
+            document.getElementById('details-action-bar').style.display = '';
           }
         }
       } catch (err) {
