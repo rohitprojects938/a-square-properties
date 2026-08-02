@@ -289,6 +289,9 @@
                 <option value="painter">Painter</option>
                 <option value="electrician">Electrician</option>
                 <option value="plumber">Plumber</option>
+                <option value="carpenter">Carpenter</option>
+                <option value="ac_repair">AC Repair</option>
+                <option value="pest_control">Pest Control</option>
                 <option value="packers">Packers & Movers</option>
                 <option value="cleaning">Deep Cleaner</option>
                 <option value="gardening">Gardener</option>
@@ -505,7 +508,25 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       // 1. Initial Load of services
-      loadServicesFiltered('all');
+      const params = new URLSearchParams(window.location.search);
+      const catParam = params.get('category');
+      if (catParam) {
+        let matchedPill = null;
+        document.querySelectorAll('.category-pill').forEach(p => {
+          const onclickAttr = p.getAttribute('onclick') || '';
+          if (onclickAttr.includes(`'${catParam}'`)) {
+            matchedPill = p;
+          }
+        });
+        if (matchedPill) {
+          loadServicesFiltered(catParam, matchedPill);
+        } else {
+          document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+          loadServicesFiltered(catParam, null);
+        }
+      } else {
+        loadServicesFiltered('all');
+      }
 
       // 2. Auto-fill logic check: Get current user details if available
       try {
@@ -522,7 +543,6 @@
       }
 
       // 3. Handle action parameter ?action=add or edit to open modal automatically
-      const params = new URLSearchParams(window.location.search);
       const action = params.get('action');
       const serviceIdParam = params.get('id');
       if (action === 'add') {
@@ -685,6 +705,9 @@
               else if (category === 'cleaning') icon = 'bx-brush';
               else if (category === 'gardening') icon = 'bx-spa';
               else if (category === 'contractor') icon = 'bx-buildings';
+              else if (category === 'carpenter') icon = 'bx-hammer';
+              else if (category === 'ac_repair' || category === 'ac repair') icon = 'bx-wind';
+              else if (category === 'pest_control' || category === 'pest control') icon = 'bx-bug';
               iconHtml = `<div class="service-card-icon" style="margin-bottom:0; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:12px; background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:22px;"><i class="bx ${icon}"></i></div>`;
             }
 

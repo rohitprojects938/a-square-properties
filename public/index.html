@@ -756,6 +756,181 @@
         display: none !important;
       }
     }
+
+    /* Premium Home Services Categories */
+    .services-category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 600px) {
+      .services-category-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    .category-card {
+      position: relative;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.4) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      cursor: pointer;
+      overflow: hidden;
+      text-decoration: none;
+      box-sizing: border-box;
+    }
+    .category-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 20px;
+      z-index: -1;
+      opacity: 0.08;
+      transition: opacity 0.3s ease;
+    }
+    .category-card.plumber-card::before { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+    .category-card.electrician-card::before { background: linear-gradient(135deg, #f1c40f, #f39c12); }
+    .category-card.painter-card::before { background: linear-gradient(135deg, #e74c3c, #9b59b6); }
+    .category-card.carpenter-card::before { background: linear-gradient(135deg, #e67e22, #d35400); }
+    .category-card.ac-repair-card::before { background: linear-gradient(135deg, #1abc9c, #2ecc71); }
+    .category-card.pest-control-card::before { background: linear-gradient(135deg, #34495e, #2c3e50); }
+
+    .category-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(31, 38, 135, 0.1);
+      border-color: rgba(255, 255, 255, 0.7);
+    }
+    .category-card:hover::before {
+      opacity: 0.14;
+    }
+    .category-card:active {
+      transform: scale(0.96) translateY(-2px);
+    }
+
+    /* Highlight & Dim States for Search */
+    .category-card.highlighted {
+      border-color: var(--secondary-orange, #ff6a00);
+      box-shadow: 0 0 20px rgba(255, 106, 0, 0.35);
+      transform: scale(1.04) translateY(-4px);
+    }
+    .category-card.dimmed {
+      opacity: 0.45;
+      transform: scale(0.96);
+    }
+
+    /* Vector Graphic wrapper styles */
+    .category-graphic-wrapper {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .category-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Wrench Float Animation */
+    @keyframes float-wrench {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(5deg); }
+    }
+    .plumber-card:hover .svg-wrench, .plumber-card .svg-wrench {
+      animation: float-wrench 2.4s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    /* Spark Blink Animation */
+    @keyframes electric-blink {
+      0%, 100% { opacity: 0.2; transform: scale(0.85); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .svg-electric-spark {
+      animation: electric-blink 1.2s ease-in-out infinite;
+      transform-origin: center;
+    }
+    .svg-electric-spark.delay-1 { animation-delay: 0.4s; }
+    .svg-electric-spark.delay-2 { animation-delay: 0.8s; }
+
+    /* Paint Roller Rolling Animation */
+    @keyframes paint-roll {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(6px, -3px); }
+    }
+    .painter-card:hover .svg-roller, .painter-card .svg-roller {
+      animation: paint-roll 2s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+
+    /* Hammer Striking Animation */
+    @keyframes hammer-swing {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-25deg); }
+    }
+    .carpenter-card:hover .svg-hammer, .carpenter-card .svg-hammer {
+      animation: hammer-swing 1.6s ease-in-out infinite;
+      transform-origin: 36px 36px;
+    }
+
+    /* AC Wind/Waves Flow Animation */
+    @keyframes wave-flow {
+      0% { opacity: 0; transform: translateY(0) scaleY(0.8); }
+      50% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(5px) scaleY(1.15); }
+    }
+    .air-wave {
+      animation: wave-flow 1.4s ease-in-out infinite;
+      transform-origin: top center;
+    }
+    .air-wave.wave1 { animation-delay: 0s; }
+    .air-wave.wave2 { animation-delay: 0.4s; }
+
+    @keyframes ac-wrench-wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-12deg); }
+    }
+    .ac-repair-card:hover .svg-ac-wrench, .ac-repair-card .svg-ac-wrench {
+      animation: ac-wrench-wiggle 1.8s ease-in-out infinite;
+      transform-origin: 15px 44px;
+    }
+
+    /* Pest Control Bug Shake & Spray Mist Animation */
+    @keyframes bug-shake {
+      0%, 100% { transform: translate(0, 0) rotate(0); }
+      20% { transform: translate(-1px, 1px) rotate(-3deg); }
+      40% { transform: translate(1px, -1px) rotate(3deg); }
+      60% { transform: translate(-1px, -1px) rotate(-1deg); }
+      80% { transform: translate(1px, 1px) rotate(1deg); }
+    }
+    .pest-control-card:hover .svg-pest-bug, .pest-control-card .svg-pest-bug {
+      animation: bug-shake 0.7s ease-in-out infinite;
+      transform-origin: 34px 44px;
+    }
+
+    @keyframes mist-spray {
+      0% { opacity: 0; transform: scale(0.7) translate(-3px, 3px); }
+      50% { opacity: 0.9; }
+      100% { opacity: 0; transform: scale(1.25) translate(8px, -8px); }
+    }
+    .svg-mist {
+      animation: mist-spray 1.8s ease-in-out infinite;
+      transform-origin: 25px 19px;
+    }
   </style>
 </head>
 <body>
@@ -892,7 +1067,15 @@
             <i class="bx bx-plus" style="font-size:14px; font-weight:bold;"></i> Add Your Service
           </a>
         </div>
-        <div class="horizontal-scroll" id="services-grid-container" style="margin-bottom: 20px;">
+        <!-- Search Services (local category highlight) -->
+        <div class="services-search-container" style="margin-bottom: 16px;">
+          <div style="position: relative; display: flex; align-items: center;">
+            <i class="bx bx-search" style="position: absolute; left: 12px; font-size: 16px; color: var(--text-muted);"></i>
+            <input type="text" id="services-search-input" placeholder="Search services (e.g. plumber, AC, painter)..." oninput="searchHomeCategories()" style="width: 100%; padding: 10px 12px 10px 36px; border: 1.5px solid var(--border-color, #e2e8f0); border-radius: 12px; font-size: 13px; outline: none; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: border-color 0.2s; font-family:'Outfit',sans-serif;" />
+          </div>
+        </div>
+
+        <div class="services-category-grid" id="services-category-container" style="margin-bottom: 20px;">
           <!-- Loaded dynamically -->
         </div>
 
@@ -2368,35 +2551,230 @@
     async function loadHomeServices() {
       try {
         const res = await apiRequest('/api/services');
-        if (res.success && res.data && res.data.length > 0) {
-          window.allServices = res.data;
-          const container = document.getElementById('services-grid-container');
-          if (!container) return;
-          container.innerHTML = res.data.map(s => {
-            let icon = '🔧';
-            const cat = (s.category || '').toLowerCase();
-            if (cat === 'electrician') icon = '⚡';
-            else if (cat === 'painter') icon = '🎨';
-            else if (cat === 'plumber') icon = '🪠';
-            else if (cat === 'cleaning') icon = '🧹';
-            else if (cat === 'gardening') icon = '🌱';
-            else if (cat === 'packers' || cat === 'movers') icon = '📦';
-            else if (cat === 'contractor') icon = '🏗️';
+        const container = document.getElementById('services-category-container');
+        if (!container) return;
 
-            return `
-              <div onclick="openServiceDetailsModal(${s.id})" class="service-scroll-card">
-                <div class="service-scroll-card-icon">${icon}</div>
-                <div class="service-scroll-card-title">${s.name}</div>
-                <div class="service-scroll-card-rating">⭐ ${parseFloat(s.avg_rating || 0).toFixed(1)} (${s.total_ratings || 0})</div>
-              </div>
-            `;
-          }).join('');
-          enableMouseDragScroll('#services-grid-container');
-        }
+        const services = (res.success && res.data) ? res.data : [];
+        window.allServices = services; // Cache for other uses
+
+        const counts = {
+          plumber: services.filter(s => (s.category || '').toLowerCase() === 'plumber').length,
+          electrician: services.filter(s => (s.category || '').toLowerCase() === 'electrician').length,
+          painter: services.filter(s => (s.category || '').toLowerCase() === 'painter').length,
+          carpenter: services.filter(s => (s.category || '').toLowerCase() === 'carpenter').length,
+          ac_repair: services.filter(s => {
+            const cat = (s.category || '').toLowerCase();
+            return cat === 'ac_repair' || cat === 'ac repair';
+          }).length,
+          pest_control: services.filter(s => {
+            const cat = (s.category || '').toLowerCase();
+            return cat === 'pest_control' || cat === 'pest control';
+          }).length
+        };
+
+        const categories = [
+          {
+            key: 'plumber',
+            title: 'Plumber',
+            count: counts.plumber,
+            class: 'plumber-card',
+            svg: `<svg class="category-svg" viewBox="0 0 64 64" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="plumberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00c6ff" />
+                  <stop offset="100%" stop-color="#0072ff" />
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="28" fill="url(#plumberGrad)" opacity="0.15" />
+              <path d="M16 48 H48 V40 H40 V20 H24 V40 H16 Z" fill="#e2e8f0" stroke="#0072ff" stroke-width="2" stroke-linejoin="round" />
+              <path d="M40 20 H48 V14 H40 Z" fill="#0072ff" />
+              <g class="svg-wrench">
+                <rect x="26" y="22" width="12" height="24" rx="2" fill="#94a3b8" stroke="#1e293b" stroke-width="2" />
+                <circle cx="32" cy="22" r="8" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                <rect x="29" y="14" width="6" height="8" fill="#f1f5f9" />
+                <circle cx="32" cy="46" r="4" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+              </g>
+              <path d="M44 26 C44 29 42 31 40 31 C38 31 36 29 36 26 C36 23 40 18 40 18 C40 18 44 23 44 26 Z" fill="#38bdf8" />
+            </svg>`
+          },
+          {
+            key: 'electrician',
+            title: 'Electrician',
+            count: counts.electrician,
+            class: 'electrician-card',
+            svg: `<svg class="category-svg" viewBox="0 0 64 64" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="elecGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f1c40f" />
+                  <stop offset="100%" stop-color="#f39c12" />
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="28" fill="url(#elecGrad)" opacity="0.15" />
+              <path d="M32 12 C22 12 18 20 22 28 C24 32 26 34 26 38 H38 C38 34 40 32 42 28 C46 20 42 12 32 12 Z" fill="#fff" stroke="#f39c12" stroke-width="2" />
+              <rect x="28" y="38" width="8" height="4" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" />
+              <path d="M30 42 C30 45 34 45 34 42 Z" fill="#475569" />
+              <path class="svg-spark" d="M32 20 L27 28 H32 L30 34 L37 25 H31 Z" fill="#f1c40f" stroke="#d35400" stroke-width="1" />
+              <line class="svg-electric-spark" x1="12" y1="18" x2="16" y2="20" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" />
+              <line class="svg-electric-spark delay-1" x1="52" y1="18" x2="48" y2="20" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" />
+              <line class="svg-electric-spark delay-2" x1="32" y1="6" x2="32" y2="10" stroke="#f1c40f" stroke-width="2.5" stroke-linecap="round" />
+            </svg>`
+          },
+          {
+            key: 'painter',
+            title: 'Painter',
+            count: counts.painter,
+            class: 'painter-card',
+            svg: `<svg class="category-svg" viewBox="0 0 64 64" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="paintGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#e74c3c" />
+                  <stop offset="100%" stop-color="#9b59b6" />
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="28" fill="url(#paintGrad)" opacity="0.15" />
+              <path class="svg-paint-trail" d="M12 26 C20 18 36 22 48 16 L50 24 C38 30 20 26 12 34 Z" fill="#e74c3c" opacity="0.8" />
+              <g class="svg-roller">
+                <path d="M30 46 V38 H22 V28 H24 V36 H30 V32" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <rect x="28" y="46" width="4" height="10" rx="1" fill="#d35400" />
+                <rect x="14" y="20" width="16" height="10" rx="2" fill="#9b59b6" stroke="#fff" stroke-width="1" />
+                <rect x="14" y="22" width="4" height="6" fill="#e74c3c" />
+              </g>
+            </svg>`
+          },
+          {
+            key: 'carpenter',
+            title: 'Carpenter',
+            count: counts.carpenter,
+            class: 'carpenter-card',
+            svg: `<svg class="category-svg" viewBox="0 0 64 64" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="carpGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#e67e22" />
+                  <stop offset="100%" stop-color="#d35400" />
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="28" fill="url(#carpGrad)" opacity="0.15" />
+              <rect x="14" y="40" width="36" height="10" rx="2" fill="#d35400" stroke="#5c3a21" stroke-width="1.5" />
+              <line x1="20" y1="45" x2="44" y2="45" stroke="#a0522d" stroke-width="1" stroke-dasharray="6 3" />
+              <line x1="36" y1="34" x2="36" y2="40" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" />
+              <rect x="34" y="32" width="4" height="2" fill="#64748b" />
+              <g class="svg-hammer">
+                <rect x="22" y="16" width="4" height="22" rx="1" fill="#e67e22" stroke="#5c3a21" stroke-width="1" transform="rotate(-30 24 16)" />
+                <path d="M12 12 H26 V18 H12 Z" fill="#94a3b8" stroke="#334155" stroke-width="1.5" stroke-linejoin="round" transform="rotate(-30 24 16)" />
+                <path d="M26 12 C28 14 30 18 30 18 H26 Z" fill="#64748b" stroke="#334155" stroke-width="1" transform="rotate(-30 24 16)" />
+              </g>
+            </svg>`
+          },
+          {
+            key: 'ac_repair',
+            title: 'AC Repair',
+            count: counts.ac_repair,
+            class: 'ac-repair-card',
+            svg: `<svg class="category-svg" viewBox="0 0 64 64" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="acGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#1abc9c" />
+                  <stop offset="100%" stop-color="#2ecc71" />
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="28" fill="url(#acGrad)" opacity="0.15" />
+              <rect x="14" y="16" width="36" height="16" rx="2" fill="#fff" stroke="#1abc9c" stroke-width="2" />
+              <line x1="18" y1="28" x2="46" y2="28" stroke="#cbd5e1" stroke-width="1" />
+              <rect x="40" y="20" width="4" height="4" fill="#2ecc71" rx="1" />
+              <line x1="20" y1="32" x2="44" y2="32" stroke="#1abc9c" stroke-width="1.5" />
+              <g class="svg-air-waves">
+                <path d="M22 38 C22 38 24 44 26 44 C28 44 30 38 30 38" fill="none" stroke="#a5f3fc" stroke-width="2" stroke-linecap="round" class="air-wave wave1" />
+                <path d="M32 38 C32 38 34 44 36 44 C38 44 40 38 40 38" fill="none" stroke="#a5f3fc" stroke-width="2" stroke-linecap="round" class="air-wave wave2" />
+              </g>
+              <g class="svg-ac-wrench">
+                <rect x="12" y="36" width="6" height="16" fill="#94a3b8" rx="1" transform="rotate(-45 15 44)" />
+                <circle cx="21" cy="40" r="5" fill="#cbd5e1" stroke="#475569" stroke-width="1.5" />
+                <rect x="20" y="38" width="2" height="4" fill="#94a3b8" />
+              </g>
+            </svg>`
+          },
+          {
+            key: 'pest_control',
+            title: 'Pest Control',
+            count: counts.pest_control,
+            class: 'pest-control-card',
+            svg: `<svg class="category-svg" viewBox="0 0 64 64" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="pestGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#34495e" />
+                  <stop offset="100%" stop-color="#2c3e50" />
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="28" fill="url(#pestGrad)" opacity="0.15" />
+              <g class="svg-pest-bug">
+                <line x1="38" y1="40" x2="44" y2="38" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+                <line x1="38" y1="44" x2="44" y2="44" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+                <line x1="38" y1="48" x2="42" y2="52" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" />
+                <ellipse cx="34" cy="44" rx="6" ry="8" fill="#475569" stroke="#1e293b" stroke-width="1.5" />
+                <circle cx="34" cy="34" r="3.5" fill="#334155" />
+                <path d="M32 31 C30 28 26 28 26 28" fill="none" stroke="#475569" stroke-width="1" />
+                <path d="M36 31 C38 28 42 28 42 28" fill="none" stroke="#475569" stroke-width="1" />
+              </g>
+              <g class="svg-spray">
+                <rect x="14" y="24" width="10" height="20" rx="2" fill="#94a3b8" stroke="#334155" stroke-width="1.5" />
+                <path d="M17 24 V20 H21 V24" fill="none" stroke="#334155" stroke-width="1.5" />
+                <path d="M21 20 H25 V18 H21 Z" fill="#64748b" />
+                <line x1="25" y1="19" x2="28" y2="19" stroke="#334155" stroke-width="1.5" />
+                <g class="svg-mist">
+                  <circle cx="32" cy="16" r="2" fill="#cbd5e1" opacity="0.7" />
+                  <circle cx="36" cy="14" r="3" fill="#cbd5e1" opacity="0.6" />
+                  <circle cx="41" cy="12" r="4.5" fill="#cbd5e1" opacity="0.4" />
+                </g>
+              </g>
+            </svg>`
+          }
+        ];
+
+        container.innerHTML = categories.map(c => {
+          return `
+            <a href="/marketplace.html?category=${c.key}" class="category-card ${c.class}" data-category="${c.key}">
+              <div class="category-graphic-wrapper">${c.svg}</div>
+              <div class="category-title" style="font-size:13px; font-weight:800; color:var(--text-dark); margin-top:8px; font-family:'Outfit',sans-serif;">${c.title}</div>
+              <div class="category-providers-count" style="font-size:11px; color:var(--text-muted); margin-top:2px; font-family:'Outfit',sans-serif;">${c.count} ${c.count === 1 ? 'Provider' : 'Providers'}</div>
+            </a>
+          `;
+        }).join('');
       } catch(e) {
         console.warn('Services failed:', e.message);
       }
     }
+
+    window.searchHomeCategories = function() {
+      const query = document.getElementById('services-search-input').value.trim().toLowerCase();
+      const cards = document.querySelectorAll('.category-card');
+      
+      if (!query) {
+        cards.forEach(card => {
+          card.classList.remove('highlighted', 'dimmed');
+        });
+        return;
+      }
+      
+      cards.forEach(card => {
+        const categoryKey = card.getAttribute('data-category').toLowerCase();
+        const categoryTitle = card.querySelector('.category-title').innerText.toLowerCase();
+        
+        let isMatch = categoryKey.includes(query) || categoryTitle.includes(query);
+        
+        // Custom search terms alias mapping
+        if (query === 'ac' && categoryKey === 'ac_repair') isMatch = true;
+        if (query === 'paint' && categoryKey === 'painter') isMatch = true;
+        if (query === 'pest' && categoryKey === 'pest_control') isMatch = true;
+        
+        if (isMatch) {
+          card.classList.add('highlighted');
+          card.classList.remove('dimmed');
+        } else {
+          card.classList.add('dimmed');
+          card.classList.remove('highlighted');
+        }
+      });
+    };
 
     let reviewAutoSlideInterval = null;
     let reviewResumeTimeout = null;
