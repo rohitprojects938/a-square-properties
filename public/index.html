@@ -1006,21 +1006,21 @@
             </div>
             <span class="quick-action-title">Rent Home</span>
           </a>
-          
+
           <a href="/search.html?listing_type=sale" class="quick-action-card action-buy">
             <div class="quick-action-icon-wrapper">
               <i data-lucide="shopping-cart"></i>
             </div>
             <span class="quick-action-title">Buy Home</span>
           </a>
-          
+
           <a href="/marketplace.html" class="quick-action-card action-services">
             <div class="quick-action-icon-wrapper">
               <i data-lucide="wrench"></i>
             </div>
             <span class="quick-action-title">Services</span>
           </a>
-          
+
           <a href="/search.html?no_brokerage=true" class="quick-action-card action-nobrokerage">
             <div class="quick-action-icon-wrapper">
               <i data-lucide="percent"></i>
@@ -1307,7 +1307,7 @@
           <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600;"><i class="bx bx-user" style="font-size:20px;"></i> My Profile</div>
           <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
         </a>
-        
+
         <!-- Admin link in drawer (hidden by default) -->
         <a href="/admin.html" class="drawer-item" id="drawer-admin-link" style="color:#FF6A00; display:none; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px; transition:background 0.2s;">
           <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600; color:#FF6A00;"><i class="bx bx-shield" style="font-size:20px; color:#FF6A00;"></i> Admin Panel</div>
@@ -1315,7 +1315,7 @@
         </a>
 
         <div style="height:1px; background:rgba(255,255,255,0.08); margin:8px 16px;"></div>
-        
+
         <a href="#" class="drawer-item" id="drawer-logout" style="color:var(--primary-red); display:none; align-items:center; gap:12px; padding:12px 16px; text-decoration:none; border-radius:8px;">
           <div class="drawer-item-left" style="display:flex; align-items:center; gap:12px; font-size:13px; font-weight:600; color:var(--primary-red);"><i class="bx bx-log-out" style="font-size:20px; color:var(--primary-red);"></i> Log Out</div>
           <i class="bx bx-chevron-right" style="margin-left:auto; opacity:0.5;"></i>
@@ -1785,7 +1785,7 @@
         .map(p => {
           const image = p.cover_image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80';
           const verifiedBadge = p.is_verified ? `<span class="badge-verified" style="position:absolute; top:6px; left:6px; background:#25d366; color:white; font-size:8px; font-weight:700; padding:2px 4px; border-radius:4px; text-transform:uppercase; z-index:1;">Verified</span>` : '';
-          
+
           // Premium Rent/Sale type badge dynamically formatted from listing_type (supporting future types)
           const typeUpper = (p.listing_type || '').toUpperCase();
           let typeBadgeColor = '#475569'; // Premium Slate color fallback for future database types
@@ -1801,7 +1801,7 @@
           let locationBadgeText = '';
           const hasValidUserLoc = userLoc && typeof userLoc.lat === 'number' && typeof userLoc.lng === 'number' && !isNaN(userLoc.lat) && !isNaN(userLoc.lng);
           const hasValidPropertyLoc = p.latitude !== undefined && p.latitude !== null && p.longitude !== undefined && p.longitude !== null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude));
-          
+
           let validDistance = null;
           if (hasValidUserLoc && hasValidPropertyLoc) {
             if (p.distance !== undefined && p.distance !== null && !isNaN(parseFloat(p.distance))) {
@@ -2031,7 +2031,7 @@
       const recentIds = JSON.parse(localStorage.getItem('recently_viewed_ids') || '[]');
       const container = document.getElementById('continue-browsing-list');
       const section = document.getElementById('continue-browsing-section');
-      
+
       if (!container || !section || recentIds.length === 0) return;
 
       section.style.display = 'block';
@@ -2230,7 +2230,7 @@
       const p = parseFloat(document.getElementById('calc-amount').value);
       const r = parseFloat(document.getElementById('calc-rate').value);
       const y = parseFloat(document.getElementById('calc-tenure').value);
-      
+
       if (p && r && y) {
         const emi = calculateEMI(p, r, y * 12);
         document.getElementById('calc-emi-value').innerText = emi.toLocaleString('en-IN');
@@ -2270,14 +2270,14 @@
 
     window.openServiceDetailsModal = async function(serviceId) {
       selectedServiceForRating = serviceId;
-      
+
       try {
         const res = await apiRequest(`/api/services/${serviceId}`);
         if (!res.success || !res.data) {
           alert('Service does not exist or has been deleted.');
           return;
         }
-        
+
         const s = res.data;
 
         document.getElementById('sd-title').innerText = s.name;
@@ -2381,7 +2381,7 @@
           document.getElementById('sd-rate-form').style.display = 'block';
           document.getElementById('sd-login-to-rate').style.display = 'none';
           document.getElementById('rate-value').value = '0';
-          
+
           // Dynamically bind click events to stars (handles Lucide SVGs)
           const stars = document.querySelectorAll('#rate-star-selector svg, #rate-star-selector i');
           stars.forEach((star, idx) => {
@@ -2449,9 +2449,9 @@
         if (res.success) {
           alert(res.message || 'Rating submitted successfully!');
           loadServiceReviewsList(selectedServiceForRating);
-          
+
           if (window.loadHomeServices) window.loadHomeServices();
-          
+
           const updatedRes = await apiRequest(`/api/services/${selectedServiceForRating}`);
           if (updatedRes.success && updatedRes.data) {
             const updatedSvc = updatedRes.data;
@@ -2747,25 +2747,25 @@
     window.searchHomeCategories = function() {
       const query = document.getElementById('services-search-input').value.trim().toLowerCase();
       const cards = document.querySelectorAll('.category-card');
-      
+
       if (!query) {
         cards.forEach(card => {
           card.classList.remove('highlighted', 'dimmed');
         });
         return;
       }
-      
+
       cards.forEach(card => {
         const categoryKey = card.getAttribute('data-category').toLowerCase();
         const categoryTitle = card.querySelector('.category-title').innerText.toLowerCase();
-        
+
         let isMatch = categoryKey.includes(query) || categoryTitle.includes(query);
-        
+
         // Custom search terms alias mapping
         if (query === 'ac' && categoryKey === 'ac_repair') isMatch = true;
         if (query === 'paint' && categoryKey === 'painter') isMatch = true;
         if (query === 'pest' && categoryKey === 'pest_control') isMatch = true;
-        
+
         if (isMatch) {
           card.classList.add('highlighted');
           card.classList.remove('dimmed');
@@ -2898,7 +2898,7 @@
         const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
         const dateStr = new Date(r.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
         const cityStr = r.city ? r.city : 'Verified User';
-        
+
         let avatarHtml = '';
         if (r.profile_photo) {
           avatarHtml = `<img src="${r.profile_photo}" alt="${r.name}" loading="lazy" style="width:100%; height:100%; object-fit:cover;">`;
@@ -2941,7 +2941,7 @@
             }
           }
         });
-        
+
         // Setup starting scroll position to support scrolling left
         const cardsArr = container.querySelectorAll('.review-card-premium');
         if (cardsArr.length > totalReviews && cardsArr[totalReviews]) {
@@ -3054,7 +3054,7 @@
       // Bind Mouse Events safely using single window listener
       if (!window.hasReviewsMouseListeners) {
         window.hasReviewsMouseListeners = true;
-        
+
         window.addEventListener('mousemove', (e) => {
           const activeTrack = document.querySelector('.reviews-carousel-track.is-dragging');
           if (activeTrack && typeof activeTrack.handleMouseMove === 'function') {
@@ -3118,7 +3118,7 @@
 
         const singleSetWidth = cards[N].offsetLeft - cards[0].offsetLeft;
         const cardWidth = cards[0].offsetWidth + 16; // Add gap (16px)
-        
+
         let targetScroll = track.scrollLeft + cardWidth;
         if (targetScroll >= singleSetWidth * 1.8) {
           track.scrollLeft -= singleSetWidth;
@@ -3193,11 +3193,11 @@
           body: formData
         });
         const res = await response.json();
-        
+
         if (response.ok && res.success) {
           alert('Thank you! Your review has been published.');
           closeReviewModal();
-          
+
           // Insert the new review at the beginning of list memory
           if (res.data) {
             reviewsListMemory.unshift(res.data);
@@ -3383,7 +3383,7 @@
 
       properties.forEach(p => {
         const image = p.cover_image || (p.images && p.images[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80';
-        
+
         const typeUpper = (p.listing_type || '').toUpperCase();
         let typeBadgeColor = '#475569';
         if (typeUpper === 'RENT') {

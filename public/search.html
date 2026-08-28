@@ -85,7 +85,7 @@
 </head>
 <body>
   <div class="app-shell">
-    
+
     <!-- Header -->
     <header class="app-header">
       <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
@@ -94,7 +94,7 @@
     </header>
 
     <div class="app-content search-page-container">
-      
+
       <!-- Left Column (Search results) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Search & Location Row -->
@@ -144,7 +144,7 @@
 
       <!-- Right Column (Desktop Map & Nearby Search) -->
       <div class="desktop-right-panel desktop-only">
-        
+
         <!-- Map Panel -->
         <div class="desktop-panel-section" style="flex:1; display:flex; flex-direction:column; min-height:400px; padding:0; overflow:hidden;">
           <div style="padding:16px; font-weight:700; border-bottom:1px solid var(--border-color); display:flex; align-items:center; gap:8px;">
@@ -152,7 +152,7 @@
           </div>
           <div id="desktop-search-map" style="flex:1; width:100%; min-height:300px; background:#e5e7eb;"></div>
         </div>
-        
+
         <!-- Nearby Search panel -->
         <div class="desktop-panel-section">
           <h4 class="desktop-panel-title"><i data-lucide="compass"></i> Nearby Place Search</h4>
@@ -262,7 +262,7 @@
         <span>Profile</span>
       </a>
     </nav>
-    
+
     <!-- Floating Bottom Sheet -->
     <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
     <div class="bottom-sheet" id="bottom-sheet">
@@ -301,14 +301,14 @@
       </div>
       <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
         <p style="font-size: 12px; color: var(--text-muted); margin: 0; line-height: 1.5;">GPS detection failed or permission was denied. Please select your city and area manually below to see properties near you.</p>
-        
+
         <div class="form-group">
           <label class="form-label" style="font-size: 11px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; display: block;">Choose City</label>
           <select id="fallback-city" class="form-input" style="width: 100%; box-sizing: border-box;">
             <option value="Lucknow" selected>Lucknow</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label class="form-label" style="font-size: 11px; font-weight: 700; color: var(--text-dark); margin-bottom: 6px; display: block;">Choose Area</label>
           <select id="fallback-area" class="form-input" onchange="onFallbackAreaChange()" style="width: 100%; box-sizing: border-box;">
@@ -323,7 +323,7 @@
             <option value="Rajajipuram">Rajajipuram</option>
           </select>
         </div>
-        
+
         <button id="btn-save-manual-loc" class="btn-primary" onclick="saveManualLocation()" style="width: 100%; height: 44px; font-weight: 700; font-size: 13.5px; border: none; border-radius: 12px; color: white; background: var(--secondary-orange); cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center;" disabled>
           Save Location
         </button>
@@ -360,7 +360,7 @@
       try {
         const response = await fetch('/api/auth/config');
         const config = await response.json();
-        
+
         if (config.success && config.googleMapsApiKey) {
           // Load Google Maps API script
           const script = document.createElement('script');
@@ -399,7 +399,7 @@
     function initLeafletMap() {
       const mapContainer = document.getElementById('desktop-search-map');
       if (!mapContainer) return;
-      
+
       mapInstance = L.map('desktop-search-map').setView([mapCenter.lat, mapCenter.lng], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
@@ -679,7 +679,7 @@
             filterParams.lng = locData.lng;
             filterParams.radius = 3; // Start search at 3km, backend fallback will expand if needed
             currentSort = 'nearest';
-            
+
             updateLocationUiStatus();
             closeManualLocationSheet();
 
@@ -742,7 +742,7 @@
       const coords = areaCoordinates[areaVal] || { lat: 26.8467, lng: 80.9462 }; // Default Lucknow
       if (window.LocationManager) {
         const locData = window.LocationManager.saveManualLocation('Uttar Pradesh', cityVal, areaVal, coords);
-        
+
         filterParams.lat = locData.lat;
         filterParams.lng = locData.lng;
         filterParams.radius = 3; // Start search at 3km, backend fallback will expand if needed
@@ -810,7 +810,7 @@
       result.data.forEach(p => {
         const hasUserLoc = filterParams.lat !== undefined && filterParams.lng !== undefined && !isNaN(parseFloat(filterParams.lat)) && !isNaN(parseFloat(filterParams.lng));
         const hasPropLoc = p.latitude !== undefined && p.latitude !== null && p.longitude !== undefined && p.longitude !== null && !isNaN(parseFloat(p.latitude)) && !isNaN(parseFloat(p.longitude));
-        
+
         let showDistanceText = '';
         if (hasUserLoc && hasPropLoc) {
           let dist = null;

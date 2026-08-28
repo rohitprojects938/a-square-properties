@@ -109,8 +109,8 @@
       color: var(--text-dark);
       margin-bottom: 5px;
     }
-    .service-form-group input, 
-    .service-form-group select, 
+    .service-form-group input,
+    .service-form-group select,
     .service-form-group textarea {
       width: 100%;
       padding: 10px 12px;
@@ -122,8 +122,8 @@
       font-family: inherit;
       transition: border-color 0.2s;
     }
-    .service-form-group input:focus, 
-    .service-form-group select:focus, 
+    .service-form-group input:focus,
+    .service-form-group select:focus,
     .service-form-group textarea:focus {
       border-color: var(--secondary-orange);
     }
@@ -143,7 +143,7 @@
 </head>
 <body>
   <div class="app-shell">
-    
+
     <!-- Top Header -->
     <header class="app-header">
       <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
@@ -154,7 +154,7 @@
     </header>
 
     <div class="app-content">
-      
+
       <!-- Left Column (Services List) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:12px;">
         <!-- Search bar -->
@@ -234,7 +234,7 @@
         <span>Profile</span>
       </a>
     </nav>
-    
+
     <!-- Floating Bottom Sheet -->
     <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
     <div class="bottom-sheet" id="bottom-sheet">
@@ -265,7 +265,7 @@
     <div class="service-modal-overlay" id="service-modal-overlay" onclick="if(event.target === this) closeAddServiceModal();">
       <div class="service-modal">
         <form id="post-service-form" onsubmit="submitUserNewService(event)" style="display:flex; flex-direction:column; height:100%; width:100%; margin:0;">
-          
+
           <!-- Header -->
           <div class="service-modal-header">
             <h2 id="svc-modal-title" style="font-size:16px; font-weight:800; margin:0; color:var(--text-dark);">Post Your Service</h2>
@@ -392,7 +392,7 @@
           <div class="service-modal-footer">
             <button type="submit" class="btn-primary" id="svc-post-submit-btn" style="padding:12px; border-radius:12px; font-weight:700; border:none; color:white; cursor:pointer; width:100%;">Submit Service</button>
           </div>
-          
+
         </form>
       </div>
     </div>
@@ -670,7 +670,7 @@
         if (result.success) {
           container.innerHTML = '';
           window.allServices = result.data; // Cache for detailed views
-          
+
           if (result.data.length === 0) {
             container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:12px; padding:32px;">No approved service providers found matching your criteria.</p>';
             return;
@@ -727,7 +727,7 @@
                   <span style="background:rgba(255, 106, 0, 0.08); color:var(--secondary-orange); font-size:10px; font-weight:700; padding:2px 6px; border-radius:6px; text-transform:uppercase;">${category}</span>
                 </div>
                 <p style="font-size:12px; color:var(--text-dark); line-height:1.5; margin:0;">${desc}</p>
-                
+
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-muted); border-top:1px solid #f1f5f9; padding-top:8px;">
                   <span>${exp ? `Experience: ${exp}` : ''}</span>
                   <span style="font-weight:700; color:var(--text-dark);">${price}</span>
@@ -755,7 +755,7 @@
       if (selectedImagesFiles.length + files.length > 5) {
         return alert('You can select a maximum of 5 images.');
       }
-      
+
       files.forEach(file => {
         if (!file.type.startsWith('image/')) return;
         selectedImagesFiles.push(file);
@@ -928,7 +928,7 @@
 
     window.openServiceDetailsModal = async function(serviceId) {
       selectedServiceForRating = serviceId;
-      
+
       try {
         const res = await apiRequest(`/api/services/${serviceId}`);
         if (!res.success || !res.data) {
@@ -1038,7 +1038,7 @@
           document.getElementById('sd-rate-form').style.display = 'block';
           document.getElementById('sd-login-to-rate').style.display = 'none';
           document.getElementById('rate-value').value = '0';
-          
+
           // Dynamically bind click events to stars (handles Lucide SVGs)
           const stars = document.querySelectorAll('#rate-star-selector svg, #rate-star-selector i');
           stars.forEach((star, idx) => {
@@ -1107,9 +1107,9 @@
         if (res.success) {
           alert(res.message || 'Rating submitted successfully!');
           loadServiceReviewsList(selectedServiceForRating);
-          
+
           if (window.loadServicesFiltered) window.loadServicesFiltered(currentCategory || 'all');
-          
+
           const updatedRes = await apiRequest(`/api/services/${selectedServiceForRating}`);
           if (updatedRes.success && updatedRes.data) {
             const updatedSvc = updatedRes.data;

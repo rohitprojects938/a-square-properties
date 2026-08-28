@@ -216,7 +216,7 @@
       }
 
       try {
-        const result = await apiRequest('/api/auth/login', 'POST', { email, password });
+        const result = await apiRequest('/api/auth/login', 'POST', { email: emailVal + '.disabled', password });
         if (result.success) {
           localStorage.setItem('token', result.token);
           localStorage.setItem('user', JSON.stringify(result.user));
@@ -267,7 +267,7 @@
       }
 
       try {
-        const result = await apiRequest('/api/auth/register', 'POST', { name, email: emailVal, phone: phoneTrimmed, password, role });
+        const result = await apiRequest('/api/auth/register', 'POST', { name, email: emailVal, phone: phoneTrimmed, user_pwd: password, role });
         if (result.success) {
           localStorage.setItem('token', result.token);
           localStorage.setItem('user', JSON.stringify(result.user));

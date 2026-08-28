@@ -121,7 +121,7 @@
 </head>
 <body>
   <div class="app-shell">
-    
+
     <!-- Floating Back & Favorite buttons -->
     <a href="/search.html" class="floating-back-btn">
       <i class="bx bx-left-arrow-alt" style="font-size:24px;"></i>
@@ -208,13 +208,13 @@
 
     <!-- Details App Content Scroll -->
     <div class="app-content" id="details-content-wrapper" style="display:none;">
-      
+
       <!-- Left Column (Property Details) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Image slider -->
         <div class="slider-container" id="details-image-slider" style="position:relative; aspect-ratio:16/9; overflow:hidden;">
           <img class="slider-img" id="slider-img-target" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22800%22%20height%3D%22450%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23f0f2f5%22%2F%3E%3C%2Fsvg%3E" style="width:100%; height:100%; object-fit:cover; transition: opacity 0.2s ease;">
-          
+
           <button type="button" onclick="navigateDetailsImage(-1)" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;"><i class="bx bx-chevron-left" style="font-size:24px;"></i></button>
           <button type="button" onclick="navigateDetailsImage(1)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:white; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;"><i class="bx bx-chevron-right" style="font-size:24px;"></i></button>
         </div>
@@ -450,7 +450,7 @@
         const result = await apiRequest(`/api/properties/${propertyId}`);
         if (result.success) {
           propertyDetails = result.data;
-          
+
           // Set text titles
           document.getElementById('details-title').innerText = propertyDetails.title;
           document.getElementById('details-address').innerHTML = `<i class="bx bx-map"></i> ${propertyDetails.address}, ${propertyDetails.city}`;
@@ -528,13 +528,13 @@
           if (coverImgUrl) {
             const tempImg = new Image();
             tempImg.src = window.SafeRender.safeImageUrl(coverImgUrl);
-            
+
             const showContent = () => {
               document.getElementById('details-skeleton-container').style.display = 'none';
               document.getElementById('details-content-wrapper').style.display = '';
               document.getElementById('details-action-bar').style.display = '';
             };
-            
+
             const timeoutId = setTimeout(showContent, 600); // Max wait of 600ms
             tempImg.onload = () => {
               clearTimeout(timeoutId);
@@ -552,11 +552,11 @@
         }
       } catch (err) {
         console.error('Error fetching property details:', err);
-        
+
         // Auto-retry exactly once only on 500, 502, 503, or network connectivity/timeout errors
         const status = err.status;
         const isRetryable = !status || status === 500 || status === 502 || status === 503 || err.message.toLowerCase().includes('timeout') || err.message.toLowerCase().includes('failed to fetch');
-        
+
         if (!retryAttempted && isRetryable) {
           retryAttempted = true;
           console.log('🔄 Server or network issue detected. Retrying automatically once in 1.5 seconds...');
@@ -566,15 +566,15 @@
 
         // Hide skeleton
         document.getElementById('details-skeleton-container').style.display = 'none';
-        
+
         const errContainer = document.getElementById('details-error-container');
         const errTitle = document.getElementById('error-title');
         const errMsg = document.getElementById('error-msg');
         const retryBtnEl = document.getElementById('retry-btn');
         const backHomeBtn = document.getElementById('back-home-btn');
-        
+
         errContainer.style.display = 'flex';
-        
+
         if (err.status === 404 || err.message.toLowerCase().includes('not found')) {
           errTitle.innerText = 'Property Not Found';
           errMsg.innerText = 'The property you are looking for does not exist or has been removed.';
@@ -673,7 +673,7 @@
       if (container) {
         const items = rv ? JSON.parse(rv) : [];
         const filtered = items.filter(i => i.id != propertyId);
-        
+
         if (filtered.length > 0) {
           container.innerHTML = filtered.slice(0, 3).map(p => `
             <a href="/details.html?id=${p.id}" style="display:flex; gap:10px; text-decoration:none; color:inherit; margin-top:8px;">
@@ -756,7 +756,7 @@
     function renderGallery() {
       const sliderImg = document.getElementById('slider-img-target');
       const thumbsContainer = document.getElementById('details-thumbnails-row');
-      
+
       const images = propertyDetails?.images || [];
       if (images.length === 0) {
         sliderImg.src = 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80';
@@ -807,14 +807,14 @@
     function setupSwipeListeners() {
       const sliderContainer = document.getElementById('details-image-slider');
       if (!sliderContainer) return;
-      
+
       let startX = 0;
       let endX = 0;
-      
+
       sliderContainer.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
       }, { passive: true });
-      
+
       sliderContainer.addEventListener('touchend', (e) => {
         endX = e.changedTouches[0].clientX;
         const threshold = 50;

@@ -51,7 +51,7 @@ window.AvatarSystem = {
   renderHtml(user, classNames = '', extraStyles = '') {
     const classNameAttr = classNames ? `class="${classNames}"` : '';
     const styleAttr = extraStyles ? `style="${extraStyles}"` : '';
-    
+
     if (!user) {
       const guestSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2358181F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
       const guestUri = 'data:image/svg+xml;utf8,' + encodeURIComponent(guestSvg);
@@ -60,7 +60,7 @@ window.AvatarSystem = {
 
     const initialsUri = this.getInitialsDataUri(user.name);
     const photo = window.SafeRender.safeAvatar(user, 'User');
-    
+
     return `<img src="${photo}" ` +
            `alt="${window.SafeRender.safeText(user.name, 'User').replace(/"/g, '&quot;')}" ` +
            `data-fallback-initials="${initialsUri}" ` +
@@ -261,7 +261,7 @@ window.LocationManager = (function() {
       },
       (error) => {
         console.warn('⚠️ Geolocation option 1 failed. Trying option 2...', error.message);
-        
+
         // Try option 2: enableHighAccuracy: true, longer timeout (precise GPS satellite/hardware)
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -481,7 +481,7 @@ async function startApp(userPromise) {
 function injectStandardFooter() {
   const currentPath = window.location.pathname.toLowerCase();
   const targetPages = ['profile', 'search', 'about', 'blogs', 'marketplace'];
-  
+
   // Clean checks: ignore pages like details/reels/post/admin etc.
   const isTarget = targetPages.some(page => currentPath.includes(page)) &&
                    !currentPath.includes('details') &&
@@ -492,9 +492,9 @@ function injectStandardFooter() {
   if (!isTarget) return;
 
   // Locate the scrollable container so the footer flows naturally and doesn't stick statically
-  const container = document.querySelector('.app-content') || 
+  const container = document.querySelector('.app-content') ||
                     document.querySelector('.scrollable-content') ||
-                    document.querySelector('.app-shell') || 
+                    document.querySelector('.app-shell') ||
                     document.body;
 
   if (container) {
@@ -510,7 +510,7 @@ function injectStandardFooter() {
     footer.style.fontFamily = "'Outfit', sans-serif";
 
     const isAbout = currentPath.includes('about');
-    const line1 = isAbout 
+    const line1 = isAbout
       ? 'Houserenter.in – Your Trusted Partner for Renting, Buying & Selling Properties.'
       : 'Copyright © Houserenter.in 2026';
     const line2 = isAbout
@@ -581,14 +581,14 @@ function convertBoxiconsToLucide() {
     if (bxClass) {
       const cleanName = bxClass.replace('bx-', '').replace('bxs-', '');
       const iconName = mapBoxiconToLucide(cleanName);
-      
+
       const lucideIcon = document.createElement('i');
       lucideIcon.setAttribute('data-lucide', iconName);
       if (el.id) lucideIcon.id = el.id;
       lucideIcon.style.cssText = el.style.cssText;
       lucideIcon.onclick = el.onclick;
       if (el.classList.contains('active')) lucideIcon.classList.add('active');
-      
+
       el.replaceWith(lucideIcon);
     }
   });
@@ -760,7 +760,7 @@ function showToast(message, type = 'success') {
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  
+
   const iconName = type === 'success' ? 'check-circle' : 'alert-triangle';
   toast.innerHTML = `
     <i data-lucide="${iconName}" style="width:16px; height:16px; min-width:16px;"></i>
@@ -1001,7 +1001,7 @@ window.renderLeafletMap = function(containerId, lat, lng, popupText = 'Property 
   L.marker([lat, lng]).addTo(map)
     .bindPopup(popupText)
     .openPopup();
-  
+
   return map;
 };
 
@@ -1032,7 +1032,7 @@ function injectDesktopLayout(user) {
   // Create Drawer
   const drawer = document.createElement('aside');
   drawer.className = 'desktop-drawer desktop-only';
-  
+
   let menuItems = [
     { name: 'Dashboard', path: '/index.html', icon: 'home' },
     { name: 'Explore Properties', path: '/search.html', icon: 'search' },
@@ -1126,12 +1126,12 @@ function injectDesktopLayout(user) {
   // Bind Drawer hamburger logic
   const hmbBtn = header.querySelector('#desktop-hamburger-btn');
   const closeBtn = drawer.querySelector('#desktop-drawer-close-btn');
-  
+
   function openDrawer() {
     drawer.classList.add('open');
     overlay.classList.add('open');
   }
-  
+
   function closeDrawer() {
     drawer.classList.remove('open');
     overlay.classList.remove('open');
@@ -1161,7 +1161,7 @@ function injectDesktopLayout(user) {
       logoutUser();
     };
   }
-  
+
   if (window.lucide) window.lucide.createIcons();
 }
 
@@ -1172,7 +1172,7 @@ async function registerServiceWorker() {
 
   if (savedVersion !== CURRENT_VERSION) {
     localStorage.setItem('app_cache_version', CURRENT_VERSION);
-    
+
     // Clear CacheStorage
     if ('caches' in window) {
       try {

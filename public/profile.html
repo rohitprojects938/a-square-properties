@@ -89,7 +89,7 @@
 </head>
 <body>
   <div class="app-shell">
-    
+
     <!-- Top Header -->
     <header class="app-header">
       <a href="/index.html" class="header-icon"><i class="bx bx-left-arrow-alt"></i></a>
@@ -98,7 +98,7 @@
     </header>
 
     <div class="app-content">
-      
+
       <!-- Left Column (Dashboard details) -->
       <div class="desktop-main-col" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Profile Header -->
@@ -124,7 +124,7 @@
         </div>
 
         <!-- SECTIONS -->
-        
+
         <!-- 1. My Content (Properties & Reels) -->
         <div class="dashboard-section active" id="tab-properties">
           <!-- Properties Section -->
@@ -197,7 +197,7 @@
 
       <!-- Right Column (Desktop Analytics & Leads Panel) -->
       <div class="desktop-right-panel desktop-only" style="padding-top:0;">
-        
+
         <!-- Seller Analytics (Views count) -->
         <div class="desktop-panel-section" id="desktop-seller-analytics" style="display:none; margin-bottom:16px;">
           <h4 class="desktop-panel-title"><i data-lucide="bar-chart-2"></i> Listing Analytics</h4>
@@ -259,7 +259,7 @@
         <span>Profile</span>
       </a>
     </nav>
-    
+
     <!-- Floating Bottom Sheet -->
     <div class="bottom-sheet-overlay" id="bottom-sheet-overlay"></div>
     <div class="bottom-sheet" id="bottom-sheet">
@@ -327,7 +327,7 @@
         // Fetch billing transactions in parallel
         await loadBillingHistory();
       }
-      
+
       if (params.get('tab') === 'subscription') {
         switchSection('tab-subscription', document.querySelector('[data-target="tab-subscription"]'));
       }
@@ -337,22 +337,22 @@
       // Hide dashboard sections, tabs and logout buttons
       const tabsWrapper = document.querySelector('.profile-tabs');
       if (tabsWrapper) tabsWrapper.style.display = 'none';
-      
+
       const logoutBtn = document.querySelector('.header-icon[onclick="logoutUser()"]');
       if (logoutBtn) logoutBtn.style.display = 'none';
-      
+
       const rightPanel = document.querySelector('.desktop-right-panel');
       if (rightPanel) rightPanel.style.setProperty('display', 'none', 'important');
-      
+
       const logoEl = document.querySelector('.logo');
       if (logoEl) logoEl.innerText = 'User Profile';
-      
+
       const badge = document.getElementById('profile-sub-badge');
       if (badge) badge.style.display = 'none';
-      
+
       const propCont = document.getElementById('posted-properties-container');
       const reelCont = document.getElementById('posted-reels-container');
-      
+
       if (propCont) propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Loading properties...</p>';
       if (reelCont) reelCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Loading reels...</p>';
 
@@ -362,7 +362,7 @@
           const user = result.user;
           document.getElementById('profile-name').innerText = user.name;
           document.getElementById('profile-role').innerText = `${user.role.toUpperCase()}`;
-          
+
           // Set bio
           let bioEl = document.getElementById('profile-bio');
           if (!bioEl) {
@@ -459,13 +459,13 @@
       if (!result || !result.success) {
         const propCont = document.getElementById('posted-properties-container');
         if (propCont) propCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load listings.</p>';
-        
+
         const reelCont = document.getElementById('posted-reels-container');
         if (reelCont) reelCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load reels.</p>';
-        
+
         const savedCont = document.getElementById('saved-properties-container');
         if (savedCont) savedCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load bookmarks.</p>';
-        
+
         const visitCont = document.getElementById('visits-container');
         if (visitCont) visitCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted);">Failed to load scheduled visits.</p>';
         return;
@@ -510,7 +510,7 @@
           const row = document.createElement('div');
           row.className = 'invoice-card';
           row.id = `listing-row-${p.id}`;
-          
+
           // Generate status dropdown options
           const currentStatus = p.status || 'active';
           const statusOptions = ['active', 'sold', 'rented'].map(opt => {
@@ -550,10 +550,10 @@
           const row = document.createElement('div');
           row.className = 'invoice-card';
           row.id = `reel-row-${r.id}`;
-          
+
           const uploadDate = new Date(r.created_at).toLocaleDateString();
           const cleanCaption = (r.caption || '').replace(/"/g, '&quot;');
-          
+
           row.innerHTML = `
             <div style="flex:1; padding-right:12px;">
               <h4 style="font-size:13px; font-weight:700; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:240px;">${r.caption || 'Untitled Reel'}</h4>
@@ -929,7 +929,7 @@
           alert('Reel deleted successfully!');
           const row = document.getElementById(`reel-row-${reelId}`);
           if (row) row.remove();
-          
+
           const reelCont = document.getElementById('posted-reels-container');
           if (reelCont && reelCont.children.length === 0) {
             reelCont.innerHTML = '<p style="font-size:12px; color:var(--text-muted)">You have not uploaded any reels yet.</p>';
@@ -950,7 +950,7 @@
       videoEl.src = videoUrl;
       videoEl.load();
       videoEl.play().catch(() => {});
-      
+
       document.getElementById('fullscreen-reel-player').style.display = 'flex';
     }
 
