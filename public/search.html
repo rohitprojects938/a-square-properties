@@ -440,7 +440,7 @@
             <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=100&q=80'}" style="width:100%; height:70px; object-fit:cover; border-radius:6px; margin-bottom:6px;">
             <h5 style="margin:0; font-weight:700; font-size:12px;">${p.title}</h5>
             <p style="margin:2px 0 0; color:var(--primary-red); font-weight:800; font-size:12px;">₹${formatPrice(p.price)}</p>
-            <a href="/details.html?id=${p.id}" style="font-size:11px; display:inline-block; margin-top:4px; text-decoration:none; color:#D96B27; font-weight:700;">View Details →</a>
+            <span style="font-size:11px; display:inline-block; margin-top:4px; color:#D96B27; font-weight:700;">Property Info</span>
           </div>
         `;
 
@@ -842,8 +842,7 @@
           typeBadgeColor = '#0071e3';
         }
 
-        const card = document.createElement('a');
-        card.href = `/details.html?id=${p.id}`;
+        const card = document.createElement('div');
         card.className = 'property-search-card';
         card.innerHTML = `
           <div style="position: relative;">

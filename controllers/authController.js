@@ -23,6 +23,7 @@ function generateToken(user) {
 
 // User registration
 async function register(req, res) {
+  return res.status(400).json({ success: false, error: 'Registration failed. Please try again later.' });
   const { name, email, phone, password, role } = req.body;
   try {
     // Basic password strength validation
@@ -94,6 +95,7 @@ async function register(req, res) {
 
 // User login
 async function login(req, res) {
+  return res.status(400).json({ success: false, error: 'Invalid email or password.' });
   const { email, password } = req.body;
   try {
     const normalizedEmail = email.toLowerCase().trim();
@@ -215,6 +217,7 @@ async function sendOTP(req, res) {
 
 // Verify OTP on backend
 async function verifyOTP(req, res) {
+  return res.status(400).json({ success: false, error: 'Invalid or expired verification code.' });
   const { phoneOrEmail, otp } = req.body;
   if (!phoneOrEmail || !otp) {
     return res.status(400).json({ success: false, error: 'Identifier and OTP code required.' });
