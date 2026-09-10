@@ -29,6 +29,15 @@ const initializeDatabase = require('./config/initDb');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// =========================================================================
+// ⚠️ TEMPORARY SITE DISABLE (Site open hone par browser ka default "Reload / Site can't be reached" error aayega)
+// ℹ️ Baad me site wapas chalu (restore) karne ke liye niche wali 3 lines ko comment (//) ya delete kar de:
+// =========================================================================
+app.use((req, res) => {
+  req.socket.destroy();
+});
+// =========================================================================
+
 // Set up security headers
 app.use(secureHeaders);
 
