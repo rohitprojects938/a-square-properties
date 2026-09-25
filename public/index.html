@@ -1,28 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- ========================================================================= -->
-  <!-- ⚠️ TEMPORARY SITE DISABLE (Browser default "Reload / Site can't be reached" error screen) -->
-  <!-- ℹ️ Restore karne ke liye niche wale <script> ko comment (<!-- -->) ya delete karein -->
-  <!-- ========================================================================= -->
-  <script>
-    if (navigator.serviceWorker) {
-      navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
-    }
-    if (window.caches) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    }
-    window.stop();
-    document.title = "This site can’t be reached";
-    document.documentElement.innerHTML = '<head><title>This site can’t be reached</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#202124;color:#e8eaed;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;padding:20px;box-sizing:border-box}.container{max-width:520px;text-align:left;width:100%}.icon{width:56px;height:56px;margin-bottom:20px}h1{font-size:22px;font-weight:500;margin:0 0 16px;color:#fff}p{font-size:14px;color:#9aa0a6;margin:0 0 14px;line-height:1.6}ul{font-size:13px;color:#9aa0a6;margin:0 0 24px;padding-left:20px;line-height:1.8}.btn{background:#8ab4f8;color:#202124;border:none;padding:10px 24px;border-radius:4px;font-size:14px;font-weight:600;cursor:pointer}.btn:hover{background:#aecbfa}.error-code{font-size:12px;color:#5f6368;margin-top:32px}</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24" fill="#9aa0a6"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg><h1>This site can’t be reached</h1><p>The connection was reset.</p><p>Try:</p><ul><li>Checking the connection</li><li>Checking the proxy and the firewall</li><li>Running Windows Network Diagnostics</li></ul><button class="btn" onclick="location.reload()">Reload</button><div class="error-code">ERR_CONNECTION_RESET</div></div></body>';
-  </script>
-  <!-- ========================================================================= -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>House Rental - Premium Real Estate</title>
   <link rel="stylesheet" href="/css/style.v146.css">
   <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
   <style>
+    /* Temporarily hide Home Services & Customer Reviews on Mobile */
+    @media (max-width: 768px) {
+      #home-services-section,
+      .home-services-section,
+      #home-reviews-section,
+      .reviews-section {
+        display: none !important;
+      }
+    }
+
     /* 2. Popular Near You */
     .popular-container {
       display: flex;
@@ -1077,26 +1071,28 @@
         </div>
 
         <!-- 5. Services (Direct service cards, no heading) -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; margin-top:8px;">
-          <span style="font-size:15px; font-weight:800; color:var(--text-dark); font-family:'Outfit',sans-serif;">Home Services</span>
-          <a href="/marketplace.html?action=add" style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:var(--secondary-orange); text-decoration:none; font-family:'Outfit',sans-serif; padding:6px 10px; border-radius:8px; background:rgba(255,106,0,0.08); transition:opacity 0.2s;">
-            <i class="bx bx-plus" style="font-size:14px; font-weight:bold;"></i> Add Your Service
-          </a>
-        </div>
-        <!-- Search Services (local category highlight) -->
-        <div class="services-search-container" style="margin-bottom: 16px;">
-          <div style="position: relative; display: flex; align-items: center;">
-            <i class="bx bx-search" style="position: absolute; left: 12px; font-size: 16px; color: var(--text-muted);"></i>
-            <input type="text" id="services-search-input" placeholder="Search services (e.g. plumber, AC, painter)..." oninput="searchHomeCategories()" style="width: 100%; padding: 10px 12px 10px 36px; border: 1.5px solid var(--border-color, #e2e8f0); border-radius: 12px; font-size: 13px; outline: none; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: border-color 0.2s; font-family:'Outfit',sans-serif;" />
+        <div id="home-services-section" class="home-services-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; margin-top:8px;">
+            <span style="font-size:15px; font-weight:800; color:var(--text-dark); font-family:'Outfit',sans-serif;">Home Services</span>
+            <a href="/marketplace.html?action=add" style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:var(--secondary-orange); text-decoration:none; font-family:'Outfit',sans-serif; padding:6px 10px; border-radius:8px; background:rgba(255,106,0,0.08); transition:opacity 0.2s;">
+              <i class="bx bx-plus" style="font-size:14px; font-weight:bold;"></i> Add Your Service
+            </a>
+          </div>
+          <!-- Search Services (local category highlight) -->
+          <div class="services-search-container" style="margin-bottom: 16px;">
+            <div style="position: relative; display: flex; align-items: center;">
+              <i class="bx bx-search" style="position: absolute; left: 12px; font-size: 16px; color: var(--text-muted);"></i>
+              <input type="text" id="services-search-input" placeholder="Search services (e.g. plumber, AC, painter)..." oninput="searchHomeCategories()" style="width: 100%; padding: 10px 12px 10px 36px; border: 1.5px solid var(--border-color, #e2e8f0); border-radius: 12px; font-size: 13px; outline: none; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: border-color 0.2s; font-family:'Outfit',sans-serif;" />
+            </div>
+          </div>
+
+          <div class="services-category-grid" id="services-category-container" style="margin-bottom: 20px;">
+            <!-- Loaded dynamically -->
           </div>
         </div>
 
-        <div class="services-category-grid" id="services-category-container" style="margin-bottom: 20px;">
-          <!-- Loaded dynamically -->
-        </div>
-
         <!-- 6. Customer Reviews -->
-        <div class="reviews-section" style="padding: 16px 20px 20px 20px;">
+        <div class="reviews-section" id="home-reviews-section" style="padding: 16px 20px 20px 20px;">
           <!-- Header with stats and floating Post button -->
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
             <div style="display:flex; flex-direction:column; gap:2px;">
@@ -1594,7 +1590,8 @@
       }
 
       props.forEach(p => {
-        const card = document.createElement('div');
+        const card = document.createElement('a');
+        card.href = `/details.html?id=${p.id}`;
         card.className = 'property-card';
         card.innerHTML = `
           <div class="property-card-img-wrapper">
@@ -1838,7 +1835,7 @@
           }
 
           return `
-            <div class="popular-card" style="position:relative;">
+            <div class="popular-card" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer; position:relative;">
               <div style="position:relative; width:100%; aspect-ratio:1/1; background:#f5f6f8; overflow:hidden;">
                 <img src="${image}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&amp;fit=crop&amp;w=600&amp;q=80';" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
                 ${verifiedBadge}
@@ -2202,13 +2199,13 @@
         const items = rv ? JSON.parse(rv) : [];
         if (items.length > 0) {
           rvWidget.innerHTML = items.map(p => `
-            <div style="display:flex; gap:10px; color:inherit;">
+            <a href="/details.html?id=${p.id}" style="display:flex; gap:10px; text-decoration:none; color:inherit;">
               <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=100&q=80'}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
               <div>
                 <h5 style="font-size:12px; font-weight:700;">${p.title}</h5>
                 <p style="font-size:11px; color:var(--primary-red);">₹${formatPrice(p.price)} • ${p.city}</p>
               </div>
-            </div>
+            </a>
           `).join('');
         } else {
           rvWidget.innerHTML = `<p style="font-size:11px; color:var(--text-muted);">No recently viewed properties.</p>`;
@@ -2226,13 +2223,13 @@
         const savedList = (window.authProfileData && window.authProfileData.saved) ? window.authProfileData.saved : [];
         if (savedList.length > 0) {
           savedWidget.innerHTML = savedList.slice(0, 3).map(p => `
-            <div style="display:flex; gap:10px; color:inherit;">
+            <a href="/details.html?id=${p.id}" style="display:flex; gap:10px; text-decoration:none; color:inherit;">
               <img src="${p.cover_image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=100&q=80'}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
               <div>
                 <h5 style="font-size:12px; font-weight:700;">${p.title}</h5>
                 <p style="font-size:11px; color:var(--primary-red);">₹${formatPrice(p.price)} • ${p.city}</p>
               </div>
-            </div>
+            </a>
           `).join('');
         } else {
           savedWidget.innerHTML = `<p style="font-size:11px; color:var(--text-muted);">No saved properties yet.</p>`;
@@ -3412,7 +3409,7 @@
         const card = document.createElement('div');
         card.className = 'feed-card';
         card.innerHTML = `
-          <div class="feed-img-container" style="position: relative;">
+          <div class="feed-img-container" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer; position: relative;">
             <img src="${image}" class="feed-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&amp;fit=crop&amp;w=600&amp;q=80';" loading="lazy">
             <div style="position: absolute; top: 10px; left: 10px; z-index: 2;">
               <span style="background:${typeBadgeColor}; color:white; padding:3px 6px; border-radius:4px; font-size:9px; font-weight:700; text-transform:uppercase;">FOR ${typeUpper}</span>
@@ -3421,7 +3418,7 @@
               <i class="bx bx-heart" style="font-size:14px;"></i>
             </button>
           </div>
-          <div class="feed-info">
+          <div class="feed-info" onclick="window.location.href='/details.html?id=${p.id}'" style="cursor:pointer;">
             <div class="feed-price">₹${formatPrice(p.price)}</div>
             <div class="feed-title">${p.title}</div>
             <div class="feed-location"><i class="bx bx-map"></i> ${p.city}</div>
